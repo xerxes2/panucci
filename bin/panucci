@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+import dbus, dbus.glib, os.path, sys
+
+session_bus = dbus.SessionBus()
+
+filename = None
+if os.path.exists(sys.argv[-1]) and len(sys.argv) > 1:
+    filename = sys.argv[-1]
+
+try:
+    remote_object = session_bus.get_object("org.panucci", "/player")
+    print 'Found panucci instance already running, will try to use it...'
+except dbus.exceptions.DBusException:
+    remote_object = None
+
+if remote_object is None:
+    from panucci import panucci
+    panucci.run(filename)
+else:
+    if filename is None:
+        remote_object.show_main_window(dbus_interface='org.panucci.interface')
+    else:
+        remote_object.play_file(filename, dbus_interface='org.panucci.interface')
+
