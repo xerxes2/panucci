@@ -12,7 +12,7 @@ import pygst
 pygst.require("0.10")
 import gst
 import cPickle as pickle
-
+import webbrowser
 import dbus, dbus.service, dbus.mainloop, dbus.glib
 
 
@@ -178,6 +178,21 @@ RSta0X+ifwD5ei3DfRRvPQAAAABJRU5ErkJggg==
     """.decode('base64'),
 }
 
+about_name = 'Panucci'
+about_text = 'bookmarking audio player'
+about_authors = ['Thomas Perl', 'Nick Sapi', 'Matthew Taylor']
+about_website = 'http://thpinfo.com/2008/panucci/'
+donate_wishlist_url = 'http://www.amazon.de/gp/registry/2PD2MYGHE6857'
+donate_device_url = 'http://maemo.gpodder.org/donate.html'
+
+
+def open_link(d, url, data):
+    webbrowser.open_new(url)
+        
+
+gtk.about_dialog_set_url_hook(open_link, None)
+
+
 def image(widget, filename):
     widget.remove(widget.get_child())
     if filename in images:
@@ -329,6 +344,7 @@ class BookmarksWindow(gtk.Window):
             self.main.do_seek(pos)
 
 class GTK_Main(dbus.service.Object):
+	
     def save_position(self):
         try:
             (pos, format) = self.player.query_position(self.time_format, None)
@@ -382,17 +398,41 @@ class GTK_Main(dbus.service.Object):
 
     def make_main_window(self):
         import pango
-
-        window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        		
+        if has_hildon == True:
+            self.app = hildon.Program()
+            window = hildon.Window()
+            self.app.add_window(window)
+        else:
+            window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+                        
+        	
         window.set_title('Panucci')
         window.set_default_size(400, -1)
-        window.set_border_width(10)
+        window.set_border_width(0)
         window.connect("destroy", self.destroy)
         self.main_window = window
+        
+                
+        if has_hildon == True:
+            window.set_menu(self.create_menu())
+        else:
+            menu_vbox = gtk.VBox()
+            menu_vbox.set_spacing(0)
+            window.add(menu_vbox)
+            menu_bar = gtk.MenuBar()
+            root_menu = gtk.MenuItem("File")
+            root_menu.set_submenu(self.create_menu())
+            menu_bar.append(root_menu)
+            menu_vbox.pack_start(menu_bar, False, False, 0)
+            menu_bar.show()
 
         main_hbox = gtk.HBox()
         main_hbox.set_spacing(6)
-        window.add(main_hbox)
+        if has_hildon == True:
+            window.add(main_hbox)
+        else:
+            menu_vbox.pack_end(main_hbox, True, True, 6)
 
         main_vbox = gtk.VBox()
         main_vbox.set_spacing(6)
@@ -454,12 +494,12 @@ class GTK_Main(dbus.service.Object):
         buttonbox.add(self.bookmarks_button)
         self.set_controls_sensitivity(False)
 
-        if hasattr(gtk, 'VolumeButton'):
+        if has_hildon == False: # hasattr(gtk, 'VolumeButton'):
             self.volume = gtk.VolumeButton()
             self.volume.connect('value-changed', self.volume_changed)
             buttonbox.add(self.volume)
         else:
-            import hildon
+            #import hildon # this should be unnecessary
             self.volume = hildon.VVolumebar()
             self.volume.connect('level_changed', self.volume_changed2)
             self.volume.connect('mute_toggled', self.mute_toggled)
@@ -473,6 +513,49 @@ class GTK_Main(dbus.service.Object):
 
         window.show_all()
 
+    def create_menu(self):
+        menu = gtk.Menu()
+        menu_donate_sub = gtk.Menu()
+        
+        menu_open = gtk.MenuItem("Open...")
+        #haven't quite worked this part out yet - matt
+        #menu_open.connect("activate", self.file_open, self.main_window)
+        
+        menu_about = gtk.MenuItem("About")
+        menu_about.connect("activate", self.show_about, self.main_window)
+
+        menu_donate = gtk.MenuItem("Donate")
+        
+        menu_donate_device = gtk.MenuItem("Device")
+        menu_donate_device.connect("activate", lambda w: webbrowser.open_new(donate_device_url))
+        
+        menu_donate_wishlist = gtk.MenuItem("Amazon Wishlist")
+        menu_donate_wishlist.connect("activate", lambda w: webbrowser.open_new(donate_wishlist_url))
+
+        menu_quit = gtk.MenuItem("Quit")
+        menu_quit.connect("activate", self.destroy)
+        
+        menu.append(menu_open)
+        menu.append(gtk.SeparatorMenuItem())
+        menu.append(menu_about)
+        menu_donate_sub.append(menu_donate_device)
+        menu_donate_sub.append(menu_donate_wishlist)
+        menu_donate.set_submenu(menu_donate_sub)
+        menu.append(menu_donate)
+        menu.append(gtk.SeparatorMenuItem())
+        menu.append(menu_quit)
+        return menu
+
+    def show_about(self, w, win):
+        dialog = gtk.AboutDialog()
+        dialog.set_website(about_website)
+        dialog.set_website_label('Homepage')
+        dialog.set_name(about_name)
+        dialog.set_authors(about_authors)
+        dialog.set_comments(about_text)
+        dialog.run()
+        dialog.destroy()
+        
     @dbus.service.method('org.panucci.interface')
     def show_main_window(self):
         # This is supposed to display the window
