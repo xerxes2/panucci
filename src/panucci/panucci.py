@@ -19,6 +19,12 @@ import pygst
 pygst.require('0.10')
 import gst
 
+try:
+    import gconf
+except:
+    # on the tablet, it's probably in "gnome"
+    from gnome import gconf
+
 import dbus
 import dbus.service
 import dbus.mainloop
@@ -238,6 +244,9 @@ class GTK_Main(dbus.service.Object):
             vol = int(self.volume.get_value()*100)
         pm.set_position( 'volume', vol )
         gtk.main_quit()
+
+    def gconf_key_changed(self, client, connection_id, entry, args):
+        print 'gconf key %s changed: %s' % (entry.get_key(), entry.get_value())
     
     def __init__(self, bus_name, filename=None):
         dbus.service.Object.__init__(self, object_path="/player",
@@ -246,6 +255,10 @@ class GTK_Main(dbus.service.Object):
         self.filename = filename
         self.make_main_window()
         self.has_coverart = False
+
+        self.gconf_client = gconf.client_get_default()
+        self.gconf_client.add_dir('/apps/panucci', gconf.CLIENT_PRELOAD_NONE)
+        self.gconf_client.notify_add('/apps/panucci', self.gconf_key_changed)
 
         self.want_to_seek = False
         self.player = gst.element_factory_make('playbin', 'player')
@@ -396,6 +409,8 @@ class GTK_Main(dbus.service.Object):
         menu_open = gtk.ImageMenuItem(gtk.STOCK_OPEN)
         #haven't quite worked this part out yet - matt
         #menu_open.connect("activate", self.file_open, self.main_window)
+        menu_bookmarks = gtk.MenuItem(_('Bookmarks'))
+        menu_bookmarks.connect('activate', self.bookmarks_callback)
         
         menu_donate = gtk.MenuItem(_('Donate'))
 
@@ -412,6 +427,8 @@ class GTK_Main(dbus.service.Object):
         menu_quit.connect("activate", self.destroy)
         
         menu.append(menu_open)
+        menu.append(gtk.SeparatorMenuItem())
+        menu.append(menu_bookmarks)
         menu.append(gtk.SeparatorMenuItem())
 
         menu.append(menu_donate)
@@ -505,8 +522,14 @@ class GTK_Main(dbus.service.Object):
                     dlg = gtk.FileChooserDialog(_('Select podcast or audiobook'),
                         None, gtk.FILE_CHOOSER_ACTION_OPEN, ((gtk.STOCK_CANCEL,
                         gtk.RESPONSE_REJECT, gtk.STOCK_MEDIA_PLAY, gtk.RESPONSE_OK)))
+
+                current_folder = self.gconf_client.get_string('/apps/panucci/last_folder')
+                if current_folder is not None and os.path.isdir(current_folder):
+                    dlg.set_current_folder(current_folder)
+
                 if dlg.run() == gtk.RESPONSE_OK:
                     self.filename = dlg.get_filename()
+                    self.gconf_client.set_string('/apps/panucci/last_folder', dlg.get_current_folder())
                     dlg.destroy()
                 else:
                     dlg.destroy()
