@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
+from glob import glob
 
 setup(name='Panucci',
       version='0.2',
@@ -11,4 +12,7 @@ setup(name='Panucci',
       packages=['panucci'],
       package_dir={ '':'src' },
       scripts=['bin/panucci'],
+      data_files=[
+          ('share/panucci', glob('icons/*.png')),
+          ],
      )
