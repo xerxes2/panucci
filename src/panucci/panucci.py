@@ -669,6 +669,11 @@ class GTK_Main(dbus.service.Object):
                 tag_vals[tag] = value
                 tags[tag].set_alignment( 0.5*int(not self.has_coverart), 0.5)
                 tags[tag].show()
+            if tag == 'title':
+                if running_on_tablet:
+                    self.main_window.set_title(value)
+                else:
+                    self.main_window.set_title('Panucci - ' + value)
 
         for tag_val in [ tag_vals['artist'].lower(), tag_vals['album'].lower() ]:
             if not tag_vals['title'].strip():
