@@ -69,13 +69,18 @@ def find_image(filename):
 
     return None
 
-
-def image(widget, filename):
+gtk.icon_size_register('panucci-button', 32, 32)
+def image(widget, filename, is_stock=False):
     widget.remove(widget.get_child())
-    filename = find_image(filename)
+    image = None
+    if is_stock:
+        image = gtk.image_new_from_stock(filename, gtk.icon_size_from_name('panucci-button'))
+    else:
+        filename = find_image(filename)
+        if filename is not None:
+            image = gtk.image_new_from_file(filename)
 
-    if filename is not None:
-        image = gtk.image_new_from_file(filename)
+    if image is not None:
         if running_on_tablet:
             image.set_padding(20, 20)
         else:
@@ -358,7 +363,7 @@ class GTK_Main(dbus.service.Object):
         buttonbox.add(self.rewind_button)
         self.playing = False
         self.button = gtk.Button('')
-        image(self.button, 'media-playback-start.png')
+        image(self.button, gtk.STOCK_OPEN, True)
         self.button.connect("clicked", self.start_stop)
         buttonbox.add(self.button)
         self.forward_button = gtk.Button('')
