@@ -364,6 +364,7 @@ class GTK_Main(dbus.service.Object):
 
         if has_hildon:
             self.volume = hildon.VVolumebar()
+            self.volume.set_property('can-focus', False)
             self.volume.connect('level_changed', self.volume_changed2)
             self.volume.connect('mute_toggled', self.mute_toggled)
             window.connect('key-press-event', self.on_key_press)
