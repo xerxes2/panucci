@@ -475,12 +475,8 @@ class GTK_Main(dbus.service.Object):
             self.volume.set_level( max( 0, self.volume.get_level() - 10 ))
         elif event.keyval == gtk.keysyms.Left: # seek back
             self.rewind_callback(self.rewind_button)
-        elif event.keyval == gtk.keysyms.Down: # skip back
-            self.rewind_callback(self.rrewind_button)
         elif event.keyval == gtk.keysyms.Right: # seek forward
             self.forward_callback(self.forward_button)
-        elif event.keyval == gtk.keysyms.Up: # skip forward
-            self.forward_callback(self.fforward_button)
         elif event.keyval == gtk.keysyms.Return: # play/pause
             self.start_stop(self.button)
 
