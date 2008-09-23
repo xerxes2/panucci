@@ -368,6 +368,13 @@ class GTK_Main(dbus.service.Object):
             self.volume.connect('mute_toggled', self.mute_toggled)
             window.connect('key-press-event', self.on_key_press)
             main_hbox.pack_start(self.volume, False, True)
+            # Disable focus for all widgets, so we can use the cursor
+            # keys + enter to directly control our media player, which
+            # is handled by "key-press-event"
+            for w in (self.rrewind_button, self.rewind_button, self.button,
+                    self.forward_button, self.fforward_button, self.bookmarks_button,
+                    self.volume):
+                w.unset_flags(gtk.CAN_FOCUS)
         else:
             self.volume = gtk.VolumeButton()
             self.volume.connect('value-changed', self.volume_changed)
@@ -442,6 +449,16 @@ class GTK_Main(dbus.service.Object):
             self.volume.set_level( min( 100, self.volume.get_level() + 10 ))
         elif event.keyval == gtk.keysyms.F8: #minus
             self.volume.set_level( max( 0, self.volume.get_level() - 10 ))
+        elif event.keyval == gtk.keysyms.Left: # seek back
+            self.rewind_callback(self.rewind_button)
+        elif event.keyval == gtk.keysyms.Down: # skip back
+            self.rewind_callback(self.rrewind_button)
+        elif event.keyval == gtk.keysyms.Right: # seek forward
+            self.forward_callback(self.forward_button)
+        elif event.keyval == gtk.keysyms.Up: # skip forward
+            self.forward_callback(self.fforward_button)
+        elif event.keyval == gtk.keysyms.Return: # play/pause
+            self.start_stop(self.button)
 
     def volume_changed(self, widget, new_value=8.0):
         self.player.set_property('volume', float(new_value))
@@ -641,6 +658,9 @@ class GTK_Main(dbus.service.Object):
         pad.link(adec_pad)
     
     def rewind_callback(self, w):
+        if not w.get_property('sensitive'):
+            return
+
         global skip_time
         global seek_time
         if w == self.rewind_button:
@@ -656,6 +676,9 @@ class GTK_Main(dbus.service.Object):
         BookmarksWindow(self)
 
     def forward_callback(self, w):
+        if not w.get_property('sensitive'):
+            return
+
         global skip_time
         global seek_time
         if w == self.forward_button:
