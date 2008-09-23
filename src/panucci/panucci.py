@@ -61,7 +61,7 @@ gtk.about_dialog_set_url_hook(open_link, None)
 
 
 def find_image(filename):
-    locations = ['./icons/', '../icons/', '/usr/share/panucci/']
+    locations = ['./icons/', '../icons/', '/usr/share/panucci/', os.path.dirname(sys.argv[0])+'/../icons/']
 
     for location in locations:
         if os.path.exists(location+filename):

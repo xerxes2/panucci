@@ -7,6 +7,10 @@ import sys
 
 session_bus = dbus.SessionBus()
 
+local_module_dir = os.path.join(os.path.dirname(sys.argv[0]), '..', 'src')
+if os.path.isdir(local_module_dir):
+    sys.path.append(local_module_dir)
+
 if os.path.exists(sys.argv[-1]) and len(sys.argv) > 1:
     filename = sys.argv[-1]
 else:
