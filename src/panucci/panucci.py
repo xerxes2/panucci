@@ -252,7 +252,11 @@ class GTK_Main(dbus.service.Object):
 
     def gconf_key_changed(self, client, connection_id, entry, args):
         print 'gconf key %s changed: %s' % (entry.get_key(), entry.get_value())
-    
+   
+    def handle_headset_button(self, event, button):
+        if event == 'ButtonPressed' and button == 'phone':
+            self.start_stop(self.button)
+
     def __init__(self, bus_name, filename=None):
         dbus.service.Object.__init__(self, object_path="/player",
             bus_name=bus_name)
@@ -264,6 +268,13 @@ class GTK_Main(dbus.service.Object):
         self.gconf_client = gconf.client_get_default()
         self.gconf_client.add_dir('/apps/panucci', gconf.CLIENT_PRELOAD_NONE)
         self.gconf_client.notify_add('/apps/panucci', self.gconf_key_changed)
+
+        if running_on_tablet:
+            # Enable play/pause with headset button
+            system_bus = dbus.SystemBus()
+            headset_button = system_bus.get_object('org.freedesktop.Hal', '/org/freedesktop/Hal/devices/platform_retu_headset_logicaldev_input')
+            headset_device = dbus.Interface(headset_button, 'org.freedesktop.Hal.Device')
+            headset_device.connect_to_signal('Condition', self.handle_headset_button)
 
         self.want_to_seek = False
         self.player = gst.element_factory_make('playbin', 'player')
