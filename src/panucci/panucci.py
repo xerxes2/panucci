@@ -780,7 +780,7 @@ class GTK_Main(dbus.service.Object):
                 pbl.close()
 
         if not self.has_coverart and self.filename is not None:
-            self.set_coverart_from_dir(os.path.dirname(self.filename))
+            self.has_coverart = self.set_coverart_from_dir(os.path.dirname(self.filename))
 
         tag_vals = dict([ (i,'') for i in tags.keys()])
         for tag,value in tag_message.iteritems():
