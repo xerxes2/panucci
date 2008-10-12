@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Panucci
+GenericName=Resuming audiobook and podcast player
+Comment=Resume audiobooks or podcasts from last point, or set bookmarks
+Exec=panucci
+Icon=panucci
+Terminal=false
+Type=Application
+Categories=Audio;GTK;
+StartupWMClass=panucci

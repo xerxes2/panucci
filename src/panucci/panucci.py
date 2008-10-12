@@ -37,9 +37,8 @@ _ = lambda s: s
 
 try:
     import hildon
-    has_hildon = True
 except:
-    has_hildon = False
+    pass
 
 running_on_tablet = os.path.exists('/etc/osso_software_version')
 
@@ -243,7 +242,7 @@ class GTK_Main(dbus.service.Object):
 
     def destroy(self, widget):
         self.save_position()
-        if has_hildon:
+        if running_on_tablet:
             vol = self.volume.get_level()
         else:
             vol = int(self.volume.get_value()*100)
@@ -281,7 +280,7 @@ class GTK_Main(dbus.service.Object):
 
         vol = pm.get_position('volume')
         if vol == 0: vol = 20
-        if has_hildon:
+        if running_on_tablet:
             self.volume.set_level(vol)
         else:
             self.volume.set_value(vol/100.0)
@@ -297,7 +296,7 @@ class GTK_Main(dbus.service.Object):
     def make_main_window(self):
         import pango
         		
-        if has_hildon:
+        if running_on_tablet:
             self.app = hildon.Program()
             window = hildon.Window()
             self.app.add_window(window)
@@ -311,7 +310,7 @@ class GTK_Main(dbus.service.Object):
         self.main_window = window
         
                 
-        if has_hildon:
+        if running_on_tablet:
             window.set_menu(self.create_menu())
         else:
             menu_vbox = gtk.VBox()
@@ -326,7 +325,7 @@ class GTK_Main(dbus.service.Object):
 
         main_hbox = gtk.HBox()
         main_hbox.set_spacing(6)
-        if has_hildon:
+        if running_on_tablet:
             window.add(main_hbox)
         else:
             menu_vbox.pack_end(main_hbox, True, True, 6)
@@ -391,7 +390,7 @@ class GTK_Main(dbus.service.Object):
         buttonbox.add(self.bookmarks_button)
         self.set_controls_sensitivity(False)
 
-        if has_hildon:
+        if running_on_tablet:
             self.volume = hildon.VVolumebar()
             self.volume.set_property('can-focus', False)
             self.volume.set_property('has-mute', False)
@@ -527,7 +526,7 @@ class GTK_Main(dbus.service.Object):
         if self.playing:
             self.want_to_seek = True
             if self.filename is None or not os.path.exists(self.filename):
-                if has_hildon:
+                if running_on_tablet:
                     dlg = hildon.FileChooserDialog(self.main_window,
                         gtk.FILE_CHOOSER_ACTION_OPEN)
                 else:
