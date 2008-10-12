@@ -238,6 +238,7 @@ class GTK_Main(dbus.service.Object):
             bus_name=bus_name)
 
         self.filename = filename
+        self.volume_timer_id = None
         self.make_main_window()
         self.has_coverart = False
 
@@ -364,32 +365,40 @@ class GTK_Main(dbus.service.Object):
         buttonbox.add(self.bookmarks_button)
         self.set_controls_sensitivity(False)
 
-        if running_on_tablet:
-            self.volume = hildon.VVolumebar()
-            self.volume.set_property('can-focus', False)
-            self.volume.set_property('has-mute', False)
-            self.volume.connect('level_changed', self.volume_changed_hildon)
-            self.volume.connect('mute_toggled', self.mute_toggled)
-            window.connect('key-press-event', self.on_key_press)
-            main_hbox.pack_start(self.volume, False, True)
-            # Disable focus for all widgets, so we can use the cursor
-            # keys + enter to directly control our media player, which
-            # is handled by "key-press-event"
-            for w in (self.rrewind_button, self.rewind_button, self.button,
-                    self.forward_button, self.fforward_button, self.bookmarks_button,
-                    self.volume):
-                w.unset_flags(gtk.CAN_FOCUS)
-        else:
-            self.volume = gtk.VolumeButton()
-            self.volume.connect('value-changed', self.volume_changed_gtk)
-            buttonbox.add(self.volume)
-
         self.progress = gtk.ProgressBar()
         main_vbox.pack_start(self.progress, False, False)
         main_vbox.pack_start(buttonbox, False, False)
         self.progress.set_text("00:00 / 00:00")
 
         window.show_all()
+
+        if running_on_tablet:
+            self.volume = hildon.VVolumebar()
+            self.volume.set_property('can-focus', False)
+            self.volume.connect('level_changed', self.volume_changed_hildon)
+            self.volume.connect('mute_toggled', self.mute_toggled)
+            window.connect('key-press-event', self.on_key_press)
+            main_hbox.pack_start(self.volume, False, True)
+
+            # Add a button to pop out the volume bar
+            self.volume_button = gtk.Button('')
+            image(self.volume_button, 'media-speaker.png')
+            self.volume_button.connect("clicked", self.toggle_volumebar)
+            buttonbox.add(self.volume_button)
+            self.volume_button.show()
+
+            # Disable focus for all widgets, so we can use the cursor
+            # keys + enter to directly control our media player, which
+            # is handled by "key-press-event"
+            for w in (self.rrewind_button, self.rewind_button, self.button,
+                    self.forward_button, self.fforward_button, self.bookmarks_button,
+                    self.volume_button):
+                w.unset_flags(gtk.CAN_FOCUS)
+        else:
+            self.volume = gtk.VolumeButton()
+            self.volume.connect('value-changed', self.volume_changed_gtk)
+            buttonbox.add(self.volume)
+            self.volume.show()
 
     def create_menu(self):
         menu = gtk.Menu()
@@ -526,10 +535,28 @@ class GTK_Main(dbus.service.Object):
         else:
             self.volume.set_value(vol)
 
+    def __set_volume_hide_timer(self, timeout):
+        self.volume.show()
+        if self.volume_timer_id is not None:
+            gobject.source_remove(self.volume_timer_id)
+        self.volume_timer_id = gobject.timeout_add(1000*timeout, self.__volume_hide_callback)
+
+    def __volume_hide_callback(self):
+        self.volume_timer_id = None
+        self.volume.hide()
+        return False
+
+    def toggle_volumebar(self, widget=None):
+        if self.volume_timer_id is None:
+            self.__set_volume_hide_timer(5)
+        else:
+           self.__volume_hide_callback()
+
     def volume_changed_gtk(self, widget, new_value=0.5):
         self.set_volume_level( new_value )
 
     def volume_changed_hildon(self, widget):
+        self.__set_volume_hide_timer( 4 )
         self.set_volume_level( widget.get_level()/100.0 )
 
     def mute_toggled(self, widget):
