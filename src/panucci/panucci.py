@@ -405,8 +405,7 @@ class GTK_Main(dbus.service.Object):
         menu_donate_sub = gtk.Menu()
 
         menu_open = gtk.ImageMenuItem(gtk.STOCK_OPEN)
-        #haven't quite worked this part out yet - matt
-        #menu_open.connect("activate", self.file_open, self.main_window)
+        menu_open.connect("activate", self.open_file_callback)
         menu_bookmarks = gtk.MenuItem(_('Bookmarks'))
         menu_bookmarks.connect('activate', self.bookmarks_callback)
 
@@ -573,6 +572,7 @@ class GTK_Main(dbus.service.Object):
     def play_file(self, filename):
         if self.playing:
             self.start_stop(widget=None)
+            self.stop_playing()
 
         if self.player is not None:
             self.player.set_state(gst.STATE_NULL)
@@ -588,6 +588,11 @@ class GTK_Main(dbus.service.Object):
         # This is just in case the file contains no tags,
         # at least we can display the filename
         self.set_metadata({'title': pretty_filename})
+
+    def open_file_callback(self, widget=None):
+        filename = self.get_file_from_filechooser()
+        if filename is not None:
+            self.play_file(filename)
 
     @dbus.service.method('org.panucci.interface')
     def stop_playing(self):
@@ -654,11 +659,9 @@ class GTK_Main(dbus.service.Object):
         assert  0 <= value <= 1
         volume_control.set_property('volume', value * float(multiplier))
 
-    def start_stop(self, widget):
+    def start_stop(self, widget=None):
         if self.filename is None or not os.path.exists(self.filename):
-            filename = self.get_file_from_filechooser()
-            if filename is not None:
-                self.play_file(filename)
+            self.open_file_callback()
             return
 
         self.playing = not self.playing
