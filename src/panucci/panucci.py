@@ -241,6 +241,7 @@ class GTK_Main(dbus.service.Object):
         self.volume_timer_id = None
         self.make_main_window()
         self.has_coverart = False
+        self.has_id3_coverart = False
 
         self.gconf_client = gconf.client_get_default()
         self.gconf_client.add_dir('/apps/panucci', gconf.CLIENT_PRELOAD_NONE)
@@ -364,11 +365,27 @@ class GTK_Main(dbus.service.Object):
         self.bookmarks_button.connect("clicked", self.bookmarks_callback)
         buttonbox.add(self.bookmarks_button)
         self.set_controls_sensitivity(False)
-
-        self.progress = gtk.ProgressBar()
-        main_vbox.pack_start(self.progress, False, False)
         main_vbox.pack_start(buttonbox, False, False)
-        self.progress.set_text("00:00 / 00:00")
+
+        # set up the progress slider
+        progress_hbox = gtk.HBox()
+        self.progress_time_elapsed = gtk.Label('00:00')
+        progress_hbox.pack_start(self.progress_time_elapsed, False, False)
+        if running_on_tablet:
+            self.progress = hildon.Seekbar()
+            progress_hbox.pack_start(self.progress, True, True)
+            self.progress.connect('value-changed', self.on_progressbar_changed)
+            self.progress.unset_flags(gtk.CAN_FOCUS)
+        else:
+            self.progress = gtk.Adjustment()
+            progressbar = gtk.HScale(self.progress)
+            progressbar.set_draw_value(False)
+            progress_hbox.pack_start(progressbar, True, True)
+            progressbar.connect('value-changed', self.on_progressbar_changed)
+            progressbar.unset_flags(gtk.CAN_FOCUS)
+        self.progress_total_time = gtk.Label('00:00')
+        progress_hbox.pack_start(self.progress_total_time, False, False)
+        main_vbox.pack_start(progress_hbox, False, False)
 
         window.show_all()
 
@@ -572,10 +589,8 @@ class GTK_Main(dbus.service.Object):
     def play_file(self, filename):
         if self.playing:
             self.start_stop(widget=None)
-            self.stop_playing()
 
-        if self.player is not None:
-            self.player.set_state(gst.STATE_NULL)
+        self.stop_playing()
 
         self.filename = os.path.abspath(filename)
         pretty_filename = os.path.basename(self.filename).rsplit('.',1)[0].replace('_', ' ')
@@ -594,7 +609,7 @@ class GTK_Main(dbus.service.Object):
         # For some odd reason the GUI locks up if we don't stop first
         if running_on_tablet:
             self.stop_playing()
-            time.sleep(1)
+            time.sleep(2)
         filename = self.get_file_from_filechooser()
         if filename is not None:
             self.play_file(filename)
@@ -608,8 +623,9 @@ class GTK_Main(dbus.service.Object):
         self.play_thread_id = None
         self.filename = None
         self.playing = False
-        self.progress.set_fraction(0)
-        self.progress.set_text("00:00 / 00:00")
+        self.has_coverart = False
+        self.has_id3_coverart = False
+        self.reset_progress()
         self.set_controls_sensitivity(False)
         image(self.button, gtk.STOCK_OPEN, True)
 
@@ -666,6 +682,42 @@ class GTK_Main(dbus.service.Object):
         assert  0 <= value <= 1
         volume_control.set_property('volume', value * float(multiplier))
 
+    def reset_progress(self):
+        self.progress_time_elapsed.set_text('00:00')
+        self.progress_total_time.set_text('00:00')
+        if running_on_tablet:
+            self.progress.set_total_time( 0 )
+            self.progress.set_position( 0 )
+        else:
+            self.progress.set_all( 0, 0, 0 )
+
+    def set_progress_callback(self, time_elapsed, total_time):
+        """ times must be in nanoseconds """
+        self.progress_time_elapsed.set_text(self.convert_ns(time_elapsed))
+        self.progress_total_time.set_text(self.convert_ns(total_time))
+        time_elapsed /= 10**9
+        total_time /= 10**9
+        if running_on_tablet:
+            self.progress.set_total_time( total_time )
+            self.progress.set_position( time_elapsed )
+        else:
+            self.progress.set_all( time_elapsed, 0, total_time )
+
+    def get_progress_value(self):
+        if running_on_tablet:
+            return self.progress.get_position() * 10**9
+        else:
+            return self.progress.get_value() * 10**9
+
+    def on_progressbar_changed(self, widget, scroll=None, value=None):
+        progress_value = self.get_progress_value()
+        player_value = self.player_get_position()[0]
+        # This gets called everytime the progressbar changes, very annoying...
+        # So, we only seek if the time delta is greater than 5 seconds
+        if abs(progress_value - player_value) > 5*10**9:
+            log('Seeking...')
+            self.do_seek(progress_value)
+
     def start_stop(self, widget=None):
         if self.filename is None or not os.path.exists(self.filename):
             self.open_file_callback()
@@ -690,37 +742,30 @@ class GTK_Main(dbus.service.Object):
             self.player.seek_simple(self.time_format, gst.SEEK_FLAG_FLUSH, seek_ns)
         self.want_to_seek = False
 
+    def player_get_position(self):
+        try:
+            pos_int = self.player.query_position(self.time_format, None)[0]
+            dur_int = self.player.query_duration(self.time_format, None)[0]
+        except:
+            pos_int = dur_int = 0
+        return pos_int, dur_int
+
     def play_thread(self):
         play_thread_id = self.play_thread_id
         gtk.gdk.threads_enter()
-        self.progress.set_text("00:00 / 00:00")
+        self.reset_progress()
         gtk.gdk.threads_leave()
-
-        while play_thread_id == self.play_thread_id:
-            try:
-                time.sleep(0.2)
-                dur_int = self.player.query_duration(self.time_format, None)[0]
-                dur_str = self.convert_ns(dur_int)
-                gtk.gdk.threads_enter()
-                self.progress.set_text("00:00 / " + dur_str)
-                self.progress.set_fraction(0)
-                gtk.gdk.threads_leave()
-                break
-            except:
-                pass
 
         time.sleep(0.2)
         while play_thread_id == self.play_thread_id:
-            pos_int = self.player.query_position(self.time_format, None)[0]
-            pos_str = self.convert_ns(pos_int)
-            if play_thread_id == self.play_thread_id and pos_str != '00:00':
+            try:
+                pos_int, dur_int = self.player_get_position()
                 gtk.gdk.threads_enter()
-                # dividing by zero is bad ;_;
-                self.progress.set_fraction(float(pos_int)/max(float(dur_int+1), 1.0))
-                self.progress.set_text('%s / %s' % ( pos_str, 
-                    self.convert_ns(dur_int)))
+                self.set_progress_callback( pos_int, dur_int )
                 gtk.gdk.threads_leave()
-            time.sleep(1)
+            except:
+                pass
+            time.sleep(0.5)
 
     def on_message(self, bus, message):
         t = message.type
@@ -772,7 +817,7 @@ class GTK_Main(dbus.service.Object):
         tags = { 'title': self.title_label, 'artist': self.artist_label,
                  'album': self.album_label }
 
-        if tag_message.has_key('image') and not self.has_coverart:
+        if tag_message.has_key('image') and not self.has_id3_coverart:
             value = tag_message['image']
             if isinstance( value, list ):
                 value = value[0]
@@ -784,6 +829,7 @@ class GTK_Main(dbus.service.Object):
                 pixbuf = pbl.get_pixbuf().scale_simple(
                     coverart_size[0], coverart_size[1], gtk.gdk.INTERP_BILINEAR )
                 self.set_coverart(pixbuf)
+                self.has_id3_coverart = True
             except:
                 import traceback
                 traceback.print_exc(file=sys.stdout)
@@ -829,7 +875,7 @@ class GTK_Main(dbus.service.Object):
         else:
             seconds = skip_time
         self.set_controls_sensitivity(False)
-        pos_int = self.player.query_position(self.time_format, None)[0]
+        pos_int, dur_int = self.player_get_position()
         seek_ns = max(0, pos_int - (seconds * 1000000000L))
         self.player.seek_simple(self.time_format, gst.SEEK_FLAG_FLUSH, seek_ns)
 
@@ -847,7 +893,7 @@ class GTK_Main(dbus.service.Object):
         else:
             seconds = skip_time
         self.set_controls_sensitivity(False)
-        pos_int = self.player.query_position(self.time_format, None)[0]
+        pos_int, dur_int = self.player_get_position()
         seek_ns = pos_int + (seconds * 1000000000L)
         self.player.seek_simple(self.time_format, gst.SEEK_FLAG_FLUSH, seek_ns)
 
