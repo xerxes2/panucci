@@ -590,9 +590,16 @@ class GTK_Main(dbus.service.Object):
         self.set_metadata({'title': pretty_filename})
 
     def open_file_callback(self, widget=None):
+        old_filename = self.filename
+        # For some odd reason the GUI locks up if we don't stop first
+        if running_on_tablet:
+            self.stop_playing()
+            time.sleep(1)
         filename = self.get_file_from_filechooser()
         if filename is not None:
             self.play_file(filename)
+        elif running_on_tablet:
+            self.play_file(old_filename)
 
     @dbus.service.method('org.panucci.interface')
     def stop_playing(self):
