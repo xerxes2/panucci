@@ -1,0 +1,9 @@
+Some ideas/TODOs:
+~~~~~~~~~~~~~~~~~
+
+- Fullscreen support
+
+- (Option:) Auto-unmute when headphone plugged in;
+            mute when headphone unplugged, but only
+            when it has been muted before (tricky?)
+
