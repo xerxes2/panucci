@@ -237,15 +237,16 @@ class GTK_Main(dbus.service.Object):
         dbus.service.Object.__init__(self, object_path="/player",
             bus_name=bus_name)
 
+        self.gconf_client = gconf.client_get_default()
+        self.gconf_client.add_dir('/apps/panucci', gconf.CLIENT_PRELOAD_NONE)
+        self.gconf_client.notify_add('/apps/panucci', self.gconf_key_changed)
+
+        self.lock_progress = self.gconf_client.get_bool('/apps/panucci/progress_locked')
         self.filename = filename
         self.volume_timer_id = None
         self.make_main_window()
         self.has_coverart = False
         self.has_id3_coverart = False
-
-        self.gconf_client = gconf.client_get_default()
-        self.gconf_client.add_dir('/apps/panucci', gconf.CLIENT_PRELOAD_NONE)
-        self.gconf_client.notify_add('/apps/panucci', self.gconf_key_changed)
 
         if running_on_tablet:
             # Enable play/pause with headset button
@@ -418,44 +419,64 @@ class GTK_Main(dbus.service.Object):
             self.volume.show()
 
     def create_menu(self):
+        # the main menu
         menu = gtk.Menu()
-        menu_donate_sub = gtk.Menu()
 
         menu_open = gtk.ImageMenuItem(gtk.STOCK_OPEN)
         menu_open.connect("activate", self.open_file_callback)
+        menu.append(menu_open)
+
+        menu.append(gtk.SeparatorMenuItem())
+
         menu_bookmarks = gtk.MenuItem(_('Bookmarks'))
         menu_bookmarks.connect('activate', self.bookmarks_callback)
+        menu.append(menu_bookmarks)
 
+        
+        # the settings sub-menu
+        menu_settings = gtk.MenuItem(_('Settings'))
+        menu.append(menu_settings)
+
+        menu_settings_sub = gtk.Menu()
+        menu_settings.set_submenu(menu_settings_sub)
+
+        menu_settings_lock_progress = gtk.CheckMenuItem(_('Lock Progress Bar'))
+        menu_settings_lock_progress.connect('toggled', self.on_toggle_lock_progress)
+        menu_settings_lock_progress.set_active(self.lock_progress)
+        menu_settings_sub.append(menu_settings_lock_progress)
+
+        menu.append(gtk.SeparatorMenuItem())
+
+        # the donate sub-menu
         menu_donate = gtk.MenuItem(_('Donate'))
+        menu.append(menu_donate)
+
+        menu_donate_sub = gtk.Menu()
+        menu_donate.set_submenu(menu_donate_sub)
 
         menu_donate_device = gtk.MenuItem(_('Developer device'))
         menu_donate_device.connect("activate", lambda w: webbrowser.open_new(donate_device_url))
+        menu_donate_sub.append(menu_donate_device)
 
         menu_donate_wishlist = gtk.MenuItem(_('Amazon Wishlist'))
         menu_donate_wishlist.connect("activate", lambda w: webbrowser.open_new(donate_wishlist_url))
+        menu_donate_sub.append(menu_donate_wishlist)
 
         menu_about = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
         menu_about.connect("activate", self.show_about, self.main_window)
-
-        menu_quit = gtk.ImageMenuItem(gtk.STOCK_QUIT)
-        menu_quit.connect("activate", self.destroy)
-
-        menu.append(menu_open)
-        menu.append(gtk.SeparatorMenuItem())
-        menu.append(menu_bookmarks)
-        menu.append(gtk.SeparatorMenuItem())
-
-        menu.append(menu_donate)
-        menu_donate_sub.append(menu_donate_device)
-        menu_donate_sub.append(menu_donate_wishlist)
-        menu_donate.set_submenu(menu_donate_sub)
-
         menu.append(menu_about)
 
         menu.append(gtk.SeparatorMenuItem())
+
+        menu_quit = gtk.ImageMenuItem(gtk.STOCK_QUIT)
+        menu_quit.connect("activate", self.destroy)
         menu.append(menu_quit)
 
         return menu
+
+    def on_toggle_lock_progress(self, widget):
+        self.gconf_client.set_bool('/apps/panucci/progress_locked', widget.get_active())
+        self.lock_progress = self.gconf_client.get_bool('/apps/panucci/progress_locked')
 
     def show_about(self, w, win):
         dialog = gtk.AboutDialog()
@@ -710,13 +731,14 @@ class GTK_Main(dbus.service.Object):
             return self.progress.get_value() * 10**9
 
     def on_progressbar_changed(self, widget, scroll=None, value=None):
-        progress_value = self.get_progress_value()
-        player_value = self.player_get_position()[0]
-        # This gets called everytime the progressbar changes, very annoying...
-        # So, we only seek if the time delta is greater than 5 seconds
-        if abs(progress_value - player_value) > 5*10**9:
-            log('Seeking...')
-            self.do_seek(progress_value)
+        if not self.lock_progress:
+            progress_value = self.get_progress_value()
+            player_value = self.player_get_position()[0]
+            # This gets called everytime the progressbar changes, very annoying...
+            # So, we only seek if the time delta is greater than 5 seconds
+            if abs(progress_value - player_value) > 5*10**9:
+                log('Seeking...')
+                self.do_seek(progress_value)
 
     def start_stop(self, widget=None):
         if self.filename is None or not os.path.exists(self.filename):
@@ -765,7 +787,7 @@ class GTK_Main(dbus.service.Object):
                 gtk.gdk.threads_leave()
             except:
                 pass
-            time.sleep(0.5)
+            time.sleep(0.9)
 
     def on_message(self, bus, message):
         t = message.type
