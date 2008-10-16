@@ -9,3 +9,6 @@ Some ideas/TODOs:
 
 - support for opening m3u files and queuing the list 
 	For playing audiobooks that are in many small mp3 files. 
+
+- support for Mp3Wrap'd files, it's a handy format for putting many individual
+	mp3 files into one large file without losing id3tags
