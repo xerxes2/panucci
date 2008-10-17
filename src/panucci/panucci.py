@@ -400,9 +400,11 @@ class GTK_Main(dbus.service.Object):
             main_hbox.pack_start(self.volume, False, True)
 
             # Add a button to pop out the volume bar
-            self.volume_button = gtk.Button('')
+            self.volume_button = gtk.ToggleButton('')
             image(self.volume_button, 'media-speaker.png')
-            self.volume_button.connect("clicked", self.toggle_volumebar)
+            self.volume_button.connect('clicked', self.toggle_volumebar)
+            self.volume.connect('show', lambda x: self.volume_button.set_active(True))
+            self.volume.connect('hide', lambda x: self.volume_button.set_active(False))
             buttonbox.add(self.volume_button)
             self.volume_button.show()
 
@@ -573,11 +575,12 @@ class GTK_Main(dbus.service.Object):
         else:
             self.volume.set_value(vol)
 
-    def __set_volume_hide_timer(self, timeout):
-        self.volume.show()
-        if self.volume_timer_id is not None:
-            gobject.source_remove(self.volume_timer_id)
-        self.volume_timer_id = gobject.timeout_add(1000*timeout, self.__volume_hide_callback)
+    def __set_volume_hide_timer(self, timeout, force_show=False):
+        if force_show or self.volume_button.get_active():
+            self.volume.show()
+            if self.volume_timer_id is not None:
+                gobject.source_remove(self.volume_timer_id)
+            self.volume_timer_id = gobject.timeout_add(1000*timeout, self.__volume_hide_callback)
 
     def __volume_hide_callback(self):
         self.volume_timer_id = None
@@ -594,7 +597,7 @@ class GTK_Main(dbus.service.Object):
         self.set_volume_level( new_value )
 
     def volume_changed_hildon(self, widget):
-        self.__set_volume_hide_timer( 4 )
+        self.__set_volume_hide_timer( 4, force_show=True )
         self.set_volume_level( widget.get_level()/100.0 )
 
     def mute_toggled(self, widget):
