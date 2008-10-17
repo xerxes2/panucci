@@ -8,7 +8,6 @@
 
 import sys
 import os
-import thread
 import time
 import cPickle as pickle
 import webbrowser
@@ -243,10 +242,12 @@ class GTK_Main(dbus.service.Object):
 
         self.lock_progress = self.gconf_client.get_bool('/apps/panucci/progress_locked')
         self.filename = filename
+        self.progress_timer_id = None
         self.volume_timer_id = None
         self.make_main_window()
         self.has_coverart = False
         self.has_id3_coverart = False
+        self.is_playing = False
 
         if running_on_tablet:
             # Enable play/pause with headset button
@@ -617,9 +618,10 @@ class GTK_Main(dbus.service.Object):
         pretty_filename = os.path.basename(self.filename).rsplit('.',1)[0].replace('_', ' ')
         self.setup_player(self.filename)
 
-        self.play_thread_id = thread.start_new_thread(self.play_thread, ())
         self.has_coverart = False
+        self.want_to_seek = True
         self.start_playback()
+        self.start_progress_timer()
 
         # This is just in case the file contains no tags,
         # at least we can display the filename
@@ -627,21 +629,15 @@ class GTK_Main(dbus.service.Object):
 
     def open_file_callback(self, widget=None):
         old_filename = self.filename
-        # For some odd reason the GUI locks up if we don't stop first
-        if running_on_tablet:
-            self.stop_playing()
-            time.sleep(2)
         filename = self.get_file_from_filechooser()
         if filename is not None:
             self.play_file(filename)
-        elif running_on_tablet:
-            self.play_file(old_filename)
 
     @dbus.service.method('org.panucci.interface')
     def stop_playing(self):
         self.save_position()
         if self.player is not None: self.player.set_state(gst.STATE_NULL)
-        self.play_thread_id = None
+        self.stop_progress_timer()
         self.filename = None
         self.playing = False
         self.has_coverart = False
@@ -748,11 +744,13 @@ class GTK_Main(dbus.service.Object):
         self.playing = not self.playing
 
         if self.playing:
-            self.want_to_seek = True
+            self.start_progress_timer()
             self.player.set_state(gst.STATE_PLAYING)
+            self.is_playing = True
             image(self.button, 'media-playback-pause.png')
         else:
-            self.want_to_seek = False
+            self.is_playing = False
+            self.stop_progress_timer() # This should save some power
             self.save_position()
             self.player.set_state(gst.STATE_PAUSED)
             image(self.button, 'media-playback-start.png')
@@ -763,6 +761,7 @@ class GTK_Main(dbus.service.Object):
         if seek_ns != 0:
             self.player.seek_simple(self.time_format, gst.SEEK_FLAG_FLUSH, seek_ns)
         self.want_to_seek = False
+        self.progress_timer_callback() # update right after seeking (looks nicer)
 
     def player_get_position(self):
         try:
@@ -772,22 +771,25 @@ class GTK_Main(dbus.service.Object):
             pos_int = dur_int = 0
         return pos_int, dur_int
 
-    def play_thread(self):
-        play_thread_id = self.play_thread_id
-        gtk.gdk.threads_enter()
-        self.reset_progress()
-        gtk.gdk.threads_leave()
-
-        time.sleep(0.2)
-        while play_thread_id == self.play_thread_id:
+    def progress_timer_callback( self ):
+        if self.is_playing:
             try:
                 pos_int, dur_int = self.player_get_position()
-                gtk.gdk.threads_enter()
                 self.set_progress_callback( pos_int, dur_int )
-                gtk.gdk.threads_leave()
             except:
                 pass
-            time.sleep(0.9)
+        return True
+
+    def start_progress_timer( self ):
+        if self.progress_timer_id is not None:
+            self.stop_progress_timer()
+
+        self.progress_timer_id = gobject.timeout_add( 1000, self.progress_timer_callback )
+
+    def stop_progress_timer( self ):
+        if self.progress_timer_id is not None:
+            gobject.source_remove( self.progress_timer_id )
+            self.progress_timer_id = None
 
     def on_message(self, bus, message):
         t = message.type
@@ -813,9 +815,7 @@ class GTK_Main(dbus.service.Object):
         elif t == gst.MESSAGE_TAG:
             keys = message.parse_tag().keys()
             tags = dict([ (key, message.structure[key]) for key in keys ])
-            gtk.gdk.threads_enter()
             self.set_metadata( tags )
-            gtk.gdk.threads_leave()
 
     def set_coverart( self, pixbuf ):
         self.cover_art.set_from_pixbuf(pixbuf)
@@ -948,7 +948,6 @@ def run(filename=None):
     session_bus = dbus.SessionBus(mainloop=dbus.glib.DBusGMainLoop())
     bus_name = dbus.service.BusName('org.panucci', bus=session_bus)
     GTK_Main(bus_name, filename)
-    gtk.gdk.threads_init()
     gtk.main()
     # save position manager data
     pm.save()
