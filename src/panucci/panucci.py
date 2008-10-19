@@ -333,7 +333,7 @@ class GTK_Main(dbus.service.Object):
         self.album_label.set_ellipsize(pango.ELLIPSIZE_END)
         metadata_vbox.pack_start(self.album_label, False, False)
         self.title_label = gtk.Label('')
-        self.title_label.set_ellipsize(pango.ELLIPSIZE_END)
+        self.title_label.set_line_wrap(True)
         metadata_vbox.pack_start(self.title_label, False, False)
         empty_label = gtk.Label()
         metadata_vbox.pack_start(empty_label, True, True)
@@ -641,6 +641,7 @@ class GTK_Main(dbus.service.Object):
         self.save_position()
         if self.player is not None: self.player.set_state(gst.STATE_NULL)
         self.stop_progress_timer()
+        self.title_label.set_size_request(-1,-1)
         self.filename = None
         self.playing = False
         self.has_coverart = False
@@ -873,17 +874,14 @@ class GTK_Main(dbus.service.Object):
             if tag == 'title':
                 if running_on_tablet:
                     self.main_window.set_title(value)
+                    # oh man this is hacky :(
+                    if self.has_coverart:
+                        tags[tag].set_size_request(420,-1)
+                        if len(value) >= 80: value = value[:80] + '...'
                 else:
                     self.main_window.set_title('Panucci - ' + value)
 
-        for tag_val in [ tag_vals['artist'].lower(), tag_vals['album'].lower() ]:
-            if not tag_vals['title'].strip():
-                break
-            if tag_vals['title'].lower().startswith(tag_val):
-                t = tag_vals['title'][len(tag_val):].lstrip()
-                t = t.lstrip('-').lstrip(':').lstrip()
-                tags['title'].set_markup('<span size="x-large">'+t+'</span>')
-                break
+                tags[tag].set_markup('<b><big>'+value+'</big></b>')
 
     def demuxer_callback(self, demuxer, pad):
         adec_pad = self.audio_decoder.get_pad("sink")
