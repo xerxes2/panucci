@@ -48,8 +48,8 @@ about_website = 'http://thpinfo.com/2008/panucci/'
 donate_wishlist_url = 'http://www.amazon.de/gp/registry/2PD2MYGHE6857'
 donate_device_url = 'http://maemo.gpodder.org/donate.html'
 
-seek_time = 10
-skip_time = 60
+short_seek = 10
+long_seek = 60
 
 coverart_names = [ 'cover', 'cover.jpg', 'cover.png' ]
 coverart_size = [240, 240] if running_on_tablet else [130, 130]
@@ -350,27 +350,27 @@ class GTK_Main(dbus.service.Object):
         buttonbox = gtk.HBox()
         self.rrewind_button = gtk.Button('')
         image(self.rrewind_button, 'media-skip-backward.png')
-        self.rrewind_button.connect("clicked", self.rewind_callback)
+        self.rrewind_button.connect('clicked', self.seekbutton_callback, -1*long_seek)
         buttonbox.add(self.rrewind_button)
         self.rewind_button = gtk.Button('')
         image(self.rewind_button, 'media-seek-backward.png')
-        self.rewind_button.connect("clicked", self.rewind_callback)
+        self.rewind_button.connect('clicked', self.seekbutton_callback, -1*short_seek)
         buttonbox.add(self.rewind_button)
         self.button = gtk.Button('')
         image(self.button, gtk.STOCK_OPEN, True)
-        self.button.connect("clicked", self.start_stop)
+        self.button.connect('clicked', self.start_stop)
         buttonbox.add(self.button)
         self.forward_button = gtk.Button('')
         image(self.forward_button, 'media-seek-forward.png')
-        self.forward_button.connect("clicked", self.forward_callback)
+        self.forward_button.connect('clicked', self.seekbutton_callback, short_seek)
         buttonbox.add(self.forward_button)
         self.fforward_button = gtk.Button('')
         image(self.fforward_button, 'media-skip-forward.png')
-        self.fforward_button.connect("clicked", self.forward_callback)
+        self.fforward_button.connect('clicked', self.seekbutton_callback, long_seek)
         buttonbox.add(self.fforward_button)
         self.bookmarks_button = gtk.Button('')
         image(self.bookmarks_button, 'bookmark-new.png')
-        self.bookmarks_button.connect("clicked", self.bookmarks_callback)
+        self.bookmarks_button.connect('clicked', self.bookmarks_callback)
         buttonbox.add(self.bookmarks_button)
         self.set_controls_sensitivity(False)
         main_vbox.pack_start(buttonbox, False, False)
@@ -701,7 +701,7 @@ class GTK_Main(dbus.service.Object):
         fraction = float(time_elapsed) / float(total_time) if total_time else 0
         self.progress.set_fraction( fraction )
 
-    def on_progressbar_changed(self, widget, event=None):
+    def on_progressbar_changed(self, widget, event):
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 1:
             new_fraction = event.x/float(widget.get_allocation().width)
             new_position = self.player_get_position()[1] * new_fraction
@@ -743,11 +743,10 @@ class GTK_Main(dbus.service.Object):
 
     def progress_timer_callback( self ):
         if self.playing and not self.want_to_seek:
-            try:
-                pos_int, dur_int = self.player_get_position()
+            pos_int, dur_int = self.player_get_position()
+            # This prevents bogus values from being set while seeking
+            if ( pos_int > 10**9 ) and ( dur_int > 10**9 ):
                 self.set_progress_callback( pos_int, dur_int )
-            except:
-                pass
         return True
 
     def start_progress_timer( self ):
@@ -853,38 +852,14 @@ class GTK_Main(dbus.service.Object):
         adec_pad = self.audio_decoder.get_pad("sink")
         pad.link(adec_pad)
 
-    def rewind_callback(self, w):
-        if not w.get_property('sensitive'):
-            return
-
-        global skip_time
-        global seek_time
-        if w == self.rewind_button:
-            seconds = seek_time
-        else:
-            seconds = skip_time
-        self.set_controls_sensitivity(False)
+    def seekbutton_callback( self, widget, seek_amount ):
         pos_int, dur_int = self.player_get_position()
-        seek_ns = max(0, pos_int - (seconds * 1000000000L))
-        self.player.seek_simple(self.time_format, gst.SEEK_FLAG_FLUSH, seek_ns)
+        new_pos = pos_int + seek_amount*10**9
+        new_pos = min( max( 0, new_pos ), dur_int )
+        self.do_seek(new_pos)
 
     def bookmarks_callback(self, w):
         BookmarksWindow(self)
-
-    def forward_callback(self, w):
-        if not w.get_property('sensitive'):
-            return
-
-        global skip_time
-        global seek_time
-        if w == self.forward_button:
-            seconds = seek_time
-        else:
-            seconds = skip_time
-        self.set_controls_sensitivity(False)
-        pos_int, dur_int = self.player_get_position()
-        seek_ns = pos_int + (seconds * 1000000000L)
-        self.player.seek_simple(self.time_format, gst.SEEK_FLAG_FLUSH, seek_ns)
 
     def convert_ns(self, time_int):
         time_int = time_int / 1000000000
