@@ -240,7 +240,6 @@ class GTK_Main(dbus.service.Object):
         self.gconf_client.add_dir('/apps/panucci', gconf.CLIENT_PRELOAD_NONE)
         self.gconf_client.notify_add('/apps/panucci', self.gconf_key_changed)
 
-        self.lock_progress = self.gconf_client.get_bool('/apps/panucci/progress_locked')
         self.filename = filename
         self.progress_timer_id = None
         self.volume_timer_id = None
@@ -343,6 +342,8 @@ class GTK_Main(dbus.service.Object):
         progress_eventbox.set_events(gtk.gdk.BUTTON_PRESS_MASK)
         progress_eventbox.connect('button-press-event', self.on_progressbar_changed)
         self.progress = gtk.ProgressBar()
+        if running_on_tablet: # make the progress bar more "finger-friendly"
+            self.progress.set_size_request( -1, 50 )
         progress_eventbox.add(self.progress)
         main_vbox.pack_start( progress_eventbox, False, False )
 
@@ -430,7 +431,8 @@ class GTK_Main(dbus.service.Object):
         menu_settings.set_submenu(menu_settings_sub)
 
         menu_settings_lock_progress = gtk.CheckMenuItem(_('Lock Progress Bar'))
-        menu_settings_lock_progress.connect('toggled', self.on_toggle_lock_progress)
+        menu_settings_lock_progress.connect('toggled', lambda w: 
+            self.gconf_client.set_bool('/apps/panucci/progress_locked', w.get_active()))
         menu_settings_lock_progress.set_active(self.lock_progress)
         menu_settings_sub.append(menu_settings_lock_progress)
 
@@ -463,9 +465,9 @@ class GTK_Main(dbus.service.Object):
 
         return menu
 
-    def on_toggle_lock_progress(self, widget):
-        self.gconf_client.set_bool('/apps/panucci/progress_locked', widget.get_active())
-        self.lock_progress = self.gconf_client.get_bool('/apps/panucci/progress_locked')
+    @property
+    def lock_progress(self):
+        return self.gconf_client.get_bool('/apps/panucci/progress_locked')
 
     def show_about(self, w, win):
         dialog = gtk.AboutDialog()
@@ -702,7 +704,8 @@ class GTK_Main(dbus.service.Object):
         self.progress.set_fraction( fraction )
 
     def on_progressbar_changed(self, widget, event):
-        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 1:
+        if ( not self.lock_progress and
+                event.type == gtk.gdk.BUTTON_PRESS and event.button == 1 ):
             new_fraction = event.x/float(widget.get_allocation().width)
             new_position = self.player_get_position()[1] * new_fraction
             self.do_seek(new_position)
