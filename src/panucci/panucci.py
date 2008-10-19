@@ -247,7 +247,7 @@ class GTK_Main(dbus.service.Object):
         self.make_main_window()
         self.has_coverart = False
         self.has_id3_coverart = False
-        self.is_playing = False
+        self.playing = False
 
         if running_on_tablet:
             # Enable play/pause with headset button
@@ -339,6 +339,13 @@ class GTK_Main(dbus.service.Object):
         metadata_vbox.pack_start(empty_label, True, True)
         metadata_hbox.pack_start( metadata_vbox, True, True )
 
+        progress_eventbox = gtk.EventBox()
+        progress_eventbox.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+        progress_eventbox.connect('button-press-event', self.on_progressbar_changed)
+        self.progress = gtk.ProgressBar()
+        progress_eventbox.add(self.progress)
+        main_vbox.pack_start( progress_eventbox, False, False )
+
         # make the button box
         buttonbox = gtk.HBox()
         self.rrewind_button = gtk.Button('')
@@ -349,7 +356,6 @@ class GTK_Main(dbus.service.Object):
         image(self.rewind_button, 'media-seek-backward.png')
         self.rewind_button.connect("clicked", self.rewind_callback)
         buttonbox.add(self.rewind_button)
-        self.playing = False
         self.button = gtk.Button('')
         image(self.button, gtk.STOCK_OPEN, True)
         self.button.connect("clicked", self.start_stop)
@@ -368,26 +374,6 @@ class GTK_Main(dbus.service.Object):
         buttonbox.add(self.bookmarks_button)
         self.set_controls_sensitivity(False)
         main_vbox.pack_start(buttonbox, False, False)
-
-        # set up the progress slider
-        progress_hbox = gtk.HBox()
-        self.progress_time_elapsed = gtk.Label('00:00')
-        progress_hbox.pack_start(self.progress_time_elapsed, False, False)
-        if running_on_tablet:
-            self.progress = hildon.Seekbar()
-            progress_hbox.pack_start(self.progress, True, True)
-            self.progress.connect('value-changed', self.on_progressbar_changed)
-            self.progress.unset_flags(gtk.CAN_FOCUS)
-        else:
-            self.progress = gtk.Adjustment()
-            progressbar = gtk.HScale(self.progress)
-            progressbar.set_draw_value(False)
-            progress_hbox.pack_start(progressbar, True, True)
-            progressbar.connect('value-changed', self.on_progressbar_changed)
-            progressbar.unset_flags(gtk.CAN_FOCUS)
-        self.progress_total_time = gtk.Label('00:00')
-        progress_hbox.pack_start(self.progress_total_time, False, False)
-        main_vbox.pack_start(progress_hbox, False, False)
 
         window.show_all()
 
@@ -413,7 +399,7 @@ class GTK_Main(dbus.service.Object):
             # is handled by "key-press-event"
             for w in (self.rrewind_button, self.rewind_button, self.button,
                     self.forward_button, self.fforward_button, self.bookmarks_button,
-                    self.volume_button):
+                    self.volume_button, self.progress):
                 w.unset_flags(gtk.CAN_FOCUS)
         else:
             self.volume = gtk.VolumeButton()
@@ -704,41 +690,22 @@ class GTK_Main(dbus.service.Object):
         volume_control.set_property('volume', value * float(multiplier))
 
     def reset_progress(self):
-        self.progress_time_elapsed.set_text('00:00')
-        self.progress_total_time.set_text('00:00')
-        if running_on_tablet:
-            self.progress.set_total_time( 0 )
-            self.progress.set_position( 0 )
-        else:
-            self.progress.set_all( 0, 0, 0 )
+        self.progress.set_fraction(0)
+        self.set_progress_callback(0,0)
 
     def set_progress_callback(self, time_elapsed, total_time):
         """ times must be in nanoseconds """
-        self.progress_time_elapsed.set_text(self.convert_ns(time_elapsed))
-        self.progress_total_time.set_text(self.convert_ns(total_time))
-        time_elapsed /= 10**9
-        total_time /= 10**9
-        if running_on_tablet:
-            self.progress.set_total_time( total_time )
-            self.progress.set_position( time_elapsed )
-        else:
-            self.progress.set_all( time_elapsed, 0, total_time )
+        time_string = "%s / %s" % ( self.convert_ns(time_elapsed),
+            self.convert_ns(total_time) )
+        self.progress.set_text( time_string )
+        fraction = float(time_elapsed) / float(total_time) if total_time else 0
+        self.progress.set_fraction( fraction )
 
-    def get_progress_value(self):
-        if running_on_tablet:
-            return self.progress.get_position() * 10**9
-        else:
-            return self.progress.get_value() * 10**9
-
-    def on_progressbar_changed(self, widget, scroll=None, value=None):
-        if not self.lock_progress:
-            progress_value = self.get_progress_value()
-            player_value = self.player_get_position()[0]
-            # This gets called everytime the progressbar changes, very annoying...
-            # So, we only seek if the time delta is greater than 5 seconds
-            if abs(progress_value - player_value) > 5*10**9:
-                log('Seeking...')
-                self.do_seek(progress_value)
+    def on_progressbar_changed(self, widget, event=None):
+        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 1:
+            new_fraction = event.x/float(widget.get_allocation().width)
+            new_position = self.player_get_position()[1] * new_fraction
+            self.do_seek(new_position)
 
     def start_stop(self, widget=None):
         if self.filename is None or not os.path.exists(self.filename):
@@ -750,24 +717,23 @@ class GTK_Main(dbus.service.Object):
         if self.playing:
             self.start_progress_timer()
             self.player.set_state(gst.STATE_PLAYING)
-            self.is_playing = True
             image(self.button, 'media-playback-pause.png')
         else:
-            self.is_playing = False
             self.stop_progress_timer() # This should save some power
             self.save_position()
             self.player.set_state(gst.STATE_PAUSED)
             image(self.button, 'media-playback-start.png')
 
     def do_seek(self, seek_ns=None):
+        self.want_to_seek = True
         if seek_ns is None:
             seek_ns = pm.get_position(self.filename)
         if seek_ns != 0:
             self.player.seek_simple(self.time_format, gst.SEEK_FLAG_FLUSH, seek_ns)
         self.want_to_seek = False
-        self.progress_timer_callback() # update right after seeking (looks nicer)
 
     def player_get_position(self):
+        """ returns [ current position, total duration ] """
         try:
             pos_int = self.player.query_position(self.time_format, None)[0]
             dur_int = self.player.query_duration(self.time_format, None)[0]
@@ -776,7 +742,7 @@ class GTK_Main(dbus.service.Object):
         return pos_int, dur_int
 
     def progress_timer_callback( self ):
-        if self.is_playing:
+        if self.playing and not self.want_to_seek:
             try:
                 pos_int, dur_int = self.player_get_position()
                 self.set_progress_callback( pos_int, dur_int )
