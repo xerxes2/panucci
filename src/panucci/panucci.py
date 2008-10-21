@@ -639,9 +639,9 @@ class GTK_Main(dbus.service.Object):
 
     def start_playback(self):
         self.set_controls_sensitivity(True)
-        self.title_label.hide()
-        self.artist_label.hide()
-        self.album_label.hide()
+        for widget in [ self.title_label, self.artist_label, self.album_label ]:
+            widget.set_text('')
+            widget.hide()
         self.cover_art.hide()
         self.start_stop(widget=None)
 
@@ -832,7 +832,7 @@ class GTK_Main(dbus.service.Object):
 
         tag_vals = dict([ (i,'') for i in tags.keys()])
         for tag,value in tag_message.iteritems():
-            if tags.has_key(tag):
+            if tags.has_key(tag) and value.strip():
                 tags[tag].set_markup('<big>'+value+'</big>')
                 tag_vals[tag] = value
                 tags[tag].set_alignment( 0.5*int(not self.has_coverart), 0.5)
