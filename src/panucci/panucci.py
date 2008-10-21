@@ -481,7 +481,7 @@ class GTK_Main(dbus.service.Object):
 
     def save_position(self):
         try:
-            (pos, format) = self.player.query_position(self.time_format, None)
+            (pos, dur) = self.player_get_position()
             pm.set_position(self.filename, pos)
         except:
             pass
@@ -489,7 +489,7 @@ class GTK_Main(dbus.service.Object):
     def get_position(self, pos=None):
         if pos is None:
             try:
-                pos = self.player.query_position(self.time_format, None)[0]
+                (pos, dur) = self.player_get_position()
             except:
                 pos = 0
         text = self.convert_ns(pos)
@@ -600,9 +600,6 @@ class GTK_Main(dbus.service.Object):
 
     @dbus.service.method('org.panucci.interface', in_signature='s')
     def play_file(self, filename):
-        if self.playing:
-            self.start_stop(widget=None)
-
         self.stop_playing()
 
         self.filename = os.path.abspath(filename)
@@ -626,7 +623,9 @@ class GTK_Main(dbus.service.Object):
 
     @dbus.service.method('org.panucci.interface')
     def stop_playing(self):
-        self.save_position()
+        if self.playing:
+            self.start_stop(widget=None)
+
         if self.player is not None: self.player.set_state(gst.STATE_NULL)
         self.stop_progress_timer()
         self.title_label.set_size_request(-1,-1)
@@ -645,7 +644,6 @@ class GTK_Main(dbus.service.Object):
         self.album_label.hide()
         self.cover_art.hide()
         self.start_stop(widget=None)
-        return False
 
     def setup_player(self, filename):
         if filename.lower().endswith('.ogg') and running_on_tablet:
