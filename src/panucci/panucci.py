@@ -282,6 +282,9 @@ class GTK_Main(dbus.service.Object):
             window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 
         window.set_title('Panucci')
+        self.window_icon = find_image('panucci.png')
+        if self.window_icon is not None:
+            window.set_icon_from_file( self.window_icon )
         window.set_default_size(400, -1)
         window.set_border_width(0)
         window.connect("destroy", self.destroy)
