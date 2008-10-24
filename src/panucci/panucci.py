@@ -228,7 +228,7 @@ class BookmarksWindow(gtk.Window):
         (model, iter) = selection.get_selected()
         if iter is not None:
             pos = model.get_value(iter, 2)
-            self.main.do_seek(pos)
+            self.main.do_seek(from_beginning=pos)
 
 class GTK_Main(dbus.service.Object):
 
@@ -708,8 +708,7 @@ class GTK_Main(dbus.service.Object):
         if ( not self.lock_progress and
                 event.type == gtk.gdk.BUTTON_PRESS and event.button == 1 ):
             new_fraction = event.x/float(widget.get_allocation().width)
-            new_position = self.player_get_position()[1] * new_fraction
-            self.do_seek(new_position)
+            self.do_seek(percent=new_fraction)
 
     def start_stop(self, widget=None):
         if self.filename is None or not os.path.exists(self.filename):
@@ -728,13 +727,38 @@ class GTK_Main(dbus.service.Object):
             self.player.set_state(gst.STATE_PAUSED)
             image(self.button, 'media-playback-start.png')
 
-    def do_seek(self, seek_ns=None):
+    def do_seek(self, from_beginning=None, from_current=None, percent=None ):
+        """ Takes one of the following keyword arguments:
+                from_beginning=n: seek n nanoseconds from the beinging of the file
+                from_current=n: seek n nanoseconds from the current position
+                percent=n: seek n percent from the beginning of the file
+        """
         self.want_to_seek = True
-        if seek_ns is None:
-            seek_ns = pm.get_position(self.filename)
-        if seek_ns != 0:
-            self.player.seek_simple(self.time_format, gst.SEEK_FLAG_FLUSH, seek_ns)
+
+        position, duration = self.player_get_position()
+        # if position and duration are 0 then player_get_position caught an
+        # exception. Therefore self.player isn't ready to be seeing.
+        if not ( position or duration ) or self.player is None:
+            return False
+
+        if from_beginning is not None:
+            assert from_beginning >= 0
+            position = min( from_beginning, duration )
+        elif from_current is not None:
+            position = max( 0, min( position+from_current, duration ))
+        elif percent is not None:
+            assert 0 <= percent <= 1
+            position = int(duration*percent)
+        else:
+            log('No seek parameters specified.')
+            return False
+
+        # Preemptively update the progressbar to make seeking nice and smooth
+        self.set_progress_callback( position, duration )
+        self.player.seek_simple(self.time_format, gst.SEEK_FLAG_FLUSH, position)
         self.want_to_seek = False
+
+        return True
 
     def player_get_position(self):
         """ returns [ current position, total duration ] """
@@ -781,7 +805,8 @@ class GTK_Main(dbus.service.Object):
                 message.structure['new-state'] == gst.STATE_PLAYING ):
 
                 if self.want_to_seek:
-                    self.do_seek()
+                    # This only gets called when the file is first loaded
+                    self.do_seek(from_beginning=pm.get_position(self.filename))
                 else:
                     self.set_controls_sensitivity(True)
 
@@ -857,10 +882,7 @@ class GTK_Main(dbus.service.Object):
         pad.link(adec_pad)
 
     def seekbutton_callback( self, widget, seek_amount ):
-        pos_int, dur_int = self.player_get_position()
-        new_pos = pos_int + seek_amount*10**9
-        new_pos = min( max( 0, new_pos ), dur_int )
-        self.do_seek(new_pos)
+        self.do_seek(from_current=seek_amount*10**9)
 
     def bookmarks_callback(self, w):
         BookmarksWindow(self)
