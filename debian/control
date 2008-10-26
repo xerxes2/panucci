@@ -1,24 +1,21 @@
 Source: panucci
-Maintainer: Ubuntu MOTU Developers <ubuntu-motu@lists.ubuntu.com>
-XSBC-Original-Maintainer: Thomas Perl <thp@perli.net>
+Maintainer: Thomas Perl <thp@perli.net>
 Section: user/other
 Priority: optional
 Standards-Version: 3.7.3
-Build-Depends: debhelper (>= 5.0.37.2), python-dev, python-support (>= 0.3)
+Build-Depends: debhelper (>= 5.0.37.2), python2.5-dev
 XS-Python-Version: >= 2.5
 XB-Python-Version: ${python:Versions}
-Homepage:http://panucci.garage.maemo.org/
+Homepage: http://panucci.garage.maemo.org/
 
 Package: panucci
 Architecture: all
-Depends: ${python:Depends}, python-gtk2, python-gst0.10, python-dbus, python-hildon
-Recommends: 
-Suggests:
-Description: With Panucci, you can play audio books, podcasts and 
-  live concerts. It will automatically resume the playback from the 
-  position where you stopped last time. Bookmarks are also supported. 
-  The interface has elements big enough to be used with your fingers. 
-  And it integrates well with gPodder.
+Depends: ${python:Depends}, python2.5-gtk2, python2.5-gstreamer, python2.5-dbus, python2.5-hildon
+Suggests: gpodder
+Description: Play audio books, podcasts and live concerts with resuming
+  Panucci will automatically resume the playback from the position
+  where you stopped last time. Bookmarks are also supported. The 
+  interface has elements big enough to be used with your fingers. 
 XB-Maemo-Icon-26:
   iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAAAXNSR0IArs4c6QAAAAZiS
   0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB9gKGRc5F8Emid

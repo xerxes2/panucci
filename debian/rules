@@ -12,10 +12,10 @@
 CHANGELOG	= debian/changelog
 DOCS		= #AUTHORS README
 
-PYTHON		= /usr/bin/python
+PYTHON		= /usr/bin/python2.5
 SETUP		= ${PYTHON} setup.py
 
-DEBPACKAGE	= gpodder
+DEBPACKAGE	= panucci
 DESTDIR		= debian/${DEBPACKAGE}
 PREFIX		= usr
 
@@ -37,16 +37,15 @@ clean:
 	rm -f build-stamp configure-stamp
 	${SETUP} clean --all
 	rm -rf build dist
-	dh_clean --exclude 'gui.py.orig'
+	dh_clean
 	make clean
 
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k --exclude 'gui.py.orig' 
+	dh_clean -k
 	dh_installdirs
-#	make generators
-	${SETUP} install --no-compile --root='$(DESTDIR)' --install-lib=$(PREFIX)/share/python-support/$(DEBPACKAGE)
+	${SETUP} install --no-compile -O2 --root='$(DESTDIR)' --prefix='$(PREFIX)'
 
 binary-arch:
 
@@ -59,7 +58,7 @@ binary-indep: build install
 	dh_installman
 	dh_compress
 	dh_fixperms
-	dh_pysupport
+	dh_python
 	dh_installdeb
 	dh_gencontrol
 	dh_md5sums
