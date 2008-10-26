@@ -1,5 +1,5 @@
-panucci (0.1) unstable; urgency=low
+panucci (0.2-1) unstable; urgency=low
 
-  * Initial release
+  * Initial public release
 
- -- Thomas Perl <thp@perli.net>  Sat,  25 Oct 2008 11:17:28 +0200
+ -- Thomas Perl <thp@perli.net>  Sun, 26 Oct 2008 11:28:35 +0100
