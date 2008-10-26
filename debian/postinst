@@ -1,0 +1,9 @@
+#! /bin/sh
+
+if [ -x /usr/bin/gtk-update-icon-cache ]
+then
+  /usr/bin/gtk-update-icon-cache -f /usr/share/icons/hicolor
+fi
+
+#DEBHELPER#
+

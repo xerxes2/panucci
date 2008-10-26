@@ -1,0 +1,6 @@
+?package(panucci):\
+  needs="X11"\
+  section="Apps/Sound"\
+  title="Panucci Audio Player"\
+  command="panucci"\
+  icon=/usr/share/panucci/panucci.png
