@@ -24,7 +24,9 @@ except dbus.exceptions.DBusException:
 
 if remote_object is None:
     from panucci import panucci
-    panucci.run(filename)
+    # This could eventually be made fancy with optparse
+    debug = '--debug' in sys.argv
+    panucci.run(filename=filename, debug=debug)
 else:
     if filename is None:
         remote_object.show_main_window(dbus_interface='org.panucci.interface')

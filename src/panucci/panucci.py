@@ -56,11 +56,13 @@ gconf_dir = '/apps/panucci'
 coverart_names = [ 'cover', 'cover.jpg', 'cover.png' ]
 coverart_size = [240, 240] if running_on_tablet else [130, 130]
 
-
+debug_override = False
 def log( msg ):
     """ A very simple log function (no log output is produced when
         using the python optimization (-O, -OO) options) """
-    if __debug__:
+    global debug_override
+
+    if __debug__ or debug_override:
         print msg
 
 def open_link(d, url, data):
@@ -954,7 +956,10 @@ class GTK_Main(dbus.service.Object):
         return time_str
 
 
-def run(filename=None):
+def run(filename=None, debug=False):
+    global debug_override
+    debug_override = debug
+
     session_bus = dbus.SessionBus(mainloop=dbus.glib.DBusGMainLoop())
     bus_name = dbus.service.BusName('org.panucci', bus=session_bus)
     GTK_Main(bus_name, filename)
@@ -963,6 +968,6 @@ def run(filename=None):
     pm.save()
 
 if __name__ == '__main__':
-    log( 'WARNING: Use the "panucci" executable, to run this program.' )
+    log( 'WARNING: Use the "panucci" executable to run this program.' )
     log( 'Exiting...' )
 
