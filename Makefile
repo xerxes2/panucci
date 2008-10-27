@@ -1,4 +1,5 @@
 PREFIX ?= /usr
+DESTDIR ?= /
 
 all:
 	@echo "Possible make targets:"
@@ -7,10 +8,18 @@ all:
 	@echo "    distclean - remove build files + dist target"
 	@echo "    test - test the application"
 
-install: python-install post-install
+install: python-install post-install install-schemas
 
 python-install:
 	python setup.py install --optimize 2
+
+install-schemas:
+	install data/panucci.schemas $(DESTDIR)/etc/gconf/schemas
+	GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source` \
+		gconftool-2 --makefile-install-rule data/panucci.schemas
+	# This isn't a problem, gconf gets started when it's needed
+	# DON'T WORRY IF THIS FAILS, kay?
+	-killall gconfd-2
 
 clean:
 	rm -rf build src/panucci/*.pyc

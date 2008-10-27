@@ -5,5 +5,9 @@ then
   /usr/bin/gtk-update-icon-cache -f /usr/share/icons/hicolor
 fi
 
+if ps -e | grep gconfd-2 > /dev/null; then
+  killall gconfd-2
+fi
+
 #DEBHELPER#
 

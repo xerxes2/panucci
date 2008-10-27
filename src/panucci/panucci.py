@@ -7,7 +7,7 @@
 # based on http://pygstdocs.berlios.de/pygst-tutorial/seeking.html
 
 import sys
-import os
+import os, os.path
 import time
 import cPickle as pickle
 import webbrowser
@@ -50,6 +50,8 @@ donate_device_url = 'http://maemo.gpodder.org/donate.html'
 
 short_seek = 10
 long_seek = 60
+
+gconf_dir = '/apps/panucci'
 
 coverart_names = [ 'cover', 'cover.jpg', 'cover.png' ]
 coverart_size = [240, 240] if running_on_tablet else [130, 130]
@@ -230,15 +232,61 @@ class BookmarksWindow(gtk.Window):
             pos = model.get_value(iter, 2)
             self.main.do_seek(from_beginning=pos)
 
+class SimpleGConfClient(gconf.Client):
+    """ A simplified wrapper around gconf.Client
+        GConf docs: http://library.gnome.org/devel/gconf/stable/ 
+    """
+
+    __type_mapping = { int: 'int', long: 'float', float: 'float',
+        str: 'string', bool: 'bool', list: 'list', }
+
+    def __init__(self, directory):
+        """ directory is the base directory that we're working in """
+        self.__directory = directory
+        gconf.Client.__init__(self)
+
+        self.add_dir( self.__directory, gconf.CLIENT_PRELOAD_NONE )
+
+    def __get_manipulator_method( self, data_type, operation ):
+        """ data_type must be a vaild "type"
+            operation is either 'set' or 'get' """
+
+        if self.__type_mapping.has_key( data_type ):
+            method = operation + '_' + self.__type_mapping[data_type]
+            return getattr( self, method )
+        else:
+            log('Data type "%s" is not supported.' % data_type)
+            return lambda x,y=None: None
+
+    def sset( self, key, value ):
+        """ A simple set function, no type is required, it is determined
+            automatically. 'key' is relative to self.__directory """
+
+        return self.__get_manipulator_method(type(value), 'set')(
+            os.path.join(self.__directory, key), value )
+
+    def sget( self, key, data_type, default=None ):
+        """ A simple get function, type is required, default value is
+            optional, 'key' is relative to self.__directory """
+
+        if self.get( os.path.join(self.__directory, key) ) is None:
+            return default
+        else:
+            return self.__get_manipulator_method(data_type, 'get')(
+                os.path.join(self.__directory, key) )
+
+    def snotify( self, callback ):
+        """ Set a callback to watch self.__directory """
+        return self.notify_add( self.__directory, callback )
+
 class GTK_Main(dbus.service.Object):
 
     def __init__(self, bus_name, filename=None):
         dbus.service.Object.__init__(self, object_path="/player",
             bus_name=bus_name)
 
-        self.gconf_client = gconf.client_get_default()
-        self.gconf_client.add_dir('/apps/panucci', gconf.CLIENT_PRELOAD_NONE)
-        self.gconf_client.notify_add('/apps/panucci', self.gconf_key_changed)
+        self.gconf = SimpleGConfClient( gconf_dir )
+        self.gconf.snotify(self.gconf_key_changed)
 
         self.filename = filename
         self.progress_timer_id = None
@@ -435,7 +483,7 @@ class GTK_Main(dbus.service.Object):
 
         menu_settings_lock_progress = gtk.CheckMenuItem(_('Lock Progress Bar'))
         menu_settings_lock_progress.connect('toggled', lambda w: 
-            self.gconf_client.set_bool('/apps/panucci/progress_locked', w.get_active()))
+            self.gconf.sset('progress_locked', w.get_active()))
         menu_settings_lock_progress.set_active(self.lock_progress)
         menu_settings_sub.append(menu_settings_lock_progress)
 
@@ -470,7 +518,7 @@ class GTK_Main(dbus.service.Object):
 
     @property
     def lock_progress(self):
-        return self.gconf_client.get_bool('/apps/panucci/progress_locked')
+        return self.gconf.sget('progress_locked', bool)
 
     def show_about(self, w, win):
         dialog = gtk.AboutDialog()
@@ -519,13 +567,13 @@ class GTK_Main(dbus.service.Object):
                 None, gtk.FILE_CHOOSER_ACTION_OPEN, ((gtk.STOCK_CANCEL,
                 gtk.RESPONSE_REJECT, gtk.STOCK_MEDIA_PLAY, gtk.RESPONSE_OK)))
 
-        current_folder = self.gconf_client.get_string('/apps/panucci/last_folder')
+        current_folder = self.gconf.sget('last_folder',str)
         if current_folder is not None and os.path.isdir(current_folder):
             dlg.set_current_folder(current_folder)
 
         if dlg.run() == gtk.RESPONSE_OK:
             filename = dlg.get_filename()
-            self.gconf_client.set_string('/apps/panucci/last_folder', dlg.get_current_folder())
+            self.gconf.sset('last_folder', dlg.get_current_folder())
             dlg.destroy()
         else:
             filename = None

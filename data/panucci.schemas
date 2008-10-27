@@ -1,0 +1,41 @@
+<gconfschemafile>
+   <schemalist>
+
+      <schema>
+        <key>/schemas/apps/panucci/last_folder</key>
+        <applyto>/apps/panucci/last_folder</applyto>
+        <owner>panucci</owner>
+        <type>string</type>
+        <default>~</default>
+        <locale name="C">
+          <short>The last folder a file was selected from.</short>
+          <long>The last folder a file was selected from.</long>
+        </locale>
+      </schema>
+
+      <schema>
+        <key>/schemas/apps/panucci/progress_locked</key>
+        <applyto>/apps/panucci/progress_locked</applyto>
+        <owner>panucci</owner>
+        <type>bool</type>
+        <default>FALSE</default>
+        <locale name="C">
+          <short>Whether or not the progress bar is locked</short>
+          <long>If the progress bar is locked, touching it won't cause the player to seek.</long>
+        </locale>
+      </schema>
+
+      <schema>
+        <key>/schemas/apps/panucci/volume</key>
+        <applyto>/apps/panucci/volume</applyto>
+        <owner>panucci</owner>
+        <type>float</type>
+        <default>0.3</default>
+        <locale name="C">
+          <short>The player's volume setting.</short>
+          <long>The player's volume setting, which is separate from the global volume setting.</long>
+        </locale>
+      </schema>
+
+  </schemalist>
+</gconfschemafile>
