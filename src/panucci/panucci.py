@@ -528,18 +528,15 @@ class GTK_Main(dbus.service.Object):
         dialog.destroy()
 
     def save_position(self):
-        try:
-            (pos, dur) = self.player_get_position()
-            pm.set_position(self.filename, pos)
-        except:
-            pass
+        (pos, dur) = self.player_get_position()
+        pm.set_position(self.filename, pos)
 
     def get_position(self, pos=None):
         if pos is None:
-            try:
+            if self.playing:
                 (pos, dur) = self.player_get_position()
-            except:
-                pos = 0
+            else:
+                pos = pm.get_position(self.filename)
         text = self.convert_ns(pos)
         return (text, pos)
 
