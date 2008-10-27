@@ -311,10 +311,7 @@ class GTK_Main(dbus.service.Object):
         self.get_volume_level = lambda: 0
         self.set_volume_level = lambda x: 0
 
-        vol = pm.get_position('volume')
-        if vol < 0 or vol > 1 : vol = 0.2
-        self.set_volume(vol)
-
+        self.set_volume(self.gconf.sget('volume', float, 0.3))
         self.time_format = gst.Format(gst.FORMAT_TIME)
         if self.filename is not None:
             self.play_file(self.filename)
@@ -548,7 +545,7 @@ class GTK_Main(dbus.service.Object):
 
     def destroy(self, widget):
         self.stop_playing()
-        pm.set_position( 'volume', self.get_volume())
+        self.gconf.sset( 'volume', self.get_volume() )
         gtk.main_quit()
 
     def gconf_key_changed(self, client, connection_id, entry, args):
