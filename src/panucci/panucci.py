@@ -517,7 +517,7 @@ class GTK_Main(dbus.service.Object):
 
     @property
     def lock_progress(self):
-        return self.gconf.sget('progress_locked', bool)
+        return self.gconf.sget('progress_locked', bool, False)
 
     def show_about(self, w, win):
         dialog = gtk.AboutDialog()
@@ -563,7 +563,8 @@ class GTK_Main(dbus.service.Object):
                 None, gtk.FILE_CHOOSER_ACTION_OPEN, ((gtk.STOCK_CANCEL,
                 gtk.RESPONSE_REJECT, gtk.STOCK_MEDIA_PLAY, gtk.RESPONSE_OK)))
 
-        current_folder = self.gconf.sget('last_folder',str)
+        current_folder = self.gconf.sget('last_folder', str,
+            os.path.expanduser('~') )
         if current_folder is not None and os.path.isdir(current_folder):
             dlg.set_current_folder(current_folder)
 
