@@ -117,7 +117,6 @@ class PositionManager(object):
     def set_position(self, url, position):
         if not url in self.positions:
             self.positions[url] = {}
-
         self.positions[url]['position'] = position
 
     def get_position(self, url):
@@ -126,15 +125,12 @@ class PositionManager(object):
         else:
             return 0
 
-    def set_bookmarks(self, url, bookmarks):
-        if not url in self.positions:
-            self.positions[url] = {}
+    def set_bookmarks(self, bookmarks):
+        self.positions['bookmarks'] = bookmarks
 
-        self.positions[url]['bookmarks'] = bookmarks
-
-    def get_bookmarks(self, url):
-        if url in self.positions and 'bookmarks' in self.positions[url]:
-            return self.positions[url]['bookmarks']
+    def get_bookmarks(self):
+        if 'bookmarks' in self.positions:
+            return self.positions['bookmarks']
         else:
             return []
 
@@ -159,7 +155,9 @@ class BookmarksWindow(gtk.Window):
         self.treeview = gtk.TreeView()
         self.treeview.set_headers_visible(True)
         self.model = gtk.ListStore(gobject.TYPE_STRING,
-            gobject.TYPE_STRING, gobject.TYPE_UINT64)
+            gobject.TYPE_STRING, 
+            gobject.TYPE_UINT64, 
+            gobject.TYPE_STRING)
         self.treeview.set_model(self.model)
 
         ncol = gtk.TreeViewColumn('Name')
@@ -174,8 +172,14 @@ class BookmarksWindow(gtk.Window):
         tcol.pack_start(tcell)
         tcol.add_attribute(tcell, 'text', 1)
 
+        fcol = gtk.TreeViewColumn('File')
+        fcell = gtk.CellRendererText()
+        fcol.pack_start(fcell)
+        fcol.add_attribute(fcell, 'text', 3)
+
         self.treeview.append_column(ncol)
         self.treeview.append_column(tcol)
+        self.treeview.append_column(fcol)
 
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -201,25 +205,29 @@ class BookmarksWindow(gtk.Window):
         self.hbox.pack_start(self.close_button)
         self.vbox.pack_start(self.hbox, False, True)
         self.add(self.vbox)
-        for label, pos in pm.get_bookmarks(self.main.filename):
-            self.add_bookmark(label=label, pos=pos)
+
+        bookmarks = pm.get_bookmarks()
+        for label, pos, filename in bookmarks:
+            self.add_bookmark(label=label, pos=pos, url=filename)
         self.show_all()
 
     def close(self, w):
         bookmarks = []
         for row in self.model:
-            bookmarks.append((row[0], row[2]))
-        pm.set_bookmarks(self.main.filename, bookmarks)
+            bookmarks.append((row[0], row[2], row[3]))
+        pm.set_bookmarks(bookmarks)
         self.destroy()
 
     def label_edited(self, cellrenderer, path, new_text):
         self.model.set_value(self.model.get_iter(path), 0, new_text)
 
-    def add_bookmark(self, w=None, label=None, pos=None):
+    def add_bookmark(self, w=None, label=None, pos=None, url=None):
         (text, position) = self.main.get_position(pos)
         if label is None:
             label = text
-        self.model.append([label, text, position])
+        if url is None:
+            url = self.main.filename
+        self.model.append([label, text, position, url])
 
     def remove_bookmark(self, w):
         selection = self.treeview.get_selection()
@@ -232,6 +240,12 @@ class BookmarksWindow(gtk.Window):
         (model, iter) = selection.get_selected()
         if iter is not None:
             pos = model.get_value(iter, 2)
+            url = model.get_value(iter, 3)
+            self.main.play_file(url)
+            ### not sure what to do about this sleep.
+            import time
+            time.sleep(.05)
+            ### if I remove it, the player does not seek.
             self.main.do_seek(from_beginning=pos)
 
 class SimpleGConfClient(gconf.Client):
