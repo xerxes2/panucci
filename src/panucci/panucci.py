@@ -106,13 +106,31 @@ class PositionManager(object):
         self.filename = filename
 
         try:
-            # load the playback positions
+        # load the playback positions
             f = open(self.filename, 'rb')
-            self.positions = pickle.load(f)
+            bookmarks_store = pickle.load(f)
             f.close()
+            ### Migrating from old pickle format to new format
+            # is the store the new format?
+            if 'bookmarks' in bookmarks_store:
+                self.positions = bookmarks_store
+            else:
+                #try converting to the new format.
+                self.positions = {}
+                self.positions['bookmarks'] = []
+                for k, v in bookmarks_store.iteritems():
+                    if k is not None:
+                        url = k
+                        self.positions[url] = { 'position' :
+                            bookmarks_store[url]['position'] }
+                        for label, position in bookmarks_store[url]['bookmarks']:
+                            self.positions['bookmarks'].append(
+                                (label, position, url))
+            ### End of migration code
         except:
             # let's start out with a new dict
             self.positions = {}
+        print self.positions
 
     def set_position(self, url, position):
         if not url in self.positions:
