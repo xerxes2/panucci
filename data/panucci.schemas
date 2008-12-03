@@ -37,5 +37,29 @@
         </locale>
       </schema>
 
+      <schema>
+        <key>/schemas/apps/panucci/db_location</key>
+        <applyto>/apps/panucci/db_location</applyto>
+        <owner>panucci</owner>
+        <type>string</type>
+        <default>~/.panucci.sqlite</default>
+        <locale name="C">
+          <short>Where Panucci's database is stored.</short>
+          <long>Where Panucci stores it's sqlite database of bookmark data.</long>
+        </locale>
+      </schema>
+
+      <schema>
+        <key>/schemas/apps/panucci/max_recent_files</key>
+        <applyto>/apps/panucci/max_recent_files</applyto>
+        <owner>panucci</owner>
+        <type>int</type>
+        <default>10</default>
+        <locale name="C">
+          <short>Maximum number of entries to show in the recent files list.</short>
+          <long>How many entries to display in the recent files list, set to 0 for none.</long>
+        </locale>
+      </schema>
+
   </schemalist>
 </gconfschemafile>

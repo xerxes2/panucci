@@ -52,7 +52,7 @@ distclean: clean
 	rm -rf dist
 
 test:
-	PYTHONPATH=src/ python bin/panucci
+	PYTHONPATH=src/ python bin/panucci --debug
 
 post-install:
 	gtk-update-icon-cache -f -i $(PREFIX)/share/icons/hicolor/

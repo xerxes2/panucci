@@ -40,12 +40,6 @@ import pygst
 pygst.require('0.10')
 import gst
 
-try:
-    import gconf
-except:
-    # on the tablet, it's probably in "gnome"
-    from gnome import gconf
-
 import dbus
 import dbus.service
 import dbus.mainloop
@@ -63,6 +57,11 @@ except:
     if running_on_tablet:
         log('Using GTK widgets, install "python2.5-hildon" for this to work properly.')
 
+import util
+from util import log
+from simplegconf import gconf
+from playlist import Playlist
+
 about_name = 'Panucci'
 about_text = _('Resuming audiobook and podcast player')
 about_authors = ['Thomas Perl', 'Nick (nikosapi)', 'Matthew Taylor']
@@ -73,19 +72,9 @@ donate_device_url = 'http://maemo.gpodder.org/donate.html'
 short_seek = 10
 long_seek = 60
 
-gconf_dir = '/apps/panucci'
-
 coverart_names = [ 'cover', 'cover.jpg', 'cover.png' ]
 coverart_size = [240, 240] if running_on_tablet else [130, 130]
 
-debug_override = False
-def log( msg ):
-    """ A very simple log function (no log output is produced when
-        using the python optimization (-O, -OO) options) """
-    global debug_override
-
-    if __debug__ or debug_override:
-        print msg
 
 def open_link(d, url, data):
     webbrowser.open_new(url)
@@ -121,67 +110,6 @@ def image(widget, filename, is_stock=False):
         widget.add(image)
         image.show()
 
-class PositionManager(object):
-    def __init__(self, filename=None):
-        if filename is None:
-            filename = os.path.expanduser('~/.rmp-bookmarks')
-        self.filename = filename
-
-        try:
-        # load the playback positions
-            f = open(self.filename, 'rb')
-            bookmarks_store = pickle.load(f)
-            f.close()
-            ### Migrating from old pickle format to new format
-            # is the store the new format?
-            if 'bookmarks' in bookmarks_store:
-                self.positions = bookmarks_store
-            else:
-                #try converting to the new format.
-                self.positions = {}
-                self.positions['bookmarks'] = []
-                for k, v in bookmarks_store.iteritems():
-                    if k is not None:
-                        url = k
-                        self.positions[url] = { 'position' :
-                            bookmarks_store[url]['position'] }
-                        for label, position in bookmarks_store[url]['bookmarks']:
-                            self.positions['bookmarks'].append(
-                                (label, position, url))
-            ### End of migration code
-        except:
-            # let's start out with a new dict
-            self.positions = {}
-        print self.positions
-
-    def set_position(self, url, position):
-        if not url in self.positions:
-            self.positions[url] = {}
-        self.positions[url]['position'] = position
-
-    def get_position(self, url):
-        if url in self.positions and 'position' in self.positions[url]:
-            return self.positions[url]['position']
-        else:
-            return 0
-
-    def set_bookmarks(self, bookmarks):
-        self.positions['bookmarks'] = bookmarks
-
-    def get_bookmarks(self):
-        if 'bookmarks' in self.positions:
-            return self.positions['bookmarks']
-        else:
-            return []
-
-    def save(self):
-        # save the playback position dict
-        f = open(self.filename, 'wb')
-        pickle.dump(self.positions, f)
-        f.close()
-
-pm = PositionManager()
-
 class BookmarksWindow(gtk.Window):
     def __init__(self, main):
         self.main = main
@@ -194,32 +122,22 @@ class BookmarksWindow(gtk.Window):
         self.vbox.set_spacing(5)
         self.treeview = gtk.TreeView()
         self.treeview.set_headers_visible(True)
-        self.model = gtk.ListStore(gobject.TYPE_STRING,
-            gobject.TYPE_STRING, 
-            gobject.TYPE_UINT64, 
-            gobject.TYPE_STRING)
-        self.treeview.set_model(self.model)
+        self.update_model()
 
-        ncol = gtk.TreeViewColumn('Name')
+        ncol = gtk.TreeViewColumn(_('Name'))
         ncell = gtk.CellRendererText()
         ncell.set_property('editable', True)
         ncell.connect('edited', self.label_edited)
         ncol.pack_start(ncell)
-        ncol.add_attribute(ncell, 'text', 0)
+        ncol.add_attribute(ncell, 'text', 1)
 
-        tcol = gtk.TreeViewColumn('Time')
+        tcol = gtk.TreeViewColumn(_('Position'))
         tcell = gtk.CellRendererText()
         tcol.pack_start(tcell)
-        tcol.add_attribute(tcell, 'text', 1)
-
-        fcol = gtk.TreeViewColumn('File')
-        fcell = gtk.CellRendererText()
-        fcol.pack_start(fcell)
-        fcol.add_attribute(fcell, 'text', 3)
+        tcol.add_attribute(tcell, 'text', 2)
 
         self.treeview.append_column(ncol)
         self.treeview.append_column(tcol)
-        self.treeview.append_column(fcol)
 
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -245,95 +163,50 @@ class BookmarksWindow(gtk.Window):
         self.hbox.pack_start(self.close_button)
         self.vbox.pack_start(self.hbox, False, True)
         self.add(self.vbox)
-
-        bookmarks = pm.get_bookmarks()
-        for label, pos, filename in bookmarks:
-            self.add_bookmark(label=label, pos=pos, url=filename)
         self.show_all()
 
+    def update_model(self):
+        self.model = self.main.playlist.get_bookmark_model()
+        self.treeview.set_model(self.model)
+
     def close(self, w):
-        bookmarks = []
-        for row in self.model:
-            bookmarks.append((row[0], row[2], row[3]))
-        pm.set_bookmarks(bookmarks)
         self.destroy()
 
     def label_edited(self, cellrenderer, path, new_text):
-        self.model.set_value(self.model.get_iter(path), 0, new_text)
+        iter = self.model.get_iter(path)
+        bkmk_id  = self.model.get_value(iter, 0)
+        old_text = self.model.get_value(iter, 1)
 
-    def add_bookmark(self, w=None, label=None, pos=None, url=None):
-        (text, position) = self.main.get_position(pos)
-        if label is None:
-            label = text
-        if url is None:
-            url = self.main.filename
-        self.model.append([label, text, position, url])
+        if new_text.strip():
+            if old_text != new_text:
+                self.model.set_value(iter, 1, new_text)
+                self.main.playlist.update_bookmark( bkmk_id, name=new_text )
+        else:
+            self.model.set_value(iter, 1, old_text)
+
+    def add_bookmark(self, w=None, lbl=None, pos=None):
+        (label, position) = self.main.get_position(pos)
+        label = label if lbl is None else lbl
+        position = position if pos is None else pos
+        self.main.playlist.save_bookmark( label, position )
+        self.update_model()
 
     def remove_bookmark(self, w):
         selection = self.treeview.get_selection()
         (model, iter) = selection.get_selected()
         if iter is not None:
+            bookmark_id = model.get_value(iter, 0)
+            self.main.playlist.remove_bookmark( bookmark_id )
             model.remove(iter)
 
     def jump_bookmark(self, w):
         selection = self.treeview.get_selection()
         (model, iter) = selection.get_selected()
         if iter is not None:
-            pos = model.get_value(iter, 2)
-            url = model.get_value(iter, 3)
-            self.main.play_file(url)
-            ### not sure what to do about this sleep.
-            import time
-            time.sleep(.05)
-            ### if I remove it, the player does not seek.
-            self.main.do_seek(from_beginning=pos)
-
-class SimpleGConfClient(gconf.Client):
-    """ A simplified wrapper around gconf.Client
-        GConf docs: http://library.gnome.org/devel/gconf/stable/ 
-    """
-
-    __type_mapping = { int: 'int', long: 'float', float: 'float',
-        str: 'string', bool: 'bool', list: 'list', }
-
-    def __init__(self, directory):
-        """ directory is the base directory that we're working in """
-        self.__directory = directory
-        gconf.Client.__init__(self)
-
-        self.add_dir( self.__directory, gconf.CLIENT_PRELOAD_NONE )
-
-    def __get_manipulator_method( self, data_type, operation ):
-        """ data_type must be a vaild "type"
-            operation is either 'set' or 'get' """
-
-        if self.__type_mapping.has_key( data_type ):
-            method = operation + '_' + self.__type_mapping[data_type]
-            return getattr( self, method )
-        else:
-            log('Data type "%s" is not supported.' % data_type)
-            return lambda x,y=None: None
-
-    def sset( self, key, value ):
-        """ A simple set function, no type is required, it is determined
-            automatically. 'key' is relative to self.__directory """
-
-        return self.__get_manipulator_method(type(value), 'set')(
-            os.path.join(self.__directory, key), value )
-
-    def sget( self, key, data_type, default=None ):
-        """ A simple get function, type is required, default value is
-            optional, 'key' is relative to self.__directory """
-
-        if self.get( os.path.join(self.__directory, key) ) is None:
-            return default
-        else:
-            return self.__get_manipulator_method(data_type, 'get')(
-                os.path.join(self.__directory, key) )
-
-    def snotify( self, callback ):
-        """ Set a callback to watch self.__directory """
-        return self.notify_add( self.__directory, callback )
+            bookmark_id = model.get_value(iter, 0)
+            self.main.stop_playing()
+            self.main.playlist.load_from_bookmark( bookmark_id )
+            self.main.start_playback()
 
 class GTK_Main(dbus.service.Object):
 
@@ -341,16 +214,16 @@ class GTK_Main(dbus.service.Object):
         dbus.service.Object.__init__(self, object_path="/player",
             bus_name=bus_name)
 
-        self.gconf = SimpleGConfClient( gconf_dir )
+        self.gconf = gconf
         self.gconf.snotify(self.gconf_key_changed)
 
-        self.filename = filename
+        self.playlist = Playlist()
+        self.recent_files = []
         self.progress_timer_id = None
         self.volume_timer_id = None
         self.make_main_window()
-        self.has_coverart = False
-        self.has_id3_coverart = False
         self.playing = False
+        self.has_coverart = False
 
         if running_on_tablet:
             # Enable play/pause with headset button
@@ -369,8 +242,12 @@ class GTK_Main(dbus.service.Object):
 
         self.set_volume(self.gconf.sget('volume', float, 0.3))
         self.time_format = gst.Format(gst.FORMAT_TIME)
-        if self.filename is not None:
-            self.play_file(self.filename)
+
+        if filename is None:
+            if self.recent_files:
+                self.play_file(self.recent_files[0], pause_on_load=True)
+        else:
+            self.play_file(filename)
 
     def make_main_window(self):
         import pango
@@ -520,6 +397,11 @@ class GTK_Main(dbus.service.Object):
         menu_open.connect("activate", self.open_file_callback)
         menu.append(menu_open)
 
+        # the recent files menu
+        self.menu_recent = gtk.MenuItem(_('Recent Files'))
+        menu.append(self.menu_recent)
+        self.create_recent_files_menu()
+
         menu.append(gtk.SeparatorMenuItem())
 
         menu_bookmarks = gtk.MenuItem(_('Bookmarks'))
@@ -569,6 +451,28 @@ class GTK_Main(dbus.service.Object):
 
         return menu
 
+    def create_recent_files_menu( self ):
+        max_files = self.gconf.sget('max_recent_files', int, 10)
+        self.recent_files = self.playlist.get_recent_files(max_files)
+        menu_recent_sub = gtk.Menu()
+
+        if len(self.recent_files) > 0:
+            for f in self.recent_files:
+                filename, extension = os.path.splitext(os.path.basename(f))
+                menu_item = gtk.MenuItem( filename )
+                menu_item.connect('activate', self.on_recent_file_activate, f)
+                menu_recent_sub.append(menu_item)
+                print f
+        else:
+            menu_item = gtk.MenuItem(_('No recent files available.'))
+            menu_item.set_sensitive(False)
+            menu_recent_sub.append(menu_item)
+
+        self.menu_recent.set_submenu(menu_recent_sub)
+
+    def on_recent_file_activate(self, widget, filepath):
+        self.play_file(filepath)
+
     @property
     def lock_progress(self):
         return self.gconf.sget('progress_locked', bool, False)
@@ -583,17 +487,13 @@ class GTK_Main(dbus.service.Object):
         dialog.run()
         dialog.destroy()
 
-    def save_position(self):
-        (pos, dur) = self.player_get_position()
-        pm.set_position(self.filename, pos)
-
     def get_position(self, pos=None):
         if pos is None:
             if self.playing:
                 (pos, dur) = self.player_get_position()
             else:
-                pos = pm.get_position(self.filename)
-        text = self.convert_ns(pos)
+                pos = self.playlist.get_current_position()
+        text = util.convert_ns(pos)
         return (text, pos)
 
     def destroy(self, widget):
@@ -700,25 +600,17 @@ class GTK_Main(dbus.service.Object):
     def show_main_window(self):
         self.main_window.present()
 
-    @dbus.service.method('org.panucci.interface', in_signature='s')
-    def play_file(self, filename):
+    @dbus.service.method('org.panucci.interface', in_signature='sb')
+    def play_file(self, filename, pause_on_load=False):
         self.stop_playing()
 
-        self.filename = os.path.abspath(filename)
-        pretty_filename = os.path.basename(self.filename).rsplit('.',1)[0].replace('_', ' ')
-        self.setup_player(self.filename)
+        self.playlist.load( os.path.abspath(filename) )
+        if self.playlist.is_empty():
+            return False
 
-        self.has_coverart = False
-        self.want_to_seek = True
-        self.start_playback()
-        self.start_progress_timer()
-
-        # This is just in case the file contains no tags,
-        # at least we can display the filename
-        self.set_metadata({'title': pretty_filename})
+        self.start_playback(pause_on_load)
 
     def open_file_callback(self, widget=None):
-        old_filename = self.filename
         filename = self.get_file_from_filechooser()
         if filename is not None:
             self.play_file(filename)
@@ -731,24 +623,36 @@ class GTK_Main(dbus.service.Object):
         if self.player is not None: self.player.set_state(gst.STATE_NULL)
         self.stop_progress_timer()
         self.title_label.set_size_request(-1,-1)
-        self.filename = None
         self.playing = False
-        self.has_coverart = False
-        self.has_id3_coverart = False
         self.reset_progress()
         self.set_controls_sensitivity(False)
         image(self.button, gtk.STOCK_OPEN, True)
 
-    def start_playback(self):
+    def start_playback(self, pause_on_load=False):
+        self.want_to_seek = True
         self.set_controls_sensitivity(True)
         for widget in [ self.title_label, self.artist_label, self.album_label ]:
             widget.set_text('')
             widget.hide()
         self.cover_art.hide()
-        self.start_stop(widget=None)
+        self.set_metadata(self.playlist.get_file_metadata())
+        self.setup_player()
 
-    def setup_player(self, filename):
-        if filename.lower().endswith('.ogg') and running_on_tablet:
+        if pause_on_load:
+            image(self.button, 'media-playback-start.png')
+            self.set_progress_callback( self.playlist.get_current_position(),
+                self.playlist.get_estimated_duration() )
+        else:
+            self.start_stop(widget=None)
+
+    def setup_player(self):
+        filetype = self.playlist.get_current_filetype()
+        filepath = self.playlist.get_current_filepath()
+
+        if None in [ filetype, filepath ]:
+            return False
+
+        if filetype.startswith('ogg') and running_on_tablet:
             log( 'Using OGG workaround, I hope this works...' )
 
             self.player = gst.Pipeline('player')
@@ -763,7 +667,7 @@ class GTK_Main(dbus.service.Object):
             self.get_volume_level = lambda : self.__get_volume_level(self.__volume_control)
             self.set_volume_level = lambda x: self.__set_volume_level(x, self.__volume_control)
 
-            source.set_property( 'location', 'file://' + filename )
+            source.set_property( 'location', 'file://' + filepath )
         else:
             log( 'Using plain-old playbin.' )
 
@@ -774,7 +678,7 @@ class GTK_Main(dbus.service.Object):
             self.get_volume_level = lambda : self.__get_volume_level(self.player, div)
             self.set_volume_level = lambda x: self.__set_volume_level(x, self.player, div)
 
-            self.player.set_property( 'uri', 'file://' + self.filename )
+            self.player.set_property( 'uri', 'file://' + filepath )
 
         bus = self.player.get_bus()
         bus.add_signal_watch()
@@ -797,8 +701,8 @@ class GTK_Main(dbus.service.Object):
 
     def set_progress_callback(self, time_elapsed, total_time):
         """ times must be in nanoseconds """
-        time_string = "%s / %s" % ( self.convert_ns(time_elapsed),
-            self.convert_ns(total_time) )
+        time_string = "%s / %s" % ( util.convert_ns(time_elapsed),
+            util.convert_ns(total_time) )
         self.progress.set_text( time_string )
         fraction = float(time_elapsed) / float(total_time) if total_time else 0
         self.progress.set_fraction( fraction )
@@ -810,7 +714,7 @@ class GTK_Main(dbus.service.Object):
             self.do_seek(percent=new_fraction)
 
     def start_stop(self, widget=None):
-        if self.filename is None or not os.path.exists(self.filename):
+        if self.playlist.is_empty():
             self.open_file_callback()
             return
 
@@ -818,11 +722,13 @@ class GTK_Main(dbus.service.Object):
 
         if self.playing:
             self.start_progress_timer()
+            self.playlist.play()
             self.player.set_state(gst.STATE_PLAYING)
             image(self.button, 'media-playback-pause.png')
         else:
             self.stop_progress_timer() # This should save some power
-            self.save_position()
+            pos, dur = self.player_get_position()
+            self.playlist.pause(pos)
             self.player.set_state(gst.STATE_PAUSED)
             image(self.button, 'media-playback-start.png')
 
@@ -836,7 +742,7 @@ class GTK_Main(dbus.service.Object):
 
         position, duration = self.player_get_position()
         # if position and duration are 0 then player_get_position caught an
-        # exception. Therefore self.player isn't ready to be seeing.
+        # exception. Therefore self.player isn't ready to be seeking.
         if not ( position or duration ) or self.player is None:
             return False
 
@@ -892,7 +798,10 @@ class GTK_Main(dbus.service.Object):
 
         if t == gst.MESSAGE_EOS:
             self.stop_playing()
-            pm.set_position(self.filename, 0)
+            if self.playlist.next():
+                self.start_playback()
+            else:
+                self.playlist.stop()
 
         elif t == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
@@ -905,61 +814,38 @@ class GTK_Main(dbus.service.Object):
 
                 if self.want_to_seek:
                     # This only gets called when the file is first loaded
-                    self.do_seek(from_beginning=pm.get_position(self.filename))
+                    pause_time = self.playlist.play()
+                    self.do_seek(from_beginning=pause_time)
                 else:
                     self.set_controls_sensitivity(True)
-
-        elif t == gst.MESSAGE_TAG:
-            keys = message.parse_tag().keys()
-            tags = dict([ (key, message.structure[key]) for key in keys ])
-            self.set_metadata( tags )
 
     def set_coverart( self, pixbuf ):
         self.cover_art.set_from_pixbuf(pixbuf)
         self.cover_art.show()
         self.has_coverart = True
 
-    def set_coverart_from_dir( self, directory ):
-        for cover in coverart_names:
-            c = os.path.join( directory, cover )
-            if os.path.isfile(c):
-                try:
-                    pixbuf = gtk.gdk.pixbuf_new_from_file_at_size(c, *coverart_size)
-                    self.cover_art.set_from_pixbuf(pixbuf)
-                    self.cover_art.show()
-                    return True
-                except:
-                    pass
-        return False
-
     def set_metadata( self, tag_message ):
         tags = { 'title': self.title_label, 'artist': self.artist_label,
                  'album': self.album_label }
 
-        if tag_message.has_key('image') and not self.has_id3_coverart:
+        if tag_message.has_key('image') and tag_message['image'] is not None:
             value = tag_message['image']
-            if isinstance( value, list ):
-                value = value[0]
 
             pbl = gtk.gdk.PixbufLoader()
             try:
-                pbl.write(value.data)
+                pbl.write(value)
                 pbl.close()
                 pixbuf = pbl.get_pixbuf().scale_simple(
                     coverart_size[0], coverart_size[1], gtk.gdk.INTERP_BILINEAR )
                 self.set_coverart(pixbuf)
-                self.has_id3_coverart = True
             except:
                 import traceback
                 traceback.print_exc(file=sys.stdout)
                 pbl.close()
 
-        if not self.has_coverart and self.filename is not None:
-            self.has_coverart = self.set_coverart_from_dir(os.path.dirname(self.filename))
-
         tag_vals = dict([ (i,'') for i in tags.keys()])
         for tag,value in tag_message.iteritems():
-            if tags.has_key(tag) and value.strip():
+            if tags.has_key(tag) and value is not None and value.strip():
                 tags[tag].set_markup('<big>'+value+'</big>')
                 tag_vals[tag] = value
                 tags[tag].set_alignment( 0.5*int(not self.has_coverart), 0.5)
@@ -986,41 +872,12 @@ class GTK_Main(dbus.service.Object):
     def bookmarks_callback(self, w):
         BookmarksWindow(self)
 
-    def convert_ns(self, time_int):
-        time_int = time_int / 1000000000
-        time_str = ""
-        if time_int >= 3600:
-            _hours = time_int / 3600
-            time_int = time_int - (_hours * 3600)
-            time_str = str(_hours) + ":"
-        if time_int >= 600:
-            _mins = time_int / 60
-            time_int = time_int - (_mins * 60)
-            time_str = time_str + str(_mins) + ":"
-        elif time_int >= 60:
-            _mins = time_int / 60
-            time_int = time_int - (_mins * 60)
-            time_str = time_str + "0" + str(_mins) + ":"
-        else:
-            time_str = time_str + "00:"
-        if time_int > 9:
-            time_str = time_str + str(time_int)
-        else:
-            time_str = time_str + "0" + str(time_int)
 
-        return time_str
-
-
-def run(filename=None, debug=False):
-    global debug_override
-    debug_override = debug
-
+def run(filename=None):
     session_bus = dbus.SessionBus(mainloop=dbus.glib.DBusGMainLoop())
     bus_name = dbus.service.BusName('org.panucci', bus=session_bus)
     GTK_Main(bus_name, filename)
     gtk.main()
-    # save position manager data
-    pm.save()
 
 if __name__ == '__main__':
     log( 'WARNING: Use the "panucci" executable to run this program.' )

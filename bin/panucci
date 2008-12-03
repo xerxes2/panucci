@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.5
+#!/usr/bin/env python
 # 
 # Copyright (c) 2008 The Panucci Audiobook and Podcast Player Project
 # 
@@ -47,12 +47,12 @@ except dbus.exceptions.DBusException:
 
 if remote_object is None:
     from panucci import panucci
+    from panucci import util
     # This could eventually be made fancy with optparse
-    debug = '--debug' in sys.argv
-    panucci.run(filename=filename, debug=debug)
+    util.logging_enabled = '--debug' in sys.argv
+    panucci.run(filename=filename)
 else:
-    if filename is None:
-        remote_object.show_main_window(dbus_interface='org.panucci.interface')
-    else:
-        remote_object.play_file(filename, dbus_interface='org.panucci.interface')
+    if filename is not None:
+        remote_object.play_file(filename, False, dbus_interface='org.panucci.interface')
+    remote_object.show_main_window(dbus_interface='org.panucci.interface')
 
