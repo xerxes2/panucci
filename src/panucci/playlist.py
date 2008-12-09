@@ -27,6 +27,8 @@ import time
 import os.path
 import hashlib
 import mutagen
+import glob
+import re
 
 import util
 from util import log
@@ -237,16 +239,25 @@ class Playlist(object):
         """ Detects File's filetype then loads it using
             the appropriate loader function """
 
+        error = False
         self.reset_playlist()
         self.filename = File
 
         extension = util.detect_filetype(File)
-        if extension == 'm3u':
-            self.m3u_importer(File)
-        elif extension == 'pls':
-            pass
+        if extension in [ 'm3u', 'pls' ]:
+            log('Loading playlist file (%s)' % extension)
+
+            if extension == 'm3u':
+                parser = M3U_Playlist()
+            else:
+                parser = PLS_Playlist()
+
+            if parser.parse(File):
+                for f in parser.get_filelist(): self.append(f)
+            else:
+                return False
         else:
-            self.single_file_import(File)
+            error = not self.single_file_import(File)
 
         bookmarks = db.load_bookmarks( self.filename,
             factory=Bookmark().load_from_dict )
@@ -259,21 +270,15 @@ class Playlist(object):
                 self.load_from_bookmark( bkmk )
                 break
 
-    def m3u_importer( self, filename ):
-        """ Import an m3u playlist 
-            TODO: make this actually support proper m3u playlists... """
-
-        f = open( filename, 'r' )
-        files = f.read()
-        f.close()
-
-        files = files.splitlines()
-        for f in files:
-            if f.strip(): self.append(f.strip())
+        return not error
 
     def single_file_import( self, filename ):
         """ Add a single track to the playlist """
-        self.append( filename )
+        if util.is_supported(filename) and os.path.isfile(filename):
+            self.append( filename )
+            return True
+        else:
+            return False
 
     ##################################
     # Plalist controls
@@ -446,4 +451,204 @@ class FileObject(object):
 
     def pause(self, position):
         self.seek_to = position
+
+
+class PlaylistItem(object):
+    def __init__(self, filepath=None, title=None, length=None):
+        self.filepath = filepath
+        self.title = title
+        self.length = length
+
+class PlaylistFile(object):
+    def __init__(self):
+        self._filepath = None
+        self._file = None
+        self._items = []
+
+    def __open_file(self, filepath, mode):
+        if self._file is not None:
+            self.close_file()
+
+        try:
+            self._file = open( filepath, mode )
+            self._filepath = filepath
+        except Exception, e:
+            self._filepath = None
+            self._file = None
+
+            log( 'Error opening file: %s' % filepath, traceback=e )
+            return False
+    
+        return True
+
+    def __close_file(self):
+        error = False
+
+        if self._file is not None:
+            try:
+                self._file.close()
+            except Exception, e:
+                log( 'Error closing file: %s' % self.filepath, traceback=e )
+                error = True
+
+        self._filepath = None
+        self._file = None
+
+        return not error
+
+    def get_absolute_filepath(self, item_filepath):
+        if item_filepath.startswith('/'):
+            path = item_filepath
+        else:
+            path = os.path.join(os.path.dirname(self._filepath),item_filepath)
+
+        if os.path.exists( path ):
+            return path
+
+    def get_filelist(self):
+        return [ item.filepath for item in self._items ]
+
+    def get_filedicts(self):
+        dict_list = []
+        for item in self._items:
+            d = { 'title': item.title,
+                  'length': item.length,
+                  'filepath': item.filepath }
+
+            dict_list.append(d)
+        return dict_list
+
+    def export(self, filepath=None, playlist_items=None):
+        if filepath is not None:
+            self.filepath = filepath
+
+        if playlist_items is not None:
+            self._items = playlist_items
+
+        if self.__open_file(filepath, 'w'):
+            self.export_hook(self._items)
+            self.__close_file()
+
+    def export_hook(self, playlist_items):
+        pass
+
+    def parse(self, filepath):
+        if self.__open_file( filepath, mode='r' ):
+            current_line = self._file.readline()
+            while current_line:
+                self.parse_line_hook( current_line.strip() )
+                current_line = self._file.readline()
+            self.__close_file()
+            self.parse_eof_hook()
+        else:
+            return False
+        return True
+
+    def parse_line_hook(self, line):
+        pass
+
+    def parse_eof_hook(self):
+        pass
+
+class M3U_Playlist(PlaylistFile):
+    def __init__(self):
+        PlaylistFile.__init__( self )
+        self.extended_m3u = False
+        self.current_item = PlaylistItem()
+
+    def parse_line_hook(self, line):
+        if line.startswith('#EXTM3U'):
+            self.extended_m3u = True
+        elif self.extended_m3u and line.startswith('#EXTINF'):
+            match = re.match('#EXTINF:([^,]+),(.*)', line)
+            if match is not None:
+                length, title = match.groups()
+                try: length = int(length)
+                except: pass
+                self.current_item.length = length
+                self.current_item.title = title
+        elif line.startswith('#'):
+            pass # skip comments
+        elif line:
+            path = self.get_absolute_filepath( line )
+            if path is not None:
+                if os.path.isfile( path ) and util.is_supported( path ):
+                    self.current_item.filepath = path
+                    self._items.append(self.current_item)
+                    self.current_item = PlaylistItem()
+                elif os.path.isdir( path ):
+                    files = glob.glob( path + '/*' )
+                    for file in files:
+                        if os.path.isfile(file) and util.is_supported(file):
+                            self._items.append(PlaylistItem(filepath=file))
+
+    def export_hook(self, playlist_items):
+        self._file.write('#EXTM3U\n\n')
+
+        for item in playlist_items:
+            string = ''
+            if not ( item.length is None and item.title is None ):
+                length = -1 if item.length is None else item.length
+                title = '' if item.title is None else item.title
+                string += '#EXTINF:%d,%s\n' % ( length, title )
+                
+            string += '%s\n' % item.filepath
+            self._file.write(string)
+
+class PLS_Playlist(PlaylistFile):
+    def __init__(self):
+        PlaylistFile.__init__( self )
+        self.current_item = PlaylistItem()
+        self.in_playlist_section = False
+        self.current_item_number = None
+
+    def __add_current_item(self):
+        path = self.get_absolute_filepath(self.current_item.filepath)
+        if path is not None and os.path.isfile(path): 
+            self._items.append(self.current_item)
+
+    def parse_line_hook(self, line):
+        sect_regex = '\[([^\]]+)\]'
+        item_regex = '[^\d]+([\d]+)=(.*)'
+
+        if re.search(item_regex, line) is not None:
+            current = re.search(item_regex, line).group(1)
+            if self.current_item_number is None:
+                self.current_item_number = current
+            elif self.current_item_number != current:
+                self.__add_current_item()
+
+                self.current_item = PlaylistItem()
+                self.current_item_number = current
+
+        if re.search(sect_regex, line) is not None:
+            section = re.match(sect_regex, line).group(1).lower()
+            self.in_playlist_section = section == 'playlist'
+        elif not self.in_playlist_section:
+            pass # don't do anything if we're not in [playlist]
+        elif line.lower().startswith('file'):
+            self.current_item.filepath = re.search(item_regex, line).group(2)
+        elif line.lower().startswith('title'):
+            self.current_item.title = re.search(item_regex, line).group(2)
+        elif line.lower().startswith('length'):
+            try: length = int(re.search(item_regex, line).group(2))
+            except: pass
+            self.current_item.length = length
+
+    def parse_eof_hook(self):
+        self.__add_current_item()
+
+    def export_hook(self, playlist_items):
+        self._file.write('[playlist]\n')
+        self._file.write('NumberOfEntries=%d\n\n' % len(playlist_items))
+
+        for i,item in enumerate(playlist_items):
+            title = '' if item.title is None else item.title
+            length = -1 if item.length is None else item.length
+            self._file.write('File%d=%s\n' % (i+1, item.filepath))
+            self._file.write('Title%d=%s\n' % (i+1, title))
+            self._file.write('Length%d=%s\n\n' % (i+1, length))
+
+        self._file.write('Version=2\n')
+
 

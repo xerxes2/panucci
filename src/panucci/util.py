@@ -22,7 +22,14 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # 
 
+import os.path
 import traceback
+
+supported_extensions = [ '.mp3', '.ogg', '.flac', '.m4a', '.wav' ]
+
+def is_supported( filepath ):
+    filepath, extension = os.path.splitext(filepath)
+    return extension.lower() in supported_extensions
 
 def convert_ns(time_int):
     time_int = time_int / 10**9
