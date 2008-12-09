@@ -462,7 +462,6 @@ class GTK_Main(dbus.service.Object):
                 menu_item = gtk.MenuItem( filename )
                 menu_item.connect('activate', self.on_recent_file_activate, f)
                 menu_recent_sub.append(menu_item)
-                print f
         else:
             menu_item = gtk.MenuItem(_('No recent files available.'))
             menu_item.set_sensitive(False)
@@ -838,10 +837,8 @@ class GTK_Main(dbus.service.Object):
                 pixbuf = pbl.get_pixbuf().scale_simple(
                     coverart_size[0], coverart_size[1], gtk.gdk.INTERP_BILINEAR )
                 self.set_coverart(pixbuf)
-            except:
-                import traceback
-                traceback.print_exc(file=sys.stdout)
-                pbl.close()
+            except Exception, e:
+                log('Error setting coverart...', traceback=e)
 
         tag_vals = dict([ (i,'') for i in tags.keys()])
         for tag,value in tag_message.iteritems():
