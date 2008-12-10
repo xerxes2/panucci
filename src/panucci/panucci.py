@@ -224,6 +224,7 @@ class GTK_Main(dbus.service.Object):
         self.make_main_window()
         self.playing = False
         self.has_coverart = False
+        self.queue_modified = False
 
         if running_on_tablet:
             # Enable play/pause with headset button
@@ -531,6 +532,11 @@ class GTK_Main(dbus.service.Object):
         dlg.destroy()
         return filename
 
+    def open_file_callback(self, widget=None):
+        filename = self.get_file_from_filechooser()
+        if filename is not None:
+            self.play_file(filename)
+
     def set_controls_sensitivity(self, sensitive):
         self.forward_button.set_sensitive(sensitive)
         self.rewind_button.set_sensitive(sensitive)
@@ -599,6 +605,11 @@ class GTK_Main(dbus.service.Object):
     def show_main_window(self):
         self.main_window.present()
 
+    @dbus.service.method('org.panucci.interface', in_signature='s')
+    def queue_file(self, filepath):
+        log('Attempting to queue file: %s' % filepath)
+        self.queue_modified = self.playlist.append( filepath )
+
     @dbus.service.method('org.panucci.interface', in_signature='sb')
     def play_file(self, filename, pause_on_load=False):
         self.stop_playing()
@@ -608,11 +619,6 @@ class GTK_Main(dbus.service.Object):
             return False
 
         self.start_playback(pause_on_load)
-
-    def open_file_callback(self, widget=None):
-        filename = self.get_file_from_filechooser()
-        if filename is not None:
-            self.play_file(filename)
 
     @dbus.service.method('org.panucci.interface')
     def stop_playing(self):
@@ -639,6 +645,7 @@ class GTK_Main(dbus.service.Object):
 
         if pause_on_load:
             image(self.button, 'media-playback-start.png')
+            self.set_controls_sensitivity(False)
             self.set_progress_callback( self.playlist.get_current_position(),
                 self.playlist.get_estimated_duration() )
         else:

@@ -48,14 +48,17 @@ class Playlist(object):
         self.__bookmarks_model_changed = True
 
     def insert( self, position, filepath ):
-        if os.path.exists(filepath):
+        if os.path.isfile(filepath) and util.is_supported(filepath):
             self.__filelist.insert( position, filepath )
+            self.__bookmarks_model_changed = True
+            return True
         else:
-            log('File cannot be found: %s' % filepath)
+            log('File not found or not supported: %s' % filepath)
+            return False
 
     def append( self, filepath ):
         """ Append a file to the queue """
-        self.insert( self.queue_length(), filepath )
+        return self.insert( self.queue_length(), filepath )
 
     def reset_playlist(self):
         """ clears all the files in the filelist """
@@ -64,6 +67,10 @@ class Playlist(object):
     @property
     def current_filepath(self):
         """ Get the current file """
+        if self._current_file >= self.queue_length():
+            log('Current file is greater than queue length, setting to 0.')
+            self._current_file = 0
+
         if self.__filelist:
             return self.__filelist[self._current_file]
 
@@ -274,11 +281,8 @@ class Playlist(object):
 
     def single_file_import( self, filename ):
         """ Add a single track to the playlist """
-        if util.is_supported(filename) and os.path.isfile(filename):
-            self.append( filename )
-            return True
-        else:
-            return False
+        self.reset_playlist()
+        return self.append( filename )
 
     ##################################
     # Plalist controls

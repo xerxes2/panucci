@@ -117,6 +117,10 @@ class Storage(object):
             log('Not saving bookmark with negative id (%d)' % bookmark.id)
             return
 
+        if bookmark.playlist_filepath is None:
+            log('Not saving bookmark without playlist filepath')
+            return
+
         if bookmark.is_resume_position:
             self.remove_resume_bookmark( bookmark.playlist_filepath )
 
