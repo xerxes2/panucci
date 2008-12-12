@@ -279,12 +279,6 @@ class Playlist(object):
     def get_recent_files(self, max_files=10):
         files = db.get_latest_files()
 
-        # don't include the temporary playlist in the file list
-        temp_playlist = gconf.sget('temp_playlist', str, '~/.panucci.m3u')
-        temp_playlist = os.path.expanduser(temp_playlist)
-        if temp_playlist in files:
-            files.remove(temp_playlist)
-
         if len(files) > max_files:
             return files[:max_files]
         else:
@@ -328,7 +322,9 @@ class Playlist(object):
                 self.load_from_bookmark( bkmk )
                 break
 
-        self.queue_modified = False
+        self.queue_modified = gconf.sget(
+            'temp_playlist', str, '~/.panucci.m3u') == self.filename
+
         return not error
 
     def single_file_import( self, filename ):

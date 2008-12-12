@@ -446,8 +446,13 @@ class GTK_Main(dbus.service.Object):
         self.recent_files = self.playlist.get_recent_files(max_files)
         menu_recent_sub = gtk.Menu()
 
+        temp_playlist = gconf.sget('temp_playlist', str, '~/.panucci.m3u')
+        temp_playlist = os.path.expanduser(temp_playlist)
+
         if len(self.recent_files) > 0:
             for f in self.recent_files:
+                # don't include the temporary playlist in the file list
+                if f == temp_playlist: continue
                 filename, extension = os.path.splitext(os.path.basename(f))
                 menu_item = gtk.MenuItem( filename.replace('_', ' '))
                 menu_item.connect('activate', self.on_recent_file_activate, f)
