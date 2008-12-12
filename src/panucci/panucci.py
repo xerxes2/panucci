@@ -32,7 +32,6 @@ import sys
 import os, os.path
 import time
 import cPickle as pickle
-import webbrowser
 
 import gtk
 import gobject
@@ -49,7 +48,8 @@ import dbus.glib
 # make a dummy "_" function to passthrough the string
 _ = lambda s: s
 
-running_on_tablet = os.path.exists('/etc/osso_software_version')
+import util
+running_on_tablet = util.platform == util.MAEMO
 
 try:
     import hildon
@@ -57,7 +57,6 @@ except:
     if running_on_tablet:
         log('Using GTK widgets, install "python2.5-hildon" for this to work properly.')
 
-import util
 from util import log
 from simplegconf import gconf
 from playlist import Playlist
@@ -65,7 +64,7 @@ from playlist import Playlist
 about_name = 'Panucci'
 about_text = _('Resuming audiobook and podcast player')
 about_authors = ['Thomas Perl', 'Nick (nikosapi)', 'Matthew Taylor']
-about_website = 'http://thpinfo.com/2008/panucci/'
+about_website = 'http://panucci.garage.maemo.org/'
 donate_wishlist_url = 'http://www.amazon.de/gp/registry/2PD2MYGHE6857'
 donate_device_url = 'http://maemo.gpodder.org/donate.html'
 
@@ -74,31 +73,17 @@ long_seek = 60
 
 coverart_names = [ 'cover', 'cover.jpg', 'cover.png' ]
 coverart_size = [240, 240] if running_on_tablet else [130, 130]
-
-
-def open_link(d, url, data):
-    webbrowser.open_new(url)
         
-gtk.about_dialog_set_url_hook(open_link, None)
-
-
-def find_image(filename):
-    locations = ['./icons/', '../icons/', '/usr/share/panucci/', os.path.dirname(sys.argv[0])+'/../icons/']
-
-    for location in locations:
-        if os.path.exists(location+filename):
-            return location+filename
-
-    return None
-
+gtk.about_dialog_set_url_hook(util.open_link, None)
 gtk.icon_size_register('panucci-button', 32, 32)
+
 def image(widget, filename, is_stock=False):
     widget.remove(widget.get_child())
     image = None
     if is_stock:
         image = gtk.image_new_from_stock(filename, gtk.icon_size_from_name('panucci-button'))
     else:
-        filename = find_image(filename)
+        filename = util.find_image(filename)
         if filename is not None:
             image = gtk.image_new_from_file(filename)
 
@@ -261,7 +246,7 @@ class GTK_Main(dbus.service.Object):
             window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 
         window.set_title('Panucci')
-        self.window_icon = find_image('panucci.png')
+        self.window_icon = util.find_image('panucci.png')
         if self.window_icon is not None:
             window.set_icon_from_file( self.window_icon )
         window.set_default_size(400, -1)
@@ -341,7 +326,8 @@ class GTK_Main(dbus.service.Object):
         buttonbox.add(self.rewind_button)
         self.button = gtk.Button('')
         image(self.button, gtk.STOCK_OPEN, True)
-        self.button.connect('clicked', self.start_stop)
+        self.button_handler_id = self.button.connect( 
+            'clicked', self.open_file_callback )
         buttonbox.add(self.button)
         self.forward_button = gtk.Button('')
         image(self.forward_button, 'media-seek-forward.png')
@@ -506,7 +492,7 @@ class GTK_Main(dbus.service.Object):
 
     def handle_headset_button(self, event, button):
         if event == 'ButtonPressed' and button == 'phone':
-            self.start_stop(self.button)
+            self.on_btn_play_pause_clicked(self.button)
 
     def get_file_from_filechooser(self):
         if running_on_tablet:
@@ -553,7 +539,7 @@ class GTK_Main(dbus.service.Object):
         elif event.keyval == gtk.keysyms.Right: # seek forward
             self.forward_callback(self.forward_button)
         elif event.keyval == gtk.keysyms.Return: # play/pause
-            self.start_stop(self.button)
+            self.on_btn_play_pause_clicked(self.button)
 
     # The following two functions get and set the volume from the volume control widgets
     def get_volume(self):
@@ -623,9 +609,15 @@ class GTK_Main(dbus.service.Object):
     @dbus.service.method('org.panucci.interface')
     def stop_playing(self):
         if self.playing:
-            self.start_stop(widget=None)
+            self.on_btn_play_pause_clicked(widget=None)
 
-        if self.player is not None: self.player.set_state(gst.STATE_NULL)
+        self.button.disconnect(self.button_handler_id)
+        self.button_handler_id = self.button.connect(
+            'clicked', self.open_file_callback )
+
+        if self.player is not None: 
+            self.player.set_state(gst.STATE_NULL)
+
         self.stop_progress_timer()
         self.title_label.set_size_request(-1,-1)
         self.playing = False
@@ -635,6 +627,10 @@ class GTK_Main(dbus.service.Object):
 
     def start_playback(self, pause_on_load=False):
         self.want_to_seek = True
+        self.button.disconnect(self.button_handler_id)
+        self.button_handler_id = self.button.connect(
+            'clicked', self.on_btn_play_pause_clicked )
+
         self.set_controls_sensitivity(True)
         for widget in [ self.title_label, self.artist_label, self.album_label ]:
             widget.set_text('')
@@ -649,7 +645,7 @@ class GTK_Main(dbus.service.Object):
             self.set_progress_callback( self.playlist.get_current_position(),
                 self.playlist.get_estimated_duration() )
         else:
-            self.start_stop(widget=None)
+            self.on_btn_play_pause_clicked(widget=None)
 
     def setup_player(self):
         filetype = self.playlist.get_current_filetype()
@@ -663,7 +659,15 @@ class GTK_Main(dbus.service.Object):
 
             self.player = gst.Pipeline('player')
             source = gst.element_factory_make('gnomevfssrc', 'file-source')
-            audio_decoder = gst.element_factory_make('tremor', 'vorbis-decoder')
+
+            try:
+                audio_decoder = gst.element_factory_make(
+                    'tremor', 'vorbis-decoder' )
+            except Exception, e:
+                log( 'No ogg decoder available, install the "mogg" package.',
+                    exception=e, title='Missing Decoder.', notify=True )
+                return False
+
             self.__volume_control = gst.element_factory_make('volume', 'volume')
             audiosink = gst.element_factory_make('dsppcmsink', 'audio-output')
 
@@ -719,11 +723,7 @@ class GTK_Main(dbus.service.Object):
             new_fraction = event.x/float(widget.get_allocation().width)
             self.do_seek(percent=new_fraction)
 
-    def start_stop(self, widget=None):
-        if self.playlist.is_empty():
-            self.open_file_callback()
-            return
-
+    def on_btn_play_pause_clicked(self, widget=None):
         self.playing = not self.playing
 
         if self.playing:
@@ -845,7 +845,7 @@ class GTK_Main(dbus.service.Object):
                     coverart_size[0], coverart_size[1], gtk.gdk.INTERP_BILINEAR )
                 self.set_coverart(pixbuf)
             except Exception, e:
-                log('Error setting coverart...', traceback=e)
+                log('Error setting coverart...', exception=e)
 
         tag_vals = dict([ (i,'') for i in tags.keys()])
         for tag,value in tag_message.iteritems():

@@ -282,6 +282,7 @@ class Playlist(object):
     def single_file_import( self, filename ):
         """ Add a single track to the playlist """
         self.reset_playlist()
+        self.filename = filename
         return self.append( filename )
 
     ##################################
@@ -404,11 +405,12 @@ class FileObject(object):
 
         elif filetype in ['ogg', 'flac']:
             for tag,value in File.iteritems():
+                tag = tag.lower().strip()
                 if   tag == 'title':  self.title = str(value)
                 elif tag == 'album':  self.album = str(value)
                 elif tag == 'artist': self.artist = str(value)
 
-        else:
+        if not self.title.strip():
             self.title = util.pretty_filename(self.filepath)
 
         if self.coverart is None:
@@ -480,7 +482,7 @@ class PlaylistFile(object):
             self._filepath = None
             self._file = None
 
-            log( 'Error opening file: %s' % filepath, traceback=e )
+            log( 'Error opening file: %s' % filepath, exception=e )
             return False
     
         return True
@@ -492,7 +494,7 @@ class PlaylistFile(object):
             try:
                 self._file.close()
             except Exception, e:
-                log( 'Error closing file: %s' % self.filepath, traceback=e )
+                log( 'Error closing file: %s' % self.filepath, exception=e )
                 error = True
 
         self._filepath = None

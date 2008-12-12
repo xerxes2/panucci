@@ -22,10 +22,35 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # 
 
+import gtk
 import os.path
+import sys
 import traceback
+import webbrowser
 
 supported_extensions = [ '.mp3', '.ogg', '.flac', '.m4a', '.wav' ]
+logging_enabled = False
+MAEMO, LINUX = range(2)
+
+def get_platform():
+    if os.path.exists('/etc/osso_software_version'):
+        return MAEMO
+    else:
+        return LINUX
+
+platform = get_platform()
+
+
+if platform == LINUX:
+    try:
+        import pynotify
+        pynotify.init('Panucci')
+        have_pynotify = True
+    except:
+        have_pynotify = False
+else:
+    import hildon
+
 
 def is_supported( filepath ):
     filepath, extension = os.path.splitext(filepath)
@@ -66,19 +91,41 @@ def pretty_filename( filename ):
     filename, extension = os.path.basename(filename).rsplit('.',1)
     return filename.replace('_', ' ')
 
+def open_link(d, url, data):
+    webbrowser.open_new(url)
 
-logging_enabled = False
+def find_image(filename):
+    locations = ['./icons/', '../icons/', '/usr/share/panucci/',
+        os.path.dirname(sys.argv[0])+'/../icons/']
+
+    for location in locations:
+        if os.path.exists(location+filename):
+            return os.path.abspath(location+filename)
 
 def log( msg, *args, **kwargs ):
     global logging_enabled
-    if not logging_enabled:
-        return
-
     if args:
         msg = msg % args
 
-    print msg
+    if logging_enabled:
+        print msg
 
-    if kwargs.get('exception') is not None:
-        traceback.print_exc()
+        if kwargs.has_key('exception'):
+            traceback.print_exc()
+
+    if kwargs.get('notify', False):
+        title = kwargs.get('title', 'Panucci')
+        send_notification( title, msg )
+
+def send_notification( title, msg ):
+    if platform == LINUX and have_pynotify:
+        icon = find_image('panucci_64x64.png')
+        args = ( title, msg ) if icon is None else ( title, msg, icon )
+        notification = pynotify.Notification(*args)
+        notification.show()
+    elif platform == MAEMO:
+        # Note: This won't work if we're not in the gtk main loop
+        markup = '<b>%s</b>\n<small>%s</small>' % (title, msg)
+        hildon.hildon_banner_show_information_with_markup(
+            gtk.Label(''), None, markup )
 
