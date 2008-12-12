@@ -33,12 +33,14 @@ import re
 import util
 from util import log
 from dbsqlite import db
+from simplegconf import gconf
 
 _ = lambda x: x
 
 class Playlist(object):
     def __init__(self):
         self.filename = None
+        self.queue_modified = False
 
         self._current_file = 0
         self.__current_fileobj = None
@@ -50,7 +52,9 @@ class Playlist(object):
     def insert( self, position, filepath ):
         if os.path.isfile(filepath) and util.is_supported(filepath):
             self.__filelist.insert( position, filepath )
+            self.__generate_per_file_bookmarks()
             self.__bookmarks_model_changed = True
+            self.queue_modified = True
             return True
         else:
             log('File not found or not supported: %s' % filepath)
@@ -98,6 +102,38 @@ class Playlist(object):
     def md5( self, string ):
         """ Return the md5sum of 'string' """
         return hashlib.md5(string).hexdigest()
+
+    def save_to_new_playlist(self, filepath, playlist_type='m3u'):
+        self.filename = filepath
+        self.__bookmarks_model_changed = True
+
+        playlist = { 'm3u': M3U_Playlist, 'pls': PLS_Playlist }
+        if not playlist.has_key(playlist_type):
+            playlist_type = 'm3u'
+            self.filename += '.m3u'
+
+        playlist = playlist[playlist_type]()
+        playlist.import_filelist(self.__filelist)
+        if not playlist.export(filepath=filepath):
+            return False
+
+        # copy the bookmarks over to new playlist
+        db.remove_all_bookmarks(self.filename)
+        bookmarks = self.__bookmarks.copy()
+        self.__bookmarks.clear()
+
+        for bookmark in bookmarks.itervalues():
+            if bookmark.id >= 0:
+                bookmark.playlist_filepath = self.filename
+                bookmark.id = db.save_bookmark(bookmark)
+                self.append_bookmark(bookmark)
+        
+        return True
+
+    def save_temp_playlist(self):
+        filepath = gconf.sget('temp_playlist', str, '~/.panucci.m3u')
+        filepath = os.path.expanduser(filepath)
+        return self.save_to_new_playlist(filepath)
 
     ######################################
     # Bookmark-related functions
@@ -149,6 +185,7 @@ class Playlist(object):
             bookmark.seek_position = seek_position
 
         db.update_bookmark(bookmark)
+        return True
 
     def remove_bookmark( self, bookmark_id ):
         if self.__bookmarks.has_key(bookmark_id):
@@ -159,8 +196,6 @@ class Playlist(object):
     def generate_bookmark_model(self, include_resume_marks=False):
         self.__bookmarks_model = gtk.ListStore(
             gobject.TYPE_INT64, gobject.TYPE_STRING, gobject.TYPE_STRING )
-
-        self.__create_per_file_bookmarks()
 
         bookmarks = self.__bookmarks.values()
         bookmarks.sort()
@@ -193,6 +228,16 @@ class Playlist(object):
             b.bookmark_name = '%s %d' % (_('File'), n+1)
             b.playlist_index = n
             self.append_bookmark(b)
+
+    def __remove_per_file_bookmarks(self):
+        bookmarks = self.__bookmarks.keys()
+        for bmark in bookmarks:
+            if bmark < 0:
+                del self.__bookmarks[bmark]
+
+    def __generate_per_file_bookmarks(self):
+        self.__remove_per_file_bookmarks()
+        self.__create_per_file_bookmarks()
 
     ######################################
     # File-related convenience functions
@@ -233,6 +278,13 @@ class Playlist(object):
 
     def get_recent_files(self, max_files=10):
         files = db.get_latest_files()
+
+        # don't include the temporary playlist in the file list
+        temp_playlist = gconf.sget('temp_playlist', str, '~/.panucci.m3u')
+        temp_playlist = os.path.expanduser(temp_playlist)
+        if temp_playlist in files:
+            files.remove(temp_playlist)
+
         if len(files) > max_files:
             return files[:max_files]
         else:
@@ -245,19 +297,17 @@ class Playlist(object):
     def load(self, File):
         """ Detects File's filetype then loads it using
             the appropriate loader function """
+        log('Attempting to load %s' % File)
 
         error = False
         self.reset_playlist()
         self.filename = File
 
+        parsers = { 'm3u': M3U_Playlist, 'pls': PLS_Playlist }
         extension = util.detect_filetype(File)
-        if extension in [ 'm3u', 'pls' ]:
+        if parsers.has_key(extension):
             log('Loading playlist file (%s)' % extension)
-
-            if extension == 'm3u':
-                parser = M3U_Playlist()
-            else:
-                parser = PLS_Playlist()
+            parser = parsers[extension]()
 
             if parser.parse(File):
                 for f in parser.get_filelist(): self.append(f)
@@ -270,6 +320,7 @@ class Playlist(object):
             factory=Bookmark().load_from_dict )
 
         self.__bookmarks = dict([ [b.id, b] for b in bookmarks ])
+        self.__create_per_file_bookmarks()
 
         for id, bkmk in self.__bookmarks.iteritems():
             if bkmk.is_resume_position:
@@ -277,6 +328,7 @@ class Playlist(object):
                 self.load_from_bookmark( bkmk )
                 break
 
+        self.queue_modified = False
         return not error
 
     def single_file_import( self, filename ):
@@ -503,6 +555,8 @@ class PlaylistFile(object):
         return not error
 
     def get_absolute_filepath(self, item_filepath):
+        if item_filepath is None: return
+
         if item_filepath.startswith('/'):
             path = item_filepath
         else:
@@ -524,9 +578,13 @@ class PlaylistFile(object):
             dict_list.append(d)
         return dict_list
 
+    def import_filelist(self, filelist):
+        for f in filelist:
+            self._items.append(PlaylistItem(filepath=f))
+
     def export(self, filepath=None, playlist_items=None):
         if filepath is not None:
-            self.filepath = filepath
+            self._filepath = filepath
 
         if playlist_items is not None:
             self._items = playlist_items
@@ -534,6 +592,9 @@ class PlaylistFile(object):
         if self.__open_file(filepath, 'w'):
             self.export_hook(self._items)
             self.__close_file()
+            return True
+        else:
+            return False
 
     def export_hook(self, playlist_items):
         pass

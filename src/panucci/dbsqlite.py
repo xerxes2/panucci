@@ -115,11 +115,11 @@ class Storage(object):
     def save_bookmark(self, bookmark):
         if bookmark.id < 0:
             log('Not saving bookmark with negative id (%d)' % bookmark.id)
-            return
+            return bookmark.id
 
         if bookmark.playlist_filepath is None:
             log('Not saving bookmark without playlist filepath')
-            return
+            return bookmark.id
 
         if bookmark.is_resume_position:
             self.remove_resume_bookmark( bookmark.playlist_filepath )
@@ -184,12 +184,25 @@ class Storage(object):
 
     def remove_resume_bookmark(self, playlist_filepath):
         log('Deleting resume bookmark for: %s' % playlist_filepath)
-        cursor = self.cursor()
 
+        cursor = self.cursor()
         cursor.execute(
             """ DELETE FROM bookmarks WHERE
                 playlist_filepath = ? AND
                 is_resume_position = 1 """,
+
+            ( playlist_filepath, ))
+
+        cursor.close()
+        self.commit()
+
+    def remove_all_bookmarks(self, playlist_filepath):
+        log('Deleting all bookmarks for: %s' % playlist_filepath)
+
+        cursor = self.cursor()
+        cursor.execute(
+            """ DELETE FROM bookmarks WHERE
+                playlist_filepath = ? """,
 
             ( playlist_filepath, ))
 

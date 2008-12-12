@@ -209,7 +209,6 @@ class GTK_Main(dbus.service.Object):
         self.make_main_window()
         self.playing = False
         self.has_coverart = False
-        self.queue_modified = False
 
         if running_on_tablet:
             # Enable play/pause with headset button
@@ -231,9 +230,9 @@ class GTK_Main(dbus.service.Object):
 
         if filename is None:
             if self.recent_files:
-                self.play_file(self.recent_files[0], pause_on_load=True)
+                self._play_file(self.recent_files[0], pause_on_load=True)
         else:
-            self.play_file(filename)
+            self._play_file(filename)
 
     def make_main_window(self):
         import pango
@@ -384,6 +383,10 @@ class GTK_Main(dbus.service.Object):
         menu_open.connect("activate", self.open_file_callback)
         menu.append(menu_open)
 
+        menu_queue = gtk.MenuItem(_('Add file to the queue'))
+        menu_queue.connect('activate', self.queue_file_callback)
+        menu.append(menu_queue)
+
         # the recent files menu
         self.menu_recent = gtk.MenuItem(_('Recent Files'))
         menu.append(self.menu_recent)
@@ -446,7 +449,7 @@ class GTK_Main(dbus.service.Object):
         if len(self.recent_files) > 0:
             for f in self.recent_files:
                 filename, extension = os.path.splitext(os.path.basename(f))
-                menu_item = gtk.MenuItem( filename )
+                menu_item = gtk.MenuItem( filename.replace('_', ' '))
                 menu_item.connect('activate', self.on_recent_file_activate, f)
                 menu_recent_sub.append(menu_item)
         else:
@@ -483,6 +486,10 @@ class GTK_Main(dbus.service.Object):
         return (text, pos)
 
     def destroy(self, widget):
+        if self.playlist.queue_modified:
+            log('Queue modified, saving temporary playlist')
+            self.playlist.save_temp_playlist()
+
         self.stop_playing()
         self.gconf.sset( 'volume', self.get_volume() )
         gtk.main_quit()
@@ -494,34 +501,100 @@ class GTK_Main(dbus.service.Object):
         if event == 'ButtonPressed' and button == 'phone':
             self.on_btn_play_pause_clicked(self.button)
 
-    def get_file_from_filechooser(self):
+    def get_file_from_filechooser(self, save_file=False, save_to=None):
         if running_on_tablet:
-            dlg = hildon.FileChooserDialog(self.main_window,
-                gtk.FILE_CHOOSER_ACTION_OPEN)
+            if save_file:
+                args = ( self.main_window, gtk.FILE_CHOOSER_ACTION_SAVE )
+            else:
+                args = ( self.main_window, gtk.FILE_CHOOSER_ACTION_OPEN )
+
+            dlg = hildon.FileChooserDialog( *args )
         else:
-            dlg = gtk.FileChooserDialog(_('Select podcast or audiobook'),
-                None, gtk.FILE_CHOOSER_ACTION_OPEN, ((gtk.STOCK_CANCEL,
-                gtk.RESPONSE_REJECT, gtk.STOCK_MEDIA_PLAY, gtk.RESPONSE_OK)))
+            if save_file:
+                args = ( _('Select file to save playlist to'), None,
+                    gtk.FILE_CHOOSER_ACTION_SAVE,
+                    (( gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                    gtk.STOCK_SAVE, gtk.RESPONSE_OK )) )
+            else:
+                args = ( _('Select podcast or audiobook'), None,
+                    gtk.FILE_CHOOSER_ACTION_OPEN,
+                    (( gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                    gtk.STOCK_MEDIA_PLAY, gtk.RESPONSE_OK )) )
+
+            dlg = gtk.FileChooserDialog(*args)
 
         current_folder = self.gconf.sget('last_folder', str,
             os.path.expanduser('~') )
+
         if current_folder is not None and os.path.isdir(current_folder):
             dlg.set_current_folder(current_folder)
+
+        if save_file and save_to is not None:
+            dlg.set_current_name(save_to)
 
         if dlg.run() == gtk.RESPONSE_OK:
             filename = dlg.get_filename()
             self.gconf.sset('last_folder', dlg.get_current_folder())
-            dlg.destroy()
         else:
             filename = None
 
         dlg.destroy()
         return filename
 
-    def open_file_callback(self, widget=None):
+    def queue_file_callback(self, widget=None):
         filename = self.get_file_from_filechooser()
         if filename is not None:
-            self.play_file(filename)
+            self.queue_file(filename)
+
+    def check_queue(self):
+        """ Makes sure the queue is saved if it has been modified
+                True means a new file can be opened
+                False means the user does not want to continue """
+
+        if self.playlist.queue_modified:
+            dlg = gtk.MessageDialog( self.main_window, gtk.DIALOG_MODAL,
+                gtk.MESSAGE_QUESTION )
+            dlg.set_title(_('Save queue to playlist file'))
+            dlg.add_button( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL )
+            dlg.add_button( gtk.STOCK_NO, gtk.RESPONSE_NO )
+            dlg.add_button( gtk.STOCK_YES, gtk.RESPONSE_YES )
+            dlg.set_markup('<span weight="bold" size="larger">' +
+                _('Save Queue?') + '</span>\n\n' +
+                _('The queue has been modified, you will lose all additions if you don\'t save.'))
+
+            response = dlg.run()
+            dlg.destroy()
+
+            if response == gtk.RESPONSE_YES:
+                return self.save_to_playlist_callback()
+            elif response == gtk.RESPONSE_NO:
+                return True
+            elif response in [gtk.RESPONSE_CANCEL, gtk.RESPONSE_DELETE_EVENT]:
+                pass
+        else:
+            return True
+
+        return False
+
+    def open_file_callback(self, widget=None):
+        if self.check_queue():
+            filename = self.get_file_from_filechooser()
+            if filename is not None:
+                self._play_file(filename)
+
+    def save_to_playlist_callback(self, widget=None):
+        filename = self.get_file_from_filechooser(
+            save_file=True, save_to='playlist.m3u' )
+
+        if filename is None:
+            return False
+
+        ext = util.detect_filetype(filename)
+        if not self.playlist.save_to_new_playlist(filename, ext):
+            util.send_notification(_('Error saving playlist...'))
+            return False
+
+        return True
 
     def set_controls_sensitivity(self, sensitive):
         self.forward_button.set_sensitive(sensitive)
@@ -594,10 +667,18 @@ class GTK_Main(dbus.service.Object):
     @dbus.service.method('org.panucci.interface', in_signature='s')
     def queue_file(self, filepath):
         log('Attempting to queue file: %s' % filepath)
-        self.queue_modified = self.playlist.append( filepath )
+        filename = os.path.basename(filepath)
+        if self.playlist.append( filepath ):
+            util.send_notification('%s added successfully.' % filename )
+        else:
+            util.log('Error adding %s to the queue.' % filename, notify=True)
 
-    @dbus.service.method('org.panucci.interface', in_signature='sb')
-    def play_file(self, filename, pause_on_load=False):
+    @dbus.service.method('org.panucci.interface', in_signature='s')
+    def play_file(self, filename):
+        if self.check_queue():
+            self._play_file(filename)
+
+    def _play_file(self, filename, pause_on_load=False):
         self.stop_playing()
 
         self.playlist.load( os.path.abspath(filename) )

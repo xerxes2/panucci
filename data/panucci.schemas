@@ -50,6 +50,18 @@
       </schema>
 
       <schema>
+        <key>/schemas/apps/panucci/temp_playlist</key>
+        <applyto>/apps/panucci/temp_playlist</applyto>
+        <owner>panucci</owner>
+        <type>string</type>
+        <default>~/.panucci.m3u</default>
+        <locale name="C">
+          <short>Where Panucci stores it's temporary playlist.</short>
+          <long>If the queue is modified and Panucci is closed then the queue gets saved to a temporary playlist file, this setting sets the location of this file.</long>
+        </locale>
+      </schema>
+
+      <schema>
         <key>/schemas/apps/panucci/max_recent_files</key>
         <applyto>/apps/panucci/max_recent_files</applyto>
         <owner>panucci</owner>

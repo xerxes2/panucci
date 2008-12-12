@@ -82,10 +82,8 @@ def convert_ns(time_int):
 
 def detect_filetype( filepath ):
     if len(filepath.split('.')) > 1:
-        filename,extension = [ i.lower() for i in filepath.rsplit('.',1) ]
-    else:
-        extension = None
-    return extension
+        filename, extension = filepath.rsplit( '.', 1 )
+        return extension.lower()
 
 def pretty_filename( filename ):
     filename, extension = os.path.basename(filename).rsplit('.',1)
@@ -114,10 +112,10 @@ def log( msg, *args, **kwargs ):
             traceback.print_exc()
 
     if kwargs.get('notify', False):
-        title = kwargs.get('title', 'Panucci')
-        send_notification( title, msg )
+        args = ( msg, title ) if kwargs.has_key('title') else (msg,)
+        send_notification( *args )
 
-def send_notification( title, msg ):
+def send_notification( msg, title='Panucci' ):
     if platform == LINUX and have_pynotify:
         icon = find_image('panucci_64x64.png')
         args = ( title, msg ) if icon is None else ( title, msg, icon )
