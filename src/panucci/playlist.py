@@ -322,8 +322,8 @@ class Playlist(object):
                 self.load_from_bookmark( bkmk )
                 break
 
-        self.queue_modified = gconf.sget(
-            'temp_playlist', str, '~/.panucci.m3u') == self.filename
+        self.queue_modified = os.path.expanduser( gconf.sget(
+            'temp_playlist', str, '~/.panucci.m3u')) == self.filename
 
         return not error
 
