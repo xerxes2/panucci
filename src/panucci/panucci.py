@@ -722,6 +722,7 @@ class GTK_Main(dbus.service.Object):
             widget.set_text('')
             widget.hide()
         self.cover_art.hide()
+        self.has_coverart = False
         self.set_metadata(self.playlist.get_file_metadata())
         self.setup_player()
 

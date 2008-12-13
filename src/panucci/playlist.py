@@ -26,9 +26,9 @@ import gobject, gtk
 import time
 import os.path
 import hashlib
-import mutagen
 import glob
 import re
+from xml.sax.saxutils import escape
 
 import util
 from util import log
@@ -425,7 +425,22 @@ class Bookmark(object):
 
 
 class FileObject(object):
-    coverart_names = ['cover', 'cover.jpg']
+    coverart_names = ['cover', 'cover.jpg', 'cover.png']
+    tag_mappings = {
+        'mp4': { '\xa9nam': 'title',
+                 '\xa9ART': 'artist',
+                 '\xa9alb': 'album',
+                 'covr':    'coverart' },
+        'mp3': { 'TIT2': 'title',
+                 'TPE1': 'artist',
+                 'TALB': 'album',
+                 'APIC': 'coverart' },
+        'ogg': { 'title':  'title',
+                 'artist': 'artist',
+                 'album':  'album' },
+    }
+    tag_mappings['m4a']  = tag_mappings['mp4']
+    tag_mappings['flac'] = tag_mappings['ogg']
 
     def __init__(self, filepath):
         self.filepath = filepath  # the full path to the file
@@ -441,24 +456,51 @@ class FileObject(object):
 
     def extract_metadata(self):
         filetype = util.detect_filetype(self.filepath)
-        File = mutagen.File(self.filepath)
-        self.length = File.info.length
 
         if filetype == 'mp3':
-            for tag,value in File.iteritems():
-                if   tag == 'TIT2': self.title = str(value)
-                elif tag == 'TALB': self.album = str(value)
-                elif tag == 'TPE1': self.artist = str(value)
-                elif tag.startswith('APIC'): self.coverart = value.data
+            import mutagen.mp3 as meta_parser
+        elif filetype == 'ogg':
+            import mutagen.oggvorbis as meta_parser
+        elif filetype == 'flac':
+            import mutagen.flac as meta_parser
+        elif filetype in ['mp4', 'm4a']:
+            import mutagen.mp4 as meta_parser
+        else:
+            log('Extracting metadata not supported for %s files.' % filetype)
+            return False
 
-        elif filetype in ['ogg', 'flac']:
-            for tag,value in File.iteritems():
-                tag = tag.lower().strip()
-                if   tag == 'title':  self.title = str(value)
-                elif tag == 'album':  self.album = str(value)
-                elif tag == 'artist': self.artist = str(value)
+        try:
+            metadata = meta_parser.Open(self.filepath)
+        except Exception, e:
+            self.title = util.pretty_filename(self.filepath)
+            log('Error running metadata parser...', exception=e)
+            return False
 
-        if not self.title.strip():
+        self.length = metadata.info.length
+        for tag,value in metadata.iteritems():
+            if tag.find(':') != -1: # hack for weirdly named coverart tags
+                tag = tag.split(':')[0]
+
+            if self.tag_mappings[filetype].has_key(tag):
+                if isinstance( value, list ):
+                    if len(value):
+                        # Here we could either join the list or just take one
+                        # item. I chose the latter simply because some ogg
+                        # files have several messed up titles...
+                        value = value[0]
+                    else:
+                        continue
+
+                if self.tag_mappings[filetype][tag] != 'coverart':
+                    try:
+                        value = escape(str(value))
+                    except Exception, e:
+                        log( 'Could not convert tag (%s) to escaped string' % tag,
+                            exception=e )
+
+                setattr( self, self.tag_mappings[filetype][tag], value )
+
+        if not str(self.title).strip():
             self.title = util.pretty_filename(self.filepath)
 
         if self.coverart is None:

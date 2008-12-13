@@ -28,7 +28,7 @@ import sys
 import traceback
 import webbrowser
 
-supported_extensions = [ '.mp3', '.ogg', '.flac', '.m4a', '.wav' ]
+supported_extensions = [ '.mp3', '.ogg', '.flac', '.m4a', '.wav', '.mp4' ]
 logging_enabled = False
 MAEMO, LINUX = range(2)
 
