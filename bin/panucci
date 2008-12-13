@@ -22,37 +22,54 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # 
 
+app_version = '0.3.0'
 
 import dbus
 import dbus.glib
 import os.path
 import sys
+from optparse import OptionParser
 
-session_bus = dbus.SessionBus()
+_ = lambda s: s
+
+usage = 'usage: %prog [options] FILE'
+parser = OptionParser(usage=usage, version='%prog '+'%s' % app_version)
+parser.add_option('-q', '--queue', action='store', type='string',
+    dest='queue_filename', help='Add FILE to the queue', metavar='FILE')
+parser.add_option('-f', '--file', action='store', type='string',
+    dest='open_filename', help='Clear the queue and play FILE',
+    metavar='FILE')
+parser.add_option('-d', '--debug', action='store_true', default=False,
+    dest='debug', help='Enable verbose logging')
+opts, args = parser.parse_args()
+
+if None not in [ opts.queue_filename, opts.open_filename ] or len(args):
+    parser.print_help()
+    sys.exit(1)
 
 local_module_dir = os.path.join(os.path.dirname(sys.argv[0]), '..', 'src')
 if os.path.isdir(local_module_dir):
     sys.path.append(local_module_dir)
 
-if os.path.exists(sys.argv[-1]) and len(sys.argv) > 1:
-    filename = sys.argv[-1]
-else:
-    filename = None
-
+session_bus = dbus.SessionBus()
 try:
     remote_object = session_bus.get_object('org.panucci', '/player')
-    print 'Found panucci instance already running, will try to use it...'
+    print _('Found panucci instance already running, will try to use it...')
 except dbus.exceptions.DBusException:
     remote_object = None
 
 if remote_object is None:
     from panucci import panucci
     from panucci import util
-    # This could eventually be made fancy with optparse
-    util.logging_enabled = '--debug' in sys.argv
-    panucci.run(filename=filename)
+    util.logging_enabled = opts.debug
+    panucci.run(filename=opts.queue_filename or opts.open_filename)
 else:
-    if filename is not None:
-        remote_object.play_file(filename, False, dbus_interface='org.panucci.interface')
+    if opts.open_filename is not None:
+        remote_object.play_file(
+            opts.open_filename, dbus_interface='org.panucci.interface' )
+    elif opts.queue_filename is not None:
+        remote_object.queue_file(
+            opts.queue_filename, dbus_interface='org.panucci.interface' )
+
     remote_object.show_main_window(dbus_interface='org.panucci.interface')
 
