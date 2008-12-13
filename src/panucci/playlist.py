@@ -497,6 +497,11 @@ class FileObject(object):
                     except Exception, e:
                         log( 'Could not convert tag (%s) to escaped string' % tag,
                             exception=e )
+                else:
+                    # some coverart classes store the image in the data
+                    # attribute whereas others do not :S
+                    if hasattr( value, 'data' ):
+                        value = value.data
 
                 setattr( self, self.tag_mappings[filetype][tag], value )
 
