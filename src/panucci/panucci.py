@@ -202,6 +202,19 @@ class GTK_Main(dbus.service.Object):
         self.gconf = gconf
         self.gconf.snotify(self.gconf_key_changed)
 
+        pickle_file = os.path.expanduser('~/.rmp-bookmarks')
+        if os.path.isfile(pickle_file):
+            import shutil
+            import pickle_converter
+            log(_('Converting old pickle format to SQLite.'), notify=True)
+            log(_('This may take a while...'), notify=True)
+            if pickle_converter.load_pickle_file(pickle_file):
+                log(_('Pickle file converted successfully.'), notify=True)
+                shutil.move( pickle_file, pickle_file + '.bak' )
+            else:
+                log( _('Error converting pickle file, check your log...'),
+                    notify=True )
+
         self.playlist = Playlist()
         self.recent_files = []
         self.progress_timer_id = None
