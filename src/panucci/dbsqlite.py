@@ -124,8 +124,8 @@ class Storage(object):
         if bookmark.is_resume_position:
             self.remove_resume_bookmark( bookmark.playlist_filepath )
 
-        log('Saving %s (%s)' % (
-            bookmark.bookmark_name, bookmark.playlist_filepath ))
+        log('Saving %s, %d (%s)' % ( bookmark.bookmark_name,
+            bookmark.seek_position, bookmark.playlist_filepath ))
 
         cursor = self.cursor()
         cursor.execute(

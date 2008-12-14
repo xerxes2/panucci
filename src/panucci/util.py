@@ -57,6 +57,7 @@ def is_supported( filepath ):
     return extension.lower() in supported_extensions
 
 def convert_ns(time_int):
+    time_int = max( 0, time_int )
     time_int = time_int / 10**9
     time_str = ""
     if time_int >= 3600:

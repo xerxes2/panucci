@@ -832,38 +832,51 @@ class GTK_Main(dbus.service.Object):
                 percent=n: seek n percent from the beginning of the file
         """
         self.want_to_seek = True
+        error = False
 
         position, duration = self.player_get_position()
         # if position and duration are 0 then player_get_position caught an
         # exception. Therefore self.player isn't ready to be seeking.
         if not ( position or duration ) or self.player is None:
-            return False
-
-        if from_beginning is not None:
-            assert from_beginning >= 0
-            position = min( from_beginning, duration )
-        elif from_current is not None:
-            position = max( 0, min( position+from_current, duration ))
-        elif percent is not None:
-            assert 0 <= percent <= 1
-            position = int(duration*percent)
+            error = True
         else:
-            log('No seek parameters specified.')
-            return False
+            if from_beginning is not None:
+                assert from_beginning >= 0
+                position = min( from_beginning, duration )
+            elif from_current is not None:
+                position = max( 0, min( position+from_current, duration ))
+            elif percent is not None:
+                assert 0 <= percent <= 1
+                position = int(duration*percent)
+            else:
+                log('No seek parameters specified.')
+                error = True
 
-        # Preemptively update the progressbar to make seeking nice and smooth
-        self.set_progress_callback( position, duration )
-        self.player.seek_simple(self.time_format, gst.SEEK_FLAG_FLUSH, position)
+        if not error:
+            # Preemptively update the progressbar to make seeking smoother
+            self.set_progress_callback( position, duration )
+            self.__seek(position)
+
         self.want_to_seek = False
+        return not error
 
-        return True
+    def __seek(self, position):
+        # Don't use this, use self.do_seek instead
+        try:
+            self.player.seek_simple(
+                self.time_format, gst.SEEK_FLAG_FLUSH, position )
+            return True
+        except Exception, e:
+            log( 'Error seeking', exception=e )
+            return False
 
     def player_get_position(self):
         """ returns [ current position, total duration ] """
         try:
             pos_int = self.player.query_position(self.time_format, None)[0]
             dur_int = self.player.query_duration(self.time_format, None)[0]
-        except:
+        except Exception, e:
+            #log('Error getting position...', exception=e)
             pos_int = dur_int = 0
         return pos_int, dur_int
 
@@ -908,7 +921,11 @@ class GTK_Main(dbus.service.Object):
                 if self.want_to_seek:
                     # This only gets called when the file is first loaded
                     pause_time = self.playlist.play()
-                    self.do_seek(from_beginning=pause_time)
+                    log('Seeking to %d' % pause_time)
+                    # seek manually because on maemo it is sometimes impossible
+                    # to query the player this early in the process
+                    self.__seek(pause_time)
+                    self.want_to_seek = False
                 else:
                     self.set_controls_sensitivity(True)
 

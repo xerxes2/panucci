@@ -349,8 +349,10 @@ class Playlist(object):
 
     def stop(self):
         """ Caused when we reach the end of a file """
-        db.remove_resume_bookmark( self.filename )
-        self.current_fileobj.pause(0)
+        # for the time being, don't remove resume points at EOF to make sure
+        #   that the recent files list stays populated.
+        # db.remove_resume_bookmark( self.filename )
+        self.pause(0)
 
     def skip(self, skip_by=None, skip_to=None, dont_loop=False):
         """ Skip to another track in the playlist.
