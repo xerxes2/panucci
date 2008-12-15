@@ -62,6 +62,7 @@ if remote_object is None:
     from panucci import panucci
     from panucci import util
     util.logging_enabled = opts.debug
+    panucci.app_version = app_version
     panucci.run(filename=opts.queue_filename or opts.open_filename)
 else:
     if opts.open_filename is not None:

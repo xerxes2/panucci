@@ -65,6 +65,7 @@ about_name = 'Panucci'
 about_text = _('Resuming audiobook and podcast player')
 about_authors = ['Thomas Perl', 'Nick (nikosapi)', 'Matthew Taylor']
 about_website = 'http://panucci.garage.maemo.org/'
+app_version = ''
 donate_wishlist_url = 'http://www.amazon.de/gp/registry/2PD2MYGHE6857'
 donate_device_url = 'http://maemo.gpodder.org/donate.html'
 
@@ -491,6 +492,7 @@ class GTK_Main(dbus.service.Object):
         dialog.set_name(about_name)
         dialog.set_authors(about_authors)
         dialog.set_comments(about_text)
+        dialog.set_version(app_version)
         dialog.run()
         dialog.destroy()
 
