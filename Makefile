@@ -25,6 +25,8 @@
 PREFIX ?= /usr
 DESTDIR ?= /
 
+PYTHON = /usr/bin/python2.5
+
 all:
 	@echo "Possible make targets:"
 	@echo "    install - install the package"
@@ -35,15 +37,22 @@ all:
 install: python-install post-install install-schemas
 
 python-install:
-	python setup.py install --optimize 2
+	$(PYTHON) setup.py install --optimize 2 --root=$(DESTDIR) --prefix=$(PREFIX)
+
+copy-schemas:
+	mkdir -p $(DESTDIR)/etc/gconf/schemas
+	install data/panucci.schemas $(DESTDIR)/etc/gconf/schemas
 
 install-schemas:
-	install data/panucci.schemas $(DESTDIR)/etc/gconf/schemas
 	GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source` \
 		gconftool-2 --makefile-install-rule data/panucci.schemas
 	# This isn't a problem, gconf gets started when it's needed
 	# DON'T WORRY IF THIS FAILS, kay?
 	-killall gconfd-2
+
+post-install:
+	gtk-update-icon-cache -f -i $(PREFIX)/share/icons/hicolor/
+	update-desktop-database $(PREFIX)/share/applications/
 
 clean:
 	rm -rf build src/panucci/*.pyc
@@ -54,6 +63,3 @@ distclean: clean
 test:
 	PYTHONPATH=src/ python bin/panucci --debug
 
-post-install:
-	gtk-update-icon-cache -f -i $(PREFIX)/share/icons/hicolor/
-	update-desktop-database $(PREFIX)/share/applications/
