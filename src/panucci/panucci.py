@@ -60,6 +60,7 @@ except:
 from util import log
 from simplegconf import gconf
 from playlist import Playlist
+from settings import settings
 
 about_name = 'Panucci'
 about_text = _('Resuming audiobook and podcast player')
@@ -239,7 +240,7 @@ class GTK_Main(dbus.service.Object):
         self.get_volume_level = lambda: 0
         self.set_volume_level = lambda x: 0
 
-        self.set_volume(self.gconf.sget('volume', float, 0.3))
+        self.set_volume(settings.volume)
         self.time_format = gst.Format(gst.FORMAT_TIME)
 
         if filename is None:
@@ -422,7 +423,7 @@ class GTK_Main(dbus.service.Object):
 
         menu_settings_lock_progress = gtk.CheckMenuItem(_('Lock Progress Bar'))
         menu_settings_lock_progress.connect('toggled', lambda w: 
-            self.gconf.sset('progress_locked', w.get_active()))
+            setattr( settings, 'progress_locked', w.get_active()))
         menu_settings_lock_progress.set_active(self.lock_progress)
         menu_settings_sub.append(menu_settings_lock_progress)
 
@@ -456,12 +457,11 @@ class GTK_Main(dbus.service.Object):
         return menu
 
     def create_recent_files_menu( self ):
-        max_files = self.gconf.sget('max_recent_files', int, 10)
+        max_files = settings.max_recent_files
         self.recent_files = self.playlist.get_recent_files(max_files)
         menu_recent_sub = gtk.Menu()
 
-        temp_playlist = gconf.sget('temp_playlist', str, '~/.panucci.m3u')
-        temp_playlist = os.path.expanduser(temp_playlist)
+        temp_playlist = os.path.expanduser(settings.temp_playlist)
 
         if len(self.recent_files) > 0:
             for f in self.recent_files:
@@ -483,7 +483,7 @@ class GTK_Main(dbus.service.Object):
 
     @property
     def lock_progress(self):
-        return self.gconf.sget('progress_locked', bool, False)
+        return settings.progress_locked
 
     def show_about(self, w, win):
         dialog = gtk.AboutDialog()
@@ -511,7 +511,7 @@ class GTK_Main(dbus.service.Object):
             self.playlist.save_temp_playlist()
 
         self.stop_playing()
-        self.gconf.sset( 'volume', self.get_volume() )
+        settings.volume = self.get_volume()
         gtk.main_quit()
 
     def gconf_key_changed(self, client, connection_id, entry, args):
@@ -543,8 +543,7 @@ class GTK_Main(dbus.service.Object):
 
             dlg = gtk.FileChooserDialog(*args)
 
-        current_folder = self.gconf.sget('last_folder', str,
-            os.path.expanduser('~') )
+        current_folder = os.path.expanduser(settings.last_folder)
 
         if current_folder is not None and os.path.isdir(current_folder):
             dlg.set_current_folder(current_folder)
@@ -554,7 +553,7 @@ class GTK_Main(dbus.service.Object):
 
         if dlg.run() == gtk.RESPONSE_OK:
             filename = dlg.get_filename()
-            self.gconf.sset('last_folder', dlg.get_current_folder())
+            settings.last_folder = dlg.get_current_folder()
         else:
             filename = None
 

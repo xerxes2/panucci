@@ -30,6 +30,8 @@ except ImportError:
     log( 'Error importing sqlite, FAIL!')
 
 import os.path
+
+from settings import settings
 from simplegconf import gconf
 from util import log
 
@@ -241,5 +243,5 @@ class Storage(object):
 
         return row
 
-db = Storage(os.path.expanduser(gconf.sget('db_location', str, '~/.panucci.sqlite')))
+db = Storage(os.path.expanduser(settings.db_location))
 

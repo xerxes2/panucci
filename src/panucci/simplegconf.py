@@ -30,6 +30,8 @@ except:
     # on the tablet, it's probably in "gnome"
     from gnome import gconf
 
+from util import log
+
 gconf_dir = '/apps/panucci'
 
 class SimpleGConfClient(gconf.Client):
@@ -65,14 +67,20 @@ class SimpleGConfClient(gconf.Client):
         return self.__get_manipulator_method(type(value), 'set')(
             os.path.join(self.__directory, key), value )
 
-    def sget( self, key, data_type, default=None ):
-        """ A simple get function, type is required, default value is
-            optional, 'key' is relative to self.__directory """
+    def sget( self, key, data_type=None, default=None ):
+        """ A simple get function, data_type or default value is required,
+        if default value is given data type will be guessed from it,
+        'key' is relative to self.__directory """
+
+        dtype = type(default) if data_type is None else data_type
+        if dtype is None:
+            log('gconf sget error: data_type or default must be set')
+            return
 
         if self.get( os.path.join(self.__directory, key) ) is None:
             return default
         else:
-            return self.__get_manipulator_method(data_type, 'get')(
+            return self.__get_manipulator_method(dtype, 'get')(
                 os.path.join(self.__directory, key) )
 
     def snotify( self, callback ):

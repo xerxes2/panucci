@@ -33,6 +33,7 @@ from xml.sax.saxutils import escape
 import util
 from util import log
 from dbsqlite import db
+from settings import settings
 from simplegconf import gconf
 
 _ = lambda x: x
@@ -131,8 +132,7 @@ class Playlist(object):
         return True
 
     def save_temp_playlist(self):
-        filepath = gconf.sget('temp_playlist', str, '~/.panucci.m3u')
-        filepath = os.path.expanduser(filepath)
+        filepath = os.path.expanduser(settings.temp_playlist)
         return self.save_to_new_playlist(filepath)
 
     ######################################
@@ -322,8 +322,8 @@ class Playlist(object):
                 self.load_from_bookmark( bkmk )
                 break
 
-        self.queue_modified = os.path.expanduser( gconf.sget(
-            'temp_playlist', str, '~/.panucci.m3u')) == self.filename
+        self.queue_modified = os.path.expanduser(
+            settings.temp_playlist ) == self.filename
 
         return not error
 
