@@ -936,10 +936,12 @@ class GTK_Main(dbus.service.Object):
                 if self.want_to_seek:
                     # This only gets called when the file is first loaded
                     pause_time = self.playlist.play()
-                    log('Seeking to %d' % pause_time)
-                    # seek manually because on maemo it is sometimes impossible
-                    # to query the player this early in the process
-                    self.__seek(pause_time)
+                    # don't seek if position is 0
+                    if pause_time > 0:
+                        log('Seeking to %d' % pause_time)
+                        # seek manually because on maemo it is sometimes impossible
+                        # to query the player this early in the process
+                        self.__seek(pause_time)
                     self.want_to_seek = False
                 else:
                     self.set_controls_sensitivity(True)
