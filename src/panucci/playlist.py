@@ -52,6 +52,8 @@ class Playlist(object):
 
     def insert( self, position, filepath ):
         if os.path.isfile(filepath) and util.is_supported(filepath):
+            if position <= self._current_file:
+                self._current_file += 1
             self.__filelist.insert( position, filepath )
             self.__generate_per_file_bookmarks()
             self.__bookmarks_model_changed = True

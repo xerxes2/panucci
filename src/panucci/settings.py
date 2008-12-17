@@ -45,9 +45,17 @@ class Settings(object):
 
     def __setattr__(self, key, value):
         if default_settings.has_key(key):
-            gconf.sset( key, value )
+            if type(value) == type(default_settings[key]):
+                gconf.sset( key, value )
+                return True
+            else:
+                log('Type of "%s" (%s) does not match default type (%s)' % (
+                    key, type(value), type(default_settings[key]) ))
         else:
             log('Setting "%s" doesn\'t exist.' % key)
+
+        return False
+
 
 settings = Settings()
 
