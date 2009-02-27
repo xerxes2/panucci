@@ -79,9 +79,9 @@ class Playlist(ObservableService):
         if not self.is_empty:
             return self.__queue.current_item.filepath
 
-    def get_queue_modified(self):    return self.__queue.modified
-    def set_queue_modified(self, v): self.__queue.modified = v
-    queue_modified = property(get_queue_modified,set_queue_modified)
+    @property
+    def queue_modified(self):
+        return self.__queue.modified
 
     @property
     def queue_length(self):
@@ -128,7 +128,7 @@ class Playlist(ObservableService):
 
     def quit(self):
         self.__log.debug('quit() called.')
-        if self.queue_modified:
+        if self.__queue.modified:
             self.__log.info('Queue modified, saving temporary playlist')
             self.save_temp_playlist()
 
@@ -341,7 +341,7 @@ class Playlist(ObservableService):
 
         self.load_from_resume_bookmark()
 
-        self.queue_modified = os.path.expanduser(
+        self.__queue.modified = os.path.expanduser(
             settings.temp_playlist ) == self.filepath
 
         self.on_queue_current_item_changed()
