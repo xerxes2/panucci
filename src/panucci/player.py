@@ -53,10 +53,12 @@ class panucciPlayer(ObservableService):
 
         self.time_format = gst.Format(gst.FORMAT_TIME)
 
-    def init(self, load_last_played=True):
+    def init(self, filepath=None):
         """ This should be called by the UI once it has initialized """
-        if load_last_played:
+        if filepath is None:
             self.playlist.load_last_played()
+        else:
+            self.playlist.load( filepath )
 
     def play(self):
         have_player = self.__player is not None

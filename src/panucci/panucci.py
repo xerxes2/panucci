@@ -370,7 +370,7 @@ class GTK_Main(object):
         player.register( 'end_of_playlist', self.on_player_end_of_playlist )
         player.playlist.register('new_track_metadata',self.on_player_new_track)
         player.playlist.register( 'file_queued', self.on_file_queued )
-        player.init()
+        player.init(filepath=filename)
 
     def make_main_window(self):
         import pango
