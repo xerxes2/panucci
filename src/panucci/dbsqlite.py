@@ -24,30 +24,33 @@
 # _Heavily_ inspired by gPodder's dbsqlite
 #
 
+import os.path
+import logging
+import string
+import time
+
+log = logging.getLogger('panucci.dbsqlite')
+
 try:
     from sqlite3 import dbapi2 as sqlite
 except ImportError:
-    log( 'Error importing sqlite, FAIL!')
-
-import os.path
-import time
-import string
+    log.critical('Error importing sqlite, FAIL!')
 
 from settings import settings
 from simplegconf import gconf
-from util import log
 
 class Storage(object):
     def __init__(self, db_file):
         """ db_file is the on-disk location of the database file """
         self.__db_file = db_file
         self.__db = None
+        self.__log = logging.getLogger('panucci.dbsqlite.Storage')
 
     @property
     def db(self):
         if self.__db is None:
             self.__db = sqlite.connect(self.__db_file)
-            log('Connected to %s' % self.__db_file)
+            self.__log.debug('Connected to %s', self.__db_file)
             self.__check_schema()
         return self.__db
 
@@ -56,10 +59,10 @@ class Storage(object):
 
     def commit(self):
         try:
-            log("COMMIT")
+            self.__log.debug('COMMIT')
             self.db.commit()
         except ProgrammingError, e:
-            log('Error commiting changes: %s' % e)
+            self.__log.error('Error commiting changes!', exc_info=1)
 
     def __check_schema(self):
         """
@@ -164,18 +167,18 @@ class Storage(object):
 
     def save_bookmark(self, bookmark):
         if bookmark.id < 0:
-            log('Not saving bookmark with negative id (%d)' % bookmark.id)
+            self.__log.warn('Not saving bookmark with negative id (%d)', bookmark.id)
             return bookmark.id
 
         if bookmark.playlist_id is None:
-            log('Not saving bookmark without playlist filepath')
+            self.__log.warn('Not saving bookmark without playlist filepath')
             return bookmark.id
 
         if bookmark.is_resume_position:
             self.remove_resume_bookmark( bookmark.playlist_id )
 
-        log('Saving %s, %d (%s)' % ( bookmark.bookmark_name,
-            bookmark.seek_position, bookmark.bookmark_filepath ))
+        self.__log.info('Saving %s, %d (%s)', bookmark.bookmark_name,
+            bookmark.seek_position, bookmark.bookmark_filepath )
 
         cursor = self.cursor()
         cursor.execute(
@@ -202,8 +205,8 @@ class Storage(object):
         return r_id[0]
 
     def update_bookmark(self, bookmark):
-        log('Updating %s (%s)' % (
-            bookmark.bookmark_name, bookmark.playlist_id ))
+        self.__log.info('Updating %s (%s)',
+            bookmark.bookmark_name, bookmark.playlist_id )
 
         cursor = self.cursor()
         cursor.execute(
@@ -226,7 +229,7 @@ class Storage(object):
         self.commit()
 
     def remove_bookmark(self, bookmark_id):
-        log('Deleting bookmark by id: %s' % bookmark_id)
+        self.__log.info('Deleting bookmark by id: %s', bookmark_id)
         assert bookmark_id >= 0
 
         cursor = self.cursor()
@@ -237,7 +240,7 @@ class Storage(object):
         self.commit()
 
     def remove_resume_bookmark(self, playlist_id):
-        log('Deleting resume bookmark for: %s' % playlist_id)
+        self.__log.info('Deleting resume bookmark for: %s', playlist_id)
 
         cursor = self.cursor()
         cursor.execute(
@@ -251,7 +254,7 @@ class Storage(object):
         self.commit()
 
     def remove_all_bookmarks(self, playlist_id):
-        log('Deleting all bookmarks for: %s' % playlist_id)
+        self.__log.info('Deleting all bookmarks for: %s', playlist_id)
 
         cursor = self.cursor()
         cursor.execute(
@@ -293,7 +296,7 @@ class Storage(object):
         return playlist_id
 
     def add_playlist(self, filepath, timestamp=None):
-        log( 'Adding playlist: %s' % filepath )
+        self.__log.info( 'Adding playlist: %s', filepath )
 
         if timestamp is None:
             timestamp = time.time()
@@ -311,7 +314,7 @@ class Storage(object):
         return r_id
 
     def update_playlist(self, playlist_id, filepath, timestamp=None):
-        log( 'Updating playlist: %s' % filepath )
+        self.__log.info( 'Updating playlist: %s', filepath )
 
         if timestamp is None:
             timestamp = time.time()
@@ -329,7 +332,7 @@ class Storage(object):
         self.commit()
 
     def delete_playlist(self, playlist_id):
-        log( 'Deleting playlist: %d' % playlist_id )
+        self.__log.info( 'Deleting playlist: %d', playlist_id )
 
         cursor = self.cursor()
         cursor.execute(
@@ -340,7 +343,7 @@ class Storage(object):
         self.commit()
 
     def get_latest_files(self):
-        log('Finding latest files...')
+        self.__log.debug('Finding latest files...')
         cursor = self.cursor()
 
         cursor.execute(

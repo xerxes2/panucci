@@ -28,10 +28,10 @@
 #
 
 
+import logging
 import sys
 import os, os.path
 import time
-import cPickle as pickle
 
 import gtk
 import gobject
@@ -48,6 +48,8 @@ import dbus.glib
 # make a dummy "_" function to passthrough the string
 _ = lambda s: s
 
+log = logging.getLogger('panucci.panucci')
+
 import util
 running_on_tablet = util.platform == util.MAEMO
 
@@ -55,9 +57,9 @@ try:
     import hildon
 except:
     if running_on_tablet:
-        log('Using GTK widgets, install "python2.5-hildon" for this to work properly.')
+        log.critical( 'Using GTK widgets, install "python2.5-hildon" '
+            'for this to work properly.' )
 
-from util import log
 from simplegconf import gconf
 from playlist import Playlist
 from settings import settings
@@ -99,6 +101,7 @@ def image(widget, filename, is_stock=False):
 
 class BookmarksWindow(gtk.Window):
     def __init__(self, main):
+        self.__log = logging.getLogger('panucci.panucci.BookmarksWindow')
         self.main = main
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
         self.set_title('Bookmarks')
@@ -222,6 +225,7 @@ class BookmarksWindow(gtk.Window):
 class GTK_Main(dbus.service.Object):
 
     def __init__(self, bus_name, filename=None):
+        self.__log = logging.getLogger('panucci.panucci.GTK_Main')
         dbus.service.Object.__init__(self, object_path="/player",
             bus_name=bus_name)
 
@@ -232,14 +236,18 @@ class GTK_Main(dbus.service.Object):
         if os.path.isfile(pickle_file):
             import shutil
             import pickle_converter
-            log(_('Converting old pickle format to SQLite.'), notify=True)
-            log(_('This may take a while...'), notify=True)
+
+            self.__log.info(
+                util.notify( _('Converting old pickle format to SQLite.') ))
+            self.__log.info( util.notify( _('This may take a while...') ))
+
             if pickle_converter.load_pickle_file(pickle_file):
-                log(_('Pickle file converted successfully.'), notify=True)
+                self.__log.info(
+                    util.notify( _('Pickle file converted successfully.') ))
                 shutil.move( pickle_file, pickle_file + '.bak' )
             else:
-                log( _('Error converting pickle file, check your log...'),
-                    notify=True )
+                self.__log.error( util.notify(
+                    _('Error converting pickle file, check your log...') ))
 
         self.playlist = Playlist()
         self.recent_files = []
@@ -252,10 +260,13 @@ class GTK_Main(dbus.service.Object):
         if running_on_tablet:
             # Enable play/pause with headset button
             system_bus = dbus.SystemBus()
-            headset_button = system_bus.get_object('org.freedesktop.Hal',
-                '/org/freedesktop/Hal/devices/platform_retu_headset_logicaldev_input')
-            headset_device = dbus.Interface(headset_button, 'org.freedesktop.Hal.Device')
-            headset_device.connect_to_signal('Condition', self.handle_headset_button)
+            headset_button = system_bus.get_object(
+                'org.freedesktop.Hal', '/org/freedesktop/Hal/devices/'
+                'platform_retu_headset_logicaldev_input' )
+            headset_device = dbus.Interface(
+                headset_button, 'org.freedesktop.Hal.Device')
+            headset_device.connect_to_signal(
+                'Condition', self.handle_headset_button )
 
         self.want_to_seek = False
         self.player = None
@@ -531,7 +542,7 @@ class GTK_Main(dbus.service.Object):
 
     def destroy(self, widget):
         if self.playlist.queue_modified:
-            log('Queue modified, saving temporary playlist')
+            self.__log.info('Queue modified, saving temporary playlist')
             self.playlist.save_temp_playlist()
 
         self.stop_playing()
@@ -539,7 +550,8 @@ class GTK_Main(dbus.service.Object):
         gtk.main_quit()
 
     def gconf_key_changed(self, client, connection_id, entry, args):
-        log( 'gconf key %s changed: %s' % (entry.get_key(), entry.get_value()))
+        self.__log.debug( 'gconf key %s changed: %s',
+            entry.get_key(), entry.get_value() )
 
     def handle_headset_button(self, event, button):
         if event == 'ButtonPressed' and button == 'phone':
@@ -634,7 +646,7 @@ class GTK_Main(dbus.service.Object):
 
         ext = util.detect_filetype(filename)
         if not self.playlist.save_to_new_playlist(filename, ext):
-            util.send_notification(_('Error saving playlist...'))
+            util.notify(_('Error saving playlist...'))
             return False
 
         return True
@@ -709,12 +721,13 @@ class GTK_Main(dbus.service.Object):
 
     @dbus.service.method('org.panucci.interface', in_signature='s')
     def queue_file(self, filepath):
-        log('Attempting to queue file: %s' % filepath)
+        self.__log.debug('Attempting to queue file: %s', filepath)
         filename = os.path.basename(filepath)
         if self.playlist.append( filepath ):
-            util.send_notification('%s added successfully.' % filename )
+            self.__log.info(util.notify('%s added successfully.' % filename ))
         else:
-            util.log('Error adding %s to the queue.' % filename, notify=True)
+            self.__log.error(
+                util.notify('Error adding %s to the queue.' % filename) )
 
     @dbus.service.method('org.panucci.interface', in_signature='s')
     def play_file(self, filename):
@@ -782,7 +795,7 @@ class GTK_Main(dbus.service.Object):
             return False
 
         if filetype.startswith('ogg') and running_on_tablet:
-            log( 'Using OGG workaround, I hope this works...' )
+            self.__log.info( 'Using OGG workaround, I hope this works...' )
 
             self.player = gst.Pipeline('player')
             source = gst.element_factory_make('gnomevfssrc', 'file-source')
@@ -791,8 +804,9 @@ class GTK_Main(dbus.service.Object):
                 audio_decoder = gst.element_factory_make(
                     'tremor', 'vorbis-decoder' )
             except Exception, e:
-                log( 'No ogg decoder available, install the "mogg" package.',
-                    exception=e, title='Missing Decoder.', notify=True )
+                self.__log.exception( util.notify(
+                    'No ogg decoder available, install the "mogg" package.',
+                    title='Missing Decoder.' ))
                 return False
 
             self.__volume_control = gst.element_factory_make('volume', 'volume')
@@ -806,7 +820,7 @@ class GTK_Main(dbus.service.Object):
 
             source.set_property( 'location', 'file://' + filepath )
         else:
-            log( 'Using plain-old playbin.' )
+            self.__log.info( 'Using plain-old playbin.' )
 
             self.player = gst.element_factory_make('playbin', 'player')
 
@@ -889,7 +903,7 @@ class GTK_Main(dbus.service.Object):
                 assert 0 <= percent <= 1
                 position = int(duration*percent)
             else:
-                log('No seek parameters specified.')
+                self.__log.warning('No seek parameters specified.')
                 error = True
 
         if not error:
@@ -907,7 +921,7 @@ class GTK_Main(dbus.service.Object):
                 self.time_format, gst.SEEK_FLAG_FLUSH, position )
             return True
         except Exception, e:
-            log( 'Error seeking', exception=e )
+            self.__log.exception( 'Error seeking' )
             return False
 
     def player_get_position(self):
@@ -916,7 +930,7 @@ class GTK_Main(dbus.service.Object):
             pos_int = self.player.query_position(self.time_format, None)[0]
             dur_int = self.player.query_duration(self.time_format, None)[0]
         except Exception, e:
-            #log('Error getting position...', exception=e)
+            #self.__log.exception('Error getting position...')
             pos_int = dur_int = 0
         return pos_int, dur_int
 
@@ -951,7 +965,7 @@ class GTK_Main(dbus.service.Object):
 
         elif t == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
-            log( "Error: %s %s" % (err, debug) )
+            self.__log.critical( "Error: %s %s" % (err, debug) )
             self.stop_playing()
 
         elif t == gst.MESSAGE_STATE_CHANGED:
@@ -963,7 +977,7 @@ class GTK_Main(dbus.service.Object):
                     pause_time = self.playlist.play()
                     # don't seek if position is 0
                     if pause_time > 0:
-                        log('Seeking to %d' % pause_time)
+                        self.__log.info('Seeking to %d' % pause_time)
                         # seek manually because on maemo it is sometimes impossible
                         # to query the player this early in the process
                         self.__seek(pause_time)
@@ -991,7 +1005,7 @@ class GTK_Main(dbus.service.Object):
                     coverart_size[0], coverart_size[1], gtk.gdk.INTERP_BILINEAR )
                 self.set_coverart(pixbuf)
             except Exception, e:
-                log('Error setting coverart...', exception=e)
+                self.__log.exception('Error setting coverart...')
 
         tag_vals = dict([ (i,'') for i in tags.keys()])
         for tag,value in tag_message.iteritems():
@@ -1030,6 +1044,7 @@ def run(filename=None):
     gtk.main()
 
 if __name__ == '__main__':
-    log( 'WARNING: Use the "panucci" executable to run this program.' )
-    log( 'Exiting...' )
+    log.error( 'WARNING: Use the "panucci" executable to run this program.' )
+    log.error( 'Exiting...' )
+    sys.exit(1)
 

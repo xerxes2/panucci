@@ -26,6 +26,7 @@ app_version = '0.3.0'
 
 import dbus
 import dbus.glib
+import logging
 import os.path
 import sys
 from optparse import OptionParser
@@ -60,8 +61,8 @@ except dbus.exceptions.DBusException:
 
 if remote_object is None:
     from panucci import panucci
-    from panucci import util
-    util.logging_enabled = opts.debug
+    log_level = logging.DEBUG if opts.debug else logging.ERROR
+    logging.basicConfig(level=log_level)
     panucci.app_version = app_version
     panucci.run(filename=opts.queue_filename or opts.open_filename)
 else:

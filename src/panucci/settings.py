@@ -22,8 +22,8 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
+import logging
 from simplegconf import gconf
-from util import log
 
 # If you add a setting _please_ update the schemas file
 
@@ -37,11 +37,13 @@ default_settings = {
 }
 
 class Settings(object):
+    __log = logging.getLogger('panucci.settings.Settings')
+
     def __getattr__(self, key):
         if default_settings.has_key(key):
             return gconf.sget( key, default=default_settings[key] )
         else:
-            log('Setting "%s" doesn\'t exist.' % key)
+            self.__log.warning('Setting "%s" doesn\'t exist.' % key)
 
     def __setattr__(self, key, value):
         if default_settings.has_key(key):
@@ -49,10 +51,11 @@ class Settings(object):
                 gconf.sset( key, value )
                 return True
             else:
-                log('Type of "%s" (%s) does not match default type (%s)' % (
-                    key, type(value), type(default_settings[key]) ))
+                self.__log.warning(
+                    'Type of "%s" (%s) does not match default type (%s)',
+                    key, type(value), type(default_settings[key]) )
         else:
-            log('Setting "%s" doesn\'t exist.' % key)
+            self.__log.warning('Setting "%s" doesn\'t exist.', key)
 
         return False
 

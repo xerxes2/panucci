@@ -29,7 +29,6 @@ import traceback
 import webbrowser
 
 supported_extensions = [ '.mp3', '.ogg', '.flac', '.m4a', '.wav', '.mp4' ]
-logging_enabled = False
 MAEMO, LINUX = range(2)
 
 def get_platform():
@@ -101,22 +100,9 @@ def find_image(filename):
         if os.path.exists(location+filename):
             return os.path.abspath(location+filename)
 
-def log( msg, *args, **kwargs ):
-    global logging_enabled
-    if args:
-        msg = msg % args
+def notify( msg, title='Panucci' ):
+    """ Sends a notification using pynotify, returns msg """
 
-    if logging_enabled:
-        print msg
-
-        if kwargs.has_key('exception'):
-            traceback.print_exc()
-
-    if kwargs.get('notify', False):
-        args = ( msg, title ) if kwargs.has_key('title') else (msg,)
-        send_notification( *args )
-
-def send_notification( msg, title='Panucci' ):
     if platform == LINUX and have_pynotify:
         icon = find_image('panucci_64x64.png')
         args = ( title, msg ) if icon is None else ( title, msg, icon )
@@ -127,4 +113,6 @@ def send_notification( msg, title='Panucci' ):
         markup = '<b>%s</b>\n<small>%s</small>' % (title, msg)
         hildon.hildon_banner_show_information_with_markup(
             gtk.Label(''), None, markup )
+
+    return msg
 

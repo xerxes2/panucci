@@ -27,11 +27,11 @@ import time
 import os.path
 import os
 import re
+import logging
 from hashlib import md5
 from xml.sax.saxutils import escape
 
 import util
-from util import log
 from dbsqlite import db
 from settings import settings
 from simplegconf import gconf
@@ -40,8 +40,9 @@ _ = lambda x: x
 
 class Playlist(object):
     def __init__(self):
-        self.filepath = None
+        self.__log = logging.getLogger('panucci.playlist.Playlist')
 
+        self.filepath = None
         self._id = None
         self.__queue = Queue(self.id)
 
@@ -51,7 +52,7 @@ class Playlist(object):
     @property
     def id(self):
         if self.filepath is None:
-            log('Can\'t get playlist id without having filepath')
+            self.__log.warning("Can't get playlist id without having filepath")
         elif self._id is None:
                 self._id = db.get_playlist_id( self.filepath, True, True )
 
@@ -95,7 +96,7 @@ class Playlist(object):
 
         playlist = playlist[playlist_type](self.filepath, self.id)
         if not playlist.export_items( filepath, self.__queue ):
-            log('Error exporting playlist to %s' % self.filepath)
+            self.__log.error('Error exporting playlist to %s', self.filepath)
             return False
 
         # copy the bookmarks over to new playlist
@@ -116,7 +117,7 @@ class Playlist(object):
         item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)
         
         if item is None:
-            log('Item with id "%s" not found' % item_id)
+            self.__log.info('Item with id "%s" not found', item_id)
             return False
 
         self.__queue.current_item_position = self.__queue.index(item_id)
@@ -137,11 +138,11 @@ class Playlist(object):
         item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)
         
         if item is None:
-            log('No such item id (%s)' % item_id)
+            self.__log.warning('No such item id (%s)', item_id)
             return False
         
         if bookmark_id is not None and bookmark is None:
-            log('No such bookmark id (%s)' % bookmark_id)
+            self.__log.warning('No such bookmark id (%s)', bookmark_id)
             return False
 
         if bookmark_id is None:
@@ -164,7 +165,8 @@ class Playlist(object):
         """ Updates the database entries for items that have been modified """
         for item in self.__queue:
             if item.is_modified:
-                log('Playlist Item "%s" is modified, updating bookmarks'%item)
+                self.__log.debug(
+                    'Playlist Item "%s" is modified, updating bookmarks', item)
                 item.update_bookmarks()
                 item.is_modified = False
 
@@ -172,7 +174,7 @@ class Playlist(object):
         item = self.__queue.get_item(item_id)
 
         if item is None:
-            log('Cannot find item with id: %s' % item_id)
+            self.__log.info('Cannot find item with id: %s', item_id)
             return False
 
         if bookmark_id is None:
@@ -202,11 +204,11 @@ class Playlist(object):
 
     def get_bookmark_model(self, include_resume_marks=False):
         if self.__bookmarks_model is None or self.__bookmarks_model_changed:
-            log('Generating new bookmarks model')
+            self.__log.debug('Generating new bookmarks model')
             self.generate_bookmark_model(include_resume_marks)
             self.__bookmarks_model_changed = False
         else:
-            log('Using cached bookmarks model')
+            self.__log.debug('Using cached bookmarks model')
 
         return self.__bookmarks_model
 
@@ -255,7 +257,7 @@ class Playlist(object):
     def load(self, File):
         """ Detects File's filetype then loads it using
             the appropriate loader function """
-        log('Attempting to load %s' % File)
+        self.__log.debug('Attempting to load %s', File)
 
         error = False
         self.reset_playlist()
@@ -264,7 +266,7 @@ class Playlist(object):
         parsers = { 'm3u': M3U_Playlist, 'pls': PLS_Playlist }
         extension = util.detect_filetype(File)
         if parsers.has_key(extension):
-            log('Loading playlist file (%s)' % extension)
+            self.__log.info('Loading playlist file (%s)', extension)
             parser = parsers[extension](self.filepath, self.id)
 
             if parser.parse(File):
@@ -328,16 +330,17 @@ class Playlist(object):
         elif skip_to is not None:
             skip = skip_to
         else:
-            log('No skip method provided...')
+            self.__log.warning('No skip method provided...')
 
         if not ( 0 <= skip < self.queue_length() ):
-            log('Can\'t skip to non-existant file. (requested=%d, total=%d)' % (
-                skip, self.queue_length()) )
+            self.__log.warning(
+                'Can\'t skip to non-existant file. (requested=%d, total=%d)',
+                skip, self.queue_length() )
             return False
 
         self.__queue.current_item_position = skip
-        log('Skipping to file %d (%s)' % (
-            skip, self.__queue.current_item.filepath ))
+        self.__log.debug('Skipping to file %d (%s)', skip,
+            self.__queue.current_item.filepath )
         return True
 
     def next(self):
@@ -354,6 +357,8 @@ class Queue(list):
     """ A Simple list of PlaylistItems """
 
     def __init__(self, playlist_id):
+        self.__log = logging.getLogger('panucci.playlist.Queue')
+
         self.playlist_id = playlist_id
         self.modified = False # Has the queue been modified?
         self.current_item_position = 0
@@ -383,14 +388,16 @@ class Queue(list):
         if s:
             self.modified = True
         else:
-            log('File not found or not supported: %s' % item.filepath)
+            self.__log.warning(
+                'File not found or not supported: %s', item.filepath )
 
         return s
 
     @property
     def current_item(self):
         if self.current_item_position > len(self):
-            log('Current item position is greater than queue length, resetting to 0.')
+            self.__log.info( 'Current item position is greater '
+                'than queue length, resetting to 0.' )
             self.current_item_position = 0
         else:
             return self[self.current_item_position]
@@ -457,16 +464,18 @@ class Queue(list):
         list.remove(self, item)
 
     def extend(self, items):
-        log('FIXME: extend not supported yet...')
+        self.__log.warning('FIXME: extend not supported yet...')
 
     def pop(self, item):
-        log('FIXME: pop not supported yet...')
+        self.__log.warning('FIXME: pop not supported yet...')
 
 class PlaylistItem(object):
     """ A (hopefully) lightweight object to hold the bare minimum amount of
         data about a single item in a playlist and it's bookmark objects. """
 
     def __init__(self):
+        self.__log = logging.getLogger('panucci.playlist.PlaylistItem')
+
         # metadata that's pulled from the playlist file (pls/extm3u)
         self.reported_filepath = None
         self.title = None
@@ -489,7 +498,7 @@ class PlaylistItem(object):
         elif isinstance( b, str ):
             return str(self) == b
         else:
-            log('[PlaylistItem] Unsupported comparison...')
+            self.__log.warning('Unsupported comparison: %s', type(b))
             return False
 
     def __str__(self):
@@ -534,7 +543,8 @@ class PlaylistItem(object):
     def delete_bookmark(self, bookmark_id):
         """ WARNING: if bookmark_id is None, ALL bookmarks will be deleted """
         if bookmark_id is None:
-            log('Deleting all bookmarks for %s' % self.reported_filepath)
+            self.__log.debug(
+                'Deleting all bookmarks for %s', self.reported_filepath )
             for bkmk in self.bookmarks:
                 bkmk.delete()
         else:
@@ -542,7 +552,7 @@ class PlaylistItem(object):
             if bkmk >= 0:
                 self.bookmarks[bkmk].delete()
             else:
-                log('Cannot find bookmark with id: %s' % bookmark_id)
+                self.__log.info('Cannot find bookmark with id: %s',bookmark_id)
                 return False
         return True
 
@@ -556,6 +566,8 @@ class Bookmark(object):
     """ A single bookmark, nothing more, nothing less. """
 
     def __init__(self):
+        self.__log = logging.getLogger('panucci.playlist.Bookmark')
+
         self.id = 0
         self.playlist_id = None
         self.bookmark_name = ''
@@ -573,7 +585,7 @@ class Bookmark(object):
             if hasattr( bkmkobj, key ):
                 setattr( bkmkobj, key, value )
             else:
-                log('Attr: %s doesn\'t exist...' % key)
+                self.__log.info('Attr: %s doesn\'t exist...', key)
 
         return bkmkobj
 
@@ -588,7 +600,7 @@ class Bookmark(object):
         if isinstance(b, str):
             return str(self) == b
         else:
-            log('[Bookmark] Unsupported comparison...')
+            self.__log.warning('Unsupported comparison: %s', type(b))
             return False
 
     def __str__(self):
@@ -604,7 +616,9 @@ class Bookmark(object):
             else:
                 return -1 if self.seek_position < b.seek_position else 1
         else:
-            log('Can\'t compare bookmarks from different files...')
+            self.__log.info(
+                'Can\'t compare bookmarks from different files:\n\tself: %s'
+                '\n\tb: %s', self.bookmark_filepath, b.bookmark_filepath )
             return 0
 
 class FileMetadata(object):
@@ -629,6 +643,7 @@ class FileMetadata(object):
     tag_mappings['flac'] = tag_mappings['ogg']
 
     def __init__(self, filepath):
+        self.__log = logging.getLogger('panucci.playlist.FileMetadata')
         self.filepath = filepath
 
         self.title = ''
@@ -651,14 +666,15 @@ class FileMetadata(object):
         elif filetype in ['mp4', 'm4a']:
             import mutagen.mp4 as meta_parser
         else:
-            log('Extracting metadata not supported for %s files.' % filetype)
+            self.__log.info(
+                'Extracting metadata not supported for %s files.', filetype )
             return False
 
         try:
             metadata = meta_parser.Open(self.filepath)
         except Exception, e:
             self.title = util.pretty_filename(self.filepath)
-            log('Error running metadata parser...', exception=e)
+            self.__log.exception('Error running metadata parser...')
             return False
 
         self.length = metadata.info.length * 10**9
@@ -680,8 +696,8 @@ class FileMetadata(object):
                     try:
                         value = escape(str(value))
                     except Exception, e:
-                        log( 'Could not convert tag (%s) to escaped string' % tag,
-                            exception=e )
+                        self.__log.exception(
+                          'Could not convert tag (%s) to escaped string', tag )
                 else:
                     # some coverart classes store the image in the data
                     # attribute whereas others do not :S
@@ -715,7 +731,7 @@ class FileMetadata(object):
         """ Returns a dict of metadata """
 
         if not self.__metadata_extracted:
-            log('Extracting metadata for %s' % self.filepath)
+            self.__log.debug('Extracting metadata for %s', self.filepath)
             self.extract_metadata()
             self.__metadata_extracted = True
 
@@ -749,7 +765,7 @@ class PlaylistFile(object):
             self._filepath = None
             self._file = None
 
-            log( 'Error opening file: %s' % filepath, exception=e )
+            self.__log.exception( 'Error opening file: %s', filepath)
             return False
     
         return True
@@ -761,7 +777,7 @@ class PlaylistFile(object):
             try:
                 self._file.close()
             except Exception, e:
-                log( 'Error closing file: %s' % self.filepath, exception=e )
+                self.__log.exception( 'Error closing file: %s', self.filepath )
                 error = True
 
         self._filepath = None
@@ -841,6 +857,7 @@ class M3U_Playlist(PlaylistFile):
     """ An (extended) m3u parser/writer """
 
     def __init__(self, *args):
+        self.__log = logging.getLogger('panucci.playlist.M3U_Playlist')
         PlaylistFile.__init__( self, *args )
         self.extended_m3u = False
         self.current_item = PlaylistItem()
@@ -889,6 +906,7 @@ class PLS_Playlist(PlaylistFile):
     """ A somewhat simple pls parser/writer """
 
     def __init__(self, *args):
+        self.__log = logging.getLogger('panucci.playlist.PLS_Playlist')
         PlaylistFile.__init__( self, *args )
         self.current_item = PlaylistItem()
         self.in_playlist_section = False

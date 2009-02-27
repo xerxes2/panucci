@@ -23,6 +23,7 @@
 # 
 
 import os.path
+import logging
 
 try:
     import gconf
@@ -30,7 +31,6 @@ except:
     # on the tablet, it's probably in "gnome"
     from gnome import gconf
 
-from util import log
 
 gconf_dir = '/apps/panucci'
 
@@ -44,6 +44,7 @@ class SimpleGConfClient(gconf.Client):
 
     def __init__(self, directory):
         """ directory is the base directory that we're working in """
+        self.__log = logging.getLogger('panucci.simplegconf.SimpleGConfClient')
         self.__directory = directory
         gconf.Client.__init__(self)
 
@@ -57,7 +58,7 @@ class SimpleGConfClient(gconf.Client):
             method = operation + '_' + self.__type_mapping[data_type]
             return getattr( self, method )
         else:
-            log('Data type "%s" is not supported.' % data_type)
+            self.__log.warn('Data type "%s" is not supported.', data_type)
             return lambda x,y=None: None
 
     def sset( self, key, value ):
@@ -74,7 +75,7 @@ class SimpleGConfClient(gconf.Client):
 
         dtype = type(default) if data_type is None else data_type
         if dtype is None:
-            log('gconf sget error: data_type or default must be set')
+            self.__log.warn('sget error: data_type or default must be set')
             return
 
         if self.get( os.path.join(self.__directory, key) ) is None:

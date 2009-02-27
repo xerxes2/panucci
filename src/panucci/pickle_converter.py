@@ -25,24 +25,25 @@
 import os.path
 import pickle
 import time
+import logging
 
 from dbsqlite import db
 from playlist import Bookmark
-from util import log
 
 _ = lambda s: s
+log = logging.getLogger('panucci.pickle_converter')
 
 def load_pickle_file( pfile ):
     try:
         f = open( pfile, 'r' )
     except Exception, e:
-        log('Can\'t open pickle file: %s' % pfile, exception=e)
+        log.exception('Can\'t open pickle file: %s', pfile)
         return False
 
     try:
         d = pickle.load(f)
     except:
-        log('Can\'t load data from pickle file: %s' % pfile, exception=e)
+        log.exception('Can\'t load data from pickle file: %s', pfile)
         return False
 
     f.close()
