@@ -34,34 +34,42 @@ class panucciInterface(dbus.service.Object):
 
     @dbus.service.method('org.panucci.panucciInterface')
     def play(self):
+        self.__log.debug('play() called')
         if self.player is not None: self.player.play()
 
     @dbus.service.method('org.panucci.panucciInterface')
     def pause(self):
+        self.__log.debug('pause() called')
         if self.player is not None: self.player.pause()
 
     @dbus.service.method('org.panucci.panucciInterface')
     def stop(self):
+        self.__log.debug('stop() called')
         if self.player is not None: self.player.stop()
 
     @dbus.service.method('org.panucci.panucciInterface')
     def playPause(self):
+        self.__log.debug('playPause() called')
         if self.player is not None: self.player.play_pause_toggle()
 
     @dbus.service.method('org.panucci.panucciInterface', in_signature='s')
     def play_file(self, filepath):
+        self.__log.debug('play_file() called')
         if self.player is not None: self.player.play_file(filepath)
 
     @dbus.service.method('org.panucci.panucciInterface', in_signature='s')
     def queue_file(self, filepath):
+        self.__log.debug('queue_file() called')
         if self.player is not None: self.player.playlist.append(filepath)
 
     @dbus.service.method('org.panucci.panucciInterface', in_signature='su')
     def insert_file(self, pos, filepath):
+        self.__log.debug('insert_file() called')
         if self.player is not None: self.player.playlist.insert(pos, filepath)
 
     @dbus.service.method('org.panucci.panucciInterface')
     def show_main_window(self):
+        self.__log.debug('show_main_window() called')
         if self.gui is not None: self.gui.show_main_window()
 
 interface = panucciInterface(
