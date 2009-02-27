@@ -73,8 +73,8 @@ class panucciPlayer(ObservableService):
 
     def pause(self):
         self.notify('paused', caller=self.pause)
-        self.__player.set_state(gst.STATE_PAUSED)
         pos, dur = self.get_position_duration()
+        self.__player.set_state(gst.STATE_PAUSED)
         self.playlist.pause(pos)
 
     def play_pause_toggle(self):
