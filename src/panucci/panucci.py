@@ -166,6 +166,7 @@ class BookmarksWindow(gtk.Window):
         self.treeview = gtk.TreeView()
         self.treeview.set_enable_tree_lines(True)
         self.treeview.set_headers_visible(True)
+        self.treeview.set_show_expanders(True)
         self.update_model()
 
         ncol = gtk.TreeViewColumn(_('Name'))
@@ -276,6 +277,7 @@ class BookmarksWindow(gtk.Window):
     def update_model(self):
         self.model = player.playlist.get_bookmark_model()
         self.treeview.set_model(self.model)
+        self.treeview.expand_all()
 
     def close(self, w):
         player.playlist.update_bookmarks()
