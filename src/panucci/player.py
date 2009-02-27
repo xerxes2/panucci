@@ -51,10 +51,6 @@ class panucciPlayer(ObservableService):
         self.__volume_control = None
         self.__volume_multiplier = 1
 
-        # Placeholder functions, these are generated dynamically
-        self.get_volume_level = lambda: 0
-        self.set_volume_level = lambda x: 0
-
         self.time_format = gst.Format(gst.FORMAT_TIME)
 
     def init(self, load_last_played=True):
