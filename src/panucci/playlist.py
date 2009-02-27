@@ -750,6 +750,7 @@ class PlaylistFile(object):
         this should not be used directly but instead subclassed. """
 
     def __init__(self, filepath, id):
+        self.__log = logging.getLogger('panucci.playlist.PlaylistFile')
         self._filepath = filepath
         self._file = None
         self._items = Queue(id)
