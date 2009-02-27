@@ -65,16 +65,18 @@ class Playlist(object):
     @property
     def current_filepath(self):
         """ Get the current file """
-        if self.__queue.current_item is not None:
+        if not self.is_empty:
             return self.__queue.current_item.filepath
 
     def get_queue_modified(self):    return self.__queue.modified
     def set_queue_modified(self, v): self.__queue.modified = v
     queue_modified = property(get_queue_modified,set_queue_modified)
 
+    @property
     def queue_length(self):
         return len(self.__queue)
 
+    @property
     def is_empty(self):
         return not self.__queue
 
@@ -241,7 +243,7 @@ class Playlist(object):
     def get_current_position(self):
         """ Returns the saved position for the current
                 file or 0 if no file is available"""
-        if self.__queue.current_item is not None:
+        if not self.is_empty:
             return self.__queue.current_item.seek_to
         else:
             return 0
@@ -250,18 +252,18 @@ class Playlist(object):
         """ Returns the filetype of the current
                 file or None if no file is available """
 
-        if self.__queue.current_item is not None:
+        if not self.is_empty:
             return self.__queue.current_item.filetype
 
     def get_file_metadata(self):
         """ Return the metadata associated with the current FileObject """
-        if self.__queue.current_item is not None:
+        if not self.is_empty:
             return self.__queue.current_item.metadata
         else:
             return {}
 
     def get_current_filepath(self):
-        if self.__queue.current_item is not None:
+        if not self.is_empty:
             return self.__queue.current_item.filepath
 
     def get_recent_files(self, max_files=10):
@@ -328,7 +330,7 @@ class Playlist(object):
                 or if the user switches playlists """
     
         db.remove_resume_bookmark( self.id )
-        if not self.is_empty():
+        if not self.is_empty:
             self.__queue.current_item.save_bookmark(
                 _('Auto Bookmark'), position, True )
 

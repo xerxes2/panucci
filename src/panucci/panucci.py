@@ -837,7 +837,7 @@ class GTK_Main(dbus.service.Object):
         self.stop_playing()
 
         self.playlist.load( os.path.abspath(filename) )
-        if self.playlist.is_empty():
+        if self.playlist.is_empty:
             return False
 
         self.start_playback(pause_on_load)
