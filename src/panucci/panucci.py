@@ -164,9 +164,11 @@ class BookmarksWindow(gtk.Window):
         self.vbox = gtk.VBox()
         self.vbox.set_spacing(5)
         self.treeview = gtk.TreeView()
-        self.treeview.set_enable_tree_lines(True)
         self.treeview.set_headers_visible(True)
-        self.treeview.set_show_expanders(True)
+
+        # The tree lines look nasty on maemo
+        if util.platform == util.LINUX:
+            self.treeview.set_enable_tree_lines(True)
         self.update_model()
 
         ncol = gtk.TreeViewColumn(_('Name'))
