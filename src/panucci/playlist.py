@@ -26,9 +26,6 @@ import logging
 from hashlib import md5
 from xml.sax.saxutils import escape
 
-# I don't know why, but without this logging doesn't work for this module...
-logging.basicConfig(level=logging.DEBUG)
-
 import util
 from dbsqlite import db
 from settings import settings
