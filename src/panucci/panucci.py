@@ -72,9 +72,6 @@ app_version = ''
 donate_wishlist_url = 'http://www.amazon.de/gp/registry/2PD2MYGHE6857'
 donate_device_url = 'http://maemo.gpodder.org/donate.html'
 
-short_seek = 10
-long_seek = 60
-
 coverart_names = [ 'cover', 'cover.jpg', 'cover.png' ]
 coverart_size = [240, 240] if running_on_tablet else [130, 130]
         
@@ -662,15 +659,6 @@ class GTK_Main(dbus.service.Object):
         dialog.run()
         dialog.destroy()
 
-    def get_position(self, pos=None):
-        if pos is None:
-            if self.playing:
-                (pos, dur) = self.player_get_position()
-            else:
-                pos = self.playlist.get_current_position()
-        text = util.convert_ns(pos)
-        return (text, pos)
-
     def destroy(self, widget):
         if self.playlist.queue_modified:
             self.__log.info('Queue modified, saving temporary playlist')
@@ -814,11 +802,9 @@ class GTK_Main(dbus.service.Object):
         else:
             self.set_volume_level( widget.get_level()/100.0 )
 
-    @dbus.service.method('org.panucci.interface')
     def show_main_window(self):
         self.main_window.present()
 
-    @dbus.service.method('org.panucci.interface', in_signature='s')
     def queue_file(self, filepath):
         self.__log.debug('Attempting to queue file: %s', filepath)
         filename = os.path.basename(filepath)
@@ -828,7 +814,6 @@ class GTK_Main(dbus.service.Object):
             self.__log.error(
                 util.notify('Error adding %s to the queue.' % filename) )
 
-    @dbus.service.method('org.panucci.interface', in_signature='s')
     def play_file(self, filename):
         if self.check_queue():
             self._play_file(filename)
@@ -842,7 +827,6 @@ class GTK_Main(dbus.service.Object):
 
         self.start_playback(pause_on_load)
 
-    @dbus.service.method('org.panucci.interface')
     def stop_playing(self, save_resume_point=True):
         if save_resume_point:
             position_string, position = self.get_position()
@@ -890,65 +874,6 @@ class GTK_Main(dbus.service.Object):
         else:
             self.on_btn_play_pause_clicked(widget=None)
 
-    def setup_player(self):
-        filetype = self.playlist.get_current_filetype()
-        filepath = self.playlist.get_current_filepath()
-
-        if None in [ filetype, filepath ]:
-            return False
-
-        if filetype.startswith('ogg') and running_on_tablet:
-            self.__log.info( 'Using OGG workaround, I hope this works...' )
-
-            self.player = gst.Pipeline('player')
-            source = gst.element_factory_make('gnomevfssrc', 'file-source')
-
-            try:
-                audio_decoder = gst.element_factory_make(
-                    'tremor', 'vorbis-decoder' )
-            except Exception, e:
-                self.__log.exception( util.notify(
-                    'No ogg decoder available, install the "mogg" package.',
-                    title='Missing Decoder.' ))
-                return False
-
-            self.__volume_control = gst.element_factory_make('volume', 'volume')
-            audiosink = gst.element_factory_make('dsppcmsink', 'audio-output')
-
-            self.player.add(source, audio_decoder, self.__volume_control, audiosink)
-            gst.element_link_many(source, audio_decoder, self.__volume_control, audiosink)
-
-            self.get_volume_level = lambda : self.__get_volume_level(self.__volume_control)
-            self.set_volume_level = lambda x: self.__set_volume_level(x, self.__volume_control)
-
-            source.set_property( 'location', 'file://' + filepath )
-        else:
-            self.__log.info( 'Using plain-old playbin.' )
-
-            self.player = gst.element_factory_make('playbin', 'player')
-
-            # Workaround for volume on maemo, they use a 0 to 10 scale
-            div = int(running_on_tablet)*10 or 1
-            self.get_volume_level = lambda : self.__get_volume_level(self.player, div)
-            self.set_volume_level = lambda x: self.__set_volume_level(x, self.player, div)
-
-            self.player.set_property( 'uri', 'file://' + filepath )
-
-        bus = self.player.get_bus()
-        bus.add_signal_watch()
-        bus.connect("message", self.on_message)
-
-        self.set_volume_level(self.get_volume())
-
-    def __get_volume_level(self, volume_control, divisor=1):
-        vol = volume_control.get_property('volume') / float(divisor)
-        assert 0 <= vol <= 1
-        return vol
-
-    def __set_volume_level(self, value, volume_control, multiplier=1):
-        assert  0 <= value <= 1
-        volume_control.set_property('volume', value * float(multiplier))
-
     def reset_progress(self):
         self.progress.set_fraction(0)
         self.set_progress_callback(0,0)
@@ -973,69 +898,14 @@ class GTK_Main(dbus.service.Object):
         if self.playing:
             self.start_progress_timer()
             self.playlist.play()
-            self.player.set_state(gst.STATE_PLAYING)
+            self.player.play()
             image(self.button, 'media-playback-pause.png')
         else:
             self.stop_progress_timer() # This should save some power
             pos, dur = self.player_get_position()
             self.playlist.pause(pos)
-            self.player.set_state(gst.STATE_PAUSED)
+            self.player.pause()
             image(self.button, 'media-playback-start.png')
-
-    def do_seek(self, from_beginning=None, from_current=None, percent=None ):
-        """ Takes one of the following keyword arguments:
-                from_beginning=n: seek n nanoseconds from the beinging of the file
-                from_current=n: seek n nanoseconds from the current position
-                percent=n: seek n percent from the beginning of the file
-        """
-        self.want_to_seek = True
-        error = False
-
-        position, duration = self.player_get_position()
-        # if position and duration are 0 then player_get_position caught an
-        # exception. Therefore self.player isn't ready to be seeking.
-        if not ( position or duration ) or self.player is None:
-            error = True
-        else:
-            if from_beginning is not None:
-                assert from_beginning >= 0
-                position = min( from_beginning, duration )
-            elif from_current is not None:
-                position = max( 0, min( position+from_current, duration ))
-            elif percent is not None:
-                assert 0 <= percent <= 1
-                position = int(duration*percent)
-            else:
-                self.__log.warning('No seek parameters specified.')
-                error = True
-
-        if not error:
-            # Preemptively update the progressbar to make seeking smoother
-            self.set_progress_callback( position, duration )
-            self.__seek(position)
-
-        self.want_to_seek = False
-        return not error
-
-    def __seek(self, position):
-        # Don't use this, use self.do_seek instead
-        try:
-            self.player.seek_simple(
-                self.time_format, gst.SEEK_FLAG_FLUSH, position )
-            return True
-        except Exception, e:
-            self.__log.exception( 'Error seeking' )
-            return False
-
-    def player_get_position(self):
-        """ returns [ current position, total duration ] """
-        try:
-            pos_int = self.player.query_position(self.time_format, None)[0]
-            dur_int = self.player.query_duration(self.time_format, None)[0]
-        except Exception, e:
-            #self.__log.exception('Error getting position...')
-            pos_int = dur_int = 0
-        return pos_int, dur_int
 
     def progress_timer_callback( self ):
         if self.playing and not self.want_to_seek:
@@ -1055,36 +925,6 @@ class GTK_Main(dbus.service.Object):
         if self.progress_timer_id is not None:
             gobject.source_remove( self.progress_timer_id )
             self.progress_timer_id = None
-
-    def on_message(self, bus, message):
-        t = message.type
-
-        if t == gst.MESSAGE_EOS:
-            self.stop_playing(save_resume_point=False)
-            if self.playlist.next():
-                self.start_playback()
-
-        elif t == gst.MESSAGE_ERROR:
-            err, debug = message.parse_error()
-            self.__log.critical( "Error: %s %s" % (err, debug) )
-            self.stop_playing()
-
-        elif t == gst.MESSAGE_STATE_CHANGED:
-            if ( message.src == self.player and
-                message.structure['new-state'] == gst.STATE_PLAYING ):
-
-                if self.want_to_seek:
-                    # This only gets called when the file is first loaded
-                    pause_time = self.playlist.play()
-                    # don't seek if position is 0
-                    if pause_time > 0:
-                        self.__log.info('Seeking to %d' % pause_time)
-                        # seek manually because on maemo it is sometimes impossible
-                        # to query the player this early in the process
-                        self.__seek(pause_time)
-                    self.want_to_seek = False
-                else:
-                    self.set_controls_sensitivity(True)
 
     def set_coverart( self, pixbuf ):
         self.cover_art.set_from_pixbuf(pixbuf)
@@ -1126,10 +966,6 @@ class GTK_Main(dbus.service.Object):
                     self.main_window.set_title('Panucci - ' + value)
 
                 tags[tag].set_markup('<b><big>'+value+'</big></b>')
-
-    def demuxer_callback(self, demuxer, pad):
-        adec_pad = self.audio_decoder.get_pad("sink")
-        pad.link(adec_pad)
 
     def seekbutton_callback( self, widget, seek_amount ):
         self.do_seek(from_current=seek_amount*10**9)
