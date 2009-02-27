@@ -629,7 +629,7 @@ class GTK_Main(object):
     def queue_file_callback(self, widget=None):
         filename = get_file_from_filechooser(self.main_window)
         if filename is not None:
-            self.queue_file(filename)
+            player.playlist.append(filename)
 
     def check_queue(self):
         """ Makes sure the queue is saved if it has been modified
