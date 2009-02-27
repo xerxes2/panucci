@@ -283,9 +283,8 @@ class Playlist(object):
 
     def single_file_import( self, filepath ):
         """ Add a single track to the playlist """
-        self.filepath = filepath
         return self.__queue.append( 
-            self.__queue.create_item_by_filepath(filepath, filepath) )
+            PlaylistItem.create_by_filepath(filepath, filepath) )
 
     ##################################
     # Playlist controls
@@ -363,12 +362,6 @@ class Queue(list):
         self.modified = False # Has the queue been modified?
         self.current_item_position = 0
         list.__init__(self)
-
-    def create_item_by_filepath(self, reported_filepath, filepath):
-        item = PlaylistItem()
-        item.reported_filepath = reported_filepath
-        item.filepath = filepath
-        return item
 
     def __count_dupe_items(self, subset, item):
         """ Count the number of duplicate items (by filepath only) in a list """
@@ -490,6 +483,13 @@ class PlaylistItem(object):
         # ( used for example, if the duplicate_id is changed )
         self.is_modified = False
         self.bookmarks = []
+
+    @staticmethod
+    def create_by_filepath(reported_filepath, filepath):
+        item = PlaylistItem()
+        item.reported_filepath = reported_filepath
+        item.filepath = filepath
+        return item
 
     def __eq__(self, b):
         if isinstance( b, PlaylistItem ):
