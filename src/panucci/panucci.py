@@ -375,16 +375,10 @@ class GTK_Main(object):
         self.has_coverart = False
         self.first_file = True
 
-#        if util.platform == util.MAEMO:
-#            # Enable play/pause with headset button
-#            system_bus = dbus.SystemBus()
-#            headset_button = system_bus.get_object(
-#                'org.freedesktop.Hal', '/org/freedesktop/Hal/devices/'
-#                'platform_retu_headset_logicaldev_input' )
-#            headset_device = dbus.Interface(
-#                headset_button, 'org.freedesktop.Hal.Device')
-#            headset_device.connect_to_signal(
-#                'Condition', self.handle_headset_button )
+        if util.platform==util.MAEMO and interface.headset_device is not None:
+            # Enable play/pause with headset button
+            interface.headset_device.connect_to_signal(
+                'Condition', self.handle_headset_button )
 
         self.set_volume(settings.volume)
 
