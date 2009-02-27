@@ -111,6 +111,11 @@ class Playlist(object):
         filepath = os.path.expanduser(settings.temp_playlist)
         return self.save_to_new_playlist(filepath)
 
+    def quit(self):
+        if self.queue_modified:
+            self.__log.info('Queue modified, saving temporary playlist')
+            self.save_temp_playlist()
+
     ######################################
     # Bookmark-related functions
     ######################################
@@ -309,6 +314,7 @@ class Playlist(object):
         return not error
 
     def append(self, filepath):
+        self.__log.debug('Attempting to queue file: %s', filepath)
         return self.__queue.append(
             PlaylistItem.create_by_filepath(filepath, filepath) )
 

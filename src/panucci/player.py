@@ -9,16 +9,18 @@ import gst
 from playlist import Playlist
 from settings import settings
 from services import ObservableService
-import dbusinterface
-running_on_tablet=False
-short_seek = 10
-long_seek = 60
 
-PLAYING, PAUSED, STOP, NULL = range(4)
+import dbusinterface
+import util
+
+running_on_tablet=False
+
+
+PLAYING, PAUSED, STOPPED, NULL = range(4)
 
 class panucciPlayer(ObservableService):
     """ """
-    signals = [ 'playing', 'paused', 'stopped', 'new_track' ]
+    signals = ['playing', 'paused', 'stopped', 'new_track', 'end_of_playlist']
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.player.panucciPlayer')
@@ -27,8 +29,15 @@ class panucciPlayer(ObservableService):
 
         self.playlist = Playlist()
         self.__initial_seek = False # have we preformed the initial seek?
+        self.seeking = False        # are we seeking?
         self.__player = None
         self.__volume_control = None
+
+        # Placeholder functions, these are generated dynamically
+        self.get_volume_level = lambda: 0
+        self.set_volume_level = lambda x: 0
+
+        self.time_format = gst.Format(gst.FORMAT_TIME)
 
     def play(self):
         have_player = self.__player is not None
@@ -44,15 +53,18 @@ class panucciPlayer(ObservableService):
     def pause(self):
         self.notify('paused', caller=self.pause)
         self.__player.set_state(gst.STATE_PAUSED)
-        pos, dur = self.__player_get_position()
+        pos, dur = self.get_position_duration()
         self.playlist.pause(pos)
 
-    def stop(self, save_resume_point=True)):
+    def play_pause_toggle(self):
+        self.pause() if self.playing else self.play()
+
+    def stop(self, save_resume_point=True):
         self.notify('stopped', caller=self.stop)
 
         if self.__player is not None:
             if save_resume_point:
-                position_string, position = self.get_position()
+                position_string, position = self.get_formatted_position()
                 self.playlist.stop(position)
 
             self.__player.set_state(gst.STATE_NULL)
@@ -66,10 +78,10 @@ class panucciPlayer(ObservableService):
         if self.__player is None:
             return NULL
         else:
-            state = self.__player.get_state()
+            state = self.__player.get_state()[1]
             return { gst.STATE_NULL    : STOPPED,
                      gst.STATE_PAUSED  : PAUSED,
-                     gst.STATE_PLAYING : PLAYING }.get_state( state, NULL )
+                     gst.STATE_PLAYING : PLAYING }.get( state, NULL )
 
     def __setup_player(self):
         filetype = self.playlist.get_current_filetype()
@@ -127,6 +139,9 @@ class panucciPlayer(ObservableService):
         bus.add_signal_watch()
         bus.connect('message', self.__on_message)
 
+        self.notify( 'new_track', self.playlist.get_file_metadata(),
+            caller=self.__setup_player )
+
         #self.set_volume_level(self.get_volume())
         return True
 
@@ -139,16 +154,16 @@ class panucciPlayer(ObservableService):
         assert  0 <= value <= 1
         volume_control.set_property('volume', value * float(multiplier))
 
-    def get_position(self, pos=None):
+    def get_formatted_position(self, pos=None):
         if pos is None:
             if self.playing:
-                (pos, dur) = self.__player_get_position()
+                (pos, dur) = self.get_position_duration()
             else:
                 pos = self.playlist.get_current_position()
         text = util.convert_ns(pos)
         return (text, pos)
 
-    def __player_get_position(self):
+    def get_position_duration(self):
         """ returns [ current position, total duration ] """
         try:
             pos_int = self.__player.query_position(self.time_format, None)[0]
@@ -164,10 +179,9 @@ class panucciPlayer(ObservableService):
                 from_current=n: seek n nanoseconds from the current position
                 percent=n: seek n percent from the beginning of the file
         """
-        self.want_to_seek = True
         error = False
+        position, duration = self.get_position_duration()
 
-        position, duration = self.__player_get_position()
         # if position and duration are 0 then player_get_position caught an
         # exception. Therefore self.__player isn't ready to be seeking.
         if not ( position or duration ) or self.__player is None:
@@ -186,26 +200,29 @@ class panucciPlayer(ObservableService):
                 error = True
 
         if not error:
-            # Preemptively update the progressbar to make seeking smoother
-            self.set_progress_callback( position, duration )
             self.__seek(position)
+            return position, duration
 
-        self.want_to_seek = False
-        return not error
+        return False
 
     def __seek(self, position):
         # Don't use this, use self.do_seek instead
+        self.seeking = True
+        error = False
+
         try:
             self.__player.seek_simple(
                 self.time_format, gst.SEEK_FLAG_FLUSH, position )
-            return True
         except Exception, e:
             self.__log.exception( 'Error seeking' )
-            return False
+            error = True
+
+        self.seeking = False
+        return not error
 
     def __on_message(self, bus, message):
         t = message.type
-        self.__log.debug('Got message of type %s', t)
+        # self.__log.debug('Got message of type %s', t)
 
         if t == gst.MESSAGE_EOS:
             self.stop(save_resume_point=False)
@@ -213,6 +230,7 @@ class panucciPlayer(ObservableService):
                 self.play()
             else:
                 self.stop()
+                self.notify( 'end_of_playlist', caller=self.__on_message )
 
         elif t == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
@@ -234,4 +252,12 @@ class panucciPlayer(ObservableService):
                         self.__seek(pause_time)
 
                     self.__initial_seek = True
+
+    def quit(self):
+        """ Called when the application exits """
+        self.stop()
+        self.playlist.quit()
+
+# there should only ever be one panucciPlayer object
+player = panucciPlayer()
 

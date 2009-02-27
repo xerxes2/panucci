@@ -35,14 +35,6 @@ import time
 
 import gtk
 import gobject
-import pygst
-pygst.require('0.10')
-import gst
-
-import dbus
-import dbus.service
-import dbus.mainloop
-import dbus.glib
 
 # At the moment, we don't have gettext support, so
 # make a dummy "_" function to passthrough the string
@@ -51,18 +43,18 @@ _ = lambda s: s
 log = logging.getLogger('panucci.panucci')
 
 import util
-running_on_tablet = util.platform == util.MAEMO
 
 try:
     import hildon
 except:
-    if running_on_tablet:
+    if util.platform == util.MAEMO:
         log.critical( 'Using GTK widgets, install "python2.5-hildon" '
             'for this to work properly.' )
 
 from simplegconf import gconf
 from playlist import Playlist
 from settings import settings
+from player import player
 
 about_name = 'Panucci'
 about_text = _('Resuming audiobook and podcast player')
@@ -72,8 +64,11 @@ app_version = ''
 donate_wishlist_url = 'http://www.amazon.de/gp/registry/2PD2MYGHE6857'
 donate_device_url = 'http://maemo.gpodder.org/donate.html'
 
+short_seek = 10
+long_seek = 60
+
 coverart_names = [ 'cover', 'cover.jpg', 'cover.png' ]
-coverart_size = [240, 240] if running_on_tablet else [130, 130]
+coverart_size = [240, 240] if util.platform == util.MAEMO else [130, 130]
         
 gtk.about_dialog_set_url_hook(util.open_link, None)
 gtk.icon_size_register('panucci-button', 32, 32)
@@ -90,7 +85,7 @@ def image(widget, filename, is_stock=False):
             image = gtk.image_new_from_file(filename)
 
     if image is not None:
-        if running_on_tablet:
+        if util.platform == util.MAEMO:
             image.set_padding(20, 20)
         else:
             image.set_padding(5, 5)
@@ -121,7 +116,7 @@ def dialog( toplevel_window, title, question, description ):
         return None
 
 def get_file_from_filechooser( toplevel_window, save_file=False, save_to=None):
-    if running_on_tablet:
+    if util.platform == util.MAEMO:
         if save_file:
             args = ( toplevel_window, gtk.FILE_CHOOSER_ACTION_SAVE )
         else:
@@ -307,7 +302,7 @@ class BookmarksWindow(gtk.Window):
             self.model.set_value(iter, 1, old_text)
 
     def add_bookmark(self, w=None, lbl=None, pos=None):
-        (label, position) = self.main.get_position(pos)
+        (label, position) = player.get_formatted_position(pos)
         label = label if lbl is None else lbl
         position = position if pos is None else pos
         self.main.playlist.save_bookmark( label, position )
@@ -346,76 +341,69 @@ class BookmarksWindow(gtk.Window):
     def jump_bookmark(self, w):
         model, bkmk_id, bkmk_iter, item_id, item_iter = self.__cur_selection()
         if item_iter is not None:
-            self.main.stop_playing()
-            self.main.playlist.load_from_bookmark_id( item_id, bkmk_id )
-            self.main.start_playback()
+            player.stop()
+            player.playlist.load_from_bookmark_id( item_id, bkmk_id )
+            player.play()
 
-class GTK_Main(dbus.service.Object):
+class GTK_Main(object):
 
-    def __init__(self, bus_name, filename=None):
+    def __init__(self, filename=None):
         self.__log = logging.getLogger('panucci.panucci.GTK_Main')
-        dbus.service.Object.__init__(self, object_path="/player",
-            bus_name=bus_name)
 
-        self.gconf = gconf
-        self.gconf.snotify(self.gconf_key_changed)
+#        pickle_file = os.path.expanduser('~/.rmp-bookmarks')
+#        if os.path.isfile(pickle_file):
+#            import shutil
+#            import pickle_converter
 
-        pickle_file = os.path.expanduser('~/.rmp-bookmarks')
-        if os.path.isfile(pickle_file):
-            import shutil
-            import pickle_converter
+#            self.__log.info(
+#                util.notify( _('Converting old pickle format to SQLite.') ))
+#            self.__log.info( util.notify( _('This may take a while...') ))
 
-            self.__log.info(
-                util.notify( _('Converting old pickle format to SQLite.') ))
-            self.__log.info( util.notify( _('This may take a while...') ))
+#            if pickle_converter.load_pickle_file(pickle_file):
+#                self.__log.info(
+#                    util.notify( _('Pickle file converted successfully.') ))
+#                shutil.move( pickle_file, pickle_file + '.bak' )
+#            else:
+#                self.__log.error( util.notify(
+#                    _('Error converting pickle file, check your log...') ))
 
-            if pickle_converter.load_pickle_file(pickle_file):
-                self.__log.info(
-                    util.notify( _('Pickle file converted successfully.') ))
-                shutil.move( pickle_file, pickle_file + '.bak' )
-            else:
-                self.__log.error( util.notify(
-                    _('Error converting pickle file, check your log...') ))
-
-        self.playlist = Playlist()
         self.recent_files = []
         self.progress_timer_id = None
         self.volume_timer_id = None
         self.make_main_window()
-        self.playing = False
         self.has_coverart = False
+        self.first_file = True
 
-        if running_on_tablet:
-            # Enable play/pause with headset button
-            system_bus = dbus.SystemBus()
-            headset_button = system_bus.get_object(
-                'org.freedesktop.Hal', '/org/freedesktop/Hal/devices/'
-                'platform_retu_headset_logicaldev_input' )
-            headset_device = dbus.Interface(
-                headset_button, 'org.freedesktop.Hal.Device')
-            headset_device.connect_to_signal(
-                'Condition', self.handle_headset_button )
-
-        self.want_to_seek = False
-        self.player = None
-
-        # Placeholder functions, these are generated dynamically
-        self.get_volume_level = lambda: 0
-        self.set_volume_level = lambda x: 0
+#        if util.platform == util.MAEMO:
+#            # Enable play/pause with headset button
+#            system_bus = dbus.SystemBus()
+#            headset_button = system_bus.get_object(
+#                'org.freedesktop.Hal', '/org/freedesktop/Hal/devices/'
+#                'platform_retu_headset_logicaldev_input' )
+#            headset_device = dbus.Interface(
+#                headset_button, 'org.freedesktop.Hal.Device')
+#            headset_device.connect_to_signal(
+#                'Condition', self.handle_headset_button )
 
         self.set_volume(settings.volume)
-        self.time_format = gst.Format(gst.FORMAT_TIME)
 
-        if filename is None:
-            if self.recent_files:
-                self._play_file(self.recent_files[0], pause_on_load=True)
-        else:
-            self._play_file(filename)
+        player.register( 'stopped', self.on_player_stopped )
+        player.register( 'playing', self.on_player_playing )
+        player.register( 'new_track', self.on_player_new_track )
+        player.register( 'paused', self.on_player_paused )
+        player.register( 'end_of_playlist', self.on_player_end_of_playlist )
+
+# this should be taken care of by the panucci executable, or playlist.py
+#        if filename is None:
+#            if self.recent_files:
+#                self._play_file(self.recent_files[0], pause_on_load=True)
+#        else:
+#            self._play_file(filename)
 
     def make_main_window(self):
         import pango
 
-        if running_on_tablet:
+        if util.platform == util.MAEMO:
             self.app = hildon.Program()
             window = hildon.Window()
             self.app.add_window(window)
@@ -431,7 +419,7 @@ class GTK_Main(dbus.service.Object):
         window.connect("destroy", self.destroy)
         self.main_window = window
 
-        if running_on_tablet:
+        if util.platform == util.MAEMO:
             window.set_menu(self.create_menu())
         else:
             menu_vbox = gtk.VBox()
@@ -446,7 +434,7 @@ class GTK_Main(dbus.service.Object):
 
         main_hbox = gtk.HBox()
         main_hbox.set_spacing(6)
-        if running_on_tablet:
+        if util.platform == util.MAEMO:
             window.add(main_hbox)
         else:
             menu_vbox.pack_end(main_hbox, True, True, 6)
@@ -486,7 +474,8 @@ class GTK_Main(dbus.service.Object):
         progress_eventbox.set_events(gtk.gdk.BUTTON_PRESS_MASK)
         progress_eventbox.connect('button-press-event', self.on_progressbar_changed)
         self.progress = gtk.ProgressBar()
-        if running_on_tablet: # make the progress bar more "finger-friendly"
+        # make the progress bar more "finger-friendly"
+        if util.platform == util.MAEMO:
             self.progress.set_size_request( -1, 50 )
         progress_eventbox.add(self.progress)
         main_vbox.pack_start( progress_eventbox, False, False )
@@ -501,11 +490,11 @@ class GTK_Main(dbus.service.Object):
         image(self.rewind_button, 'media-seek-backward.png')
         self.rewind_button.connect('clicked', self.seekbutton_callback, -1*short_seek)
         buttonbox.add(self.rewind_button)
-        self.button = gtk.Button('')
-        image(self.button, gtk.STOCK_OPEN, True)
-        self.button_handler_id = self.button.connect( 
+        self.play_pause_button = gtk.Button('')
+        image(self.play_pause_button, gtk.STOCK_OPEN, True)
+        self.button_handler_id = self.play_pause_button.connect( 
             'clicked', self.open_file_callback )
-        buttonbox.add(self.button)
+        buttonbox.add(self.play_pause_button)
         self.forward_button = gtk.Button('')
         image(self.forward_button, 'media-seek-forward.png')
         self.forward_button.connect('clicked', self.seekbutton_callback, short_seek)
@@ -523,7 +512,7 @@ class GTK_Main(dbus.service.Object):
 
         window.show_all()
 
-        if running_on_tablet:
+        if util.platform == util.MAEMO:
             self.volume = hildon.VVolumebar()
             self.volume.set_property('can-focus', False)
             self.volume.connect('level_changed', self.volume_changed_hildon)
@@ -535,17 +524,21 @@ class GTK_Main(dbus.service.Object):
             self.volume_button = gtk.ToggleButton('')
             image(self.volume_button, 'media-speaker.png')
             self.volume_button.connect('clicked', self.toggle_volumebar)
-            self.volume.connect('show', lambda x: self.volume_button.set_active(True))
-            self.volume.connect('hide', lambda x: self.volume_button.set_active(False))
+            self.volume.connect(
+                'show', lambda x: self.volume_button.set_active(True))
+            self.volume.connect(
+                'hide', lambda x: self.volume_button.set_active(False))
             buttonbox.add(self.volume_button)
             self.volume_button.show()
 
             # Disable focus for all widgets, so we can use the cursor
             # keys + enter to directly control our media player, which
             # is handled by "key-press-event"
-            for w in (self.rrewind_button, self.rewind_button, self.button,
-                    self.forward_button, self.fforward_button, self.bookmarks_button,
-                    self.volume_button, self.progress):
+            for w in (
+                    self.rrewind_button, self.rewind_button,
+                    self.play_pause_button, self.forward_button,
+                    self.fforward_button, self.progress, 
+                    self.bookmarks_button, self.volume_button, ):
                 w.unset_flags(gtk.CAN_FOCUS)
         else:
             self.volume = gtk.VolumeButton()
@@ -621,7 +614,7 @@ class GTK_Main(dbus.service.Object):
 
     def create_recent_files_menu( self ):
         max_files = settings.max_recent_files
-        self.recent_files = self.playlist.get_recent_files(max_files)
+        self.recent_files = player.playlist.get_recent_files(max_files)
         menu_recent_sub = gtk.Menu()
 
         temp_playlist = os.path.expanduser(settings.temp_playlist)
@@ -660,21 +653,12 @@ class GTK_Main(dbus.service.Object):
         dialog.destroy()
 
     def destroy(self, widget):
-        if self.playlist.queue_modified:
-            self.__log.info('Queue modified, saving temporary playlist')
-            self.playlist.save_temp_playlist()
-
-        self.stop_playing()
         settings.volume = self.get_volume()
         gtk.main_quit()
 
-    def gconf_key_changed(self, client, connection_id, entry, args):
-        self.__log.debug( 'gconf key %s changed: %s',
-            entry.get_key(), entry.get_value() )
-
     def handle_headset_button(self, event, button):
         if event == 'ButtonPressed' and button == 'phone':
-            self.on_btn_play_pause_clicked(self.button)
+            self.on_btn_play_pause_clicked()
 
     def queue_file_callback(self, widget=None):
         filename = get_file_from_filechooser(self.main_window)
@@ -686,7 +670,7 @@ class GTK_Main(dbus.service.Object):
                 True means a new file can be opened
                 False means the user does not want to continue """
 
-        if self.playlist.queue_modified:
+        if player.playlist.queue_modified:
             response = dialog(
                 self.main_window, _('Save queue to playlist file'),
                 _('Save Queue?'), _("The queue has been modified, "
@@ -732,7 +716,7 @@ class GTK_Main(dbus.service.Object):
                 return self.save_to_playlist_callback()
 
         ext = util.detect_filetype(filename)
-        if not self.playlist.save_to_new_playlist(filename, ext):
+        if not player.playlist.save_to_new_playlist(filename, ext):
             util.notify(_('Error saving playlist...'))
             return False
 
@@ -754,11 +738,12 @@ class GTK_Main(dbus.service.Object):
         elif event.keyval == gtk.keysyms.Right: # seek forward
             self.forward_callback(self.forward_button)
         elif event.keyval == gtk.keysyms.Return: # play/pause
-            self.on_btn_play_pause_clicked(self.button)
+            self.on_btn_play_pause_clicked()
 
-    # The following two functions get and set the volume from the volume control widgets
+    # The following two functions get and set the
+    #   volume from the volume control widgets.
     def get_volume(self):
-        if running_on_tablet:
+        if util.platform == util.MAEMO:
             return self.volume.get_level()/100.0
         else:
             return self.volume.get_value()
@@ -766,7 +751,7 @@ class GTK_Main(dbus.service.Object):
     def set_volume(self, vol):
         """ vol is a float from 0 to 1 """
         assert 0 <= vol <= 1
-        if running_on_tablet:
+        if util.platform == util.MAEMO:
             self.volume.set_level(vol*100.0)
         else:
             self.volume.set_value(vol)
@@ -776,7 +761,9 @@ class GTK_Main(dbus.service.Object):
             self.volume.show()
             if self.volume_timer_id is not None:
                 gobject.source_remove(self.volume_timer_id)
-            self.volume_timer_id = gobject.timeout_add(1000*timeout, self.__volume_hide_callback)
+
+            self.volume_timer_id = gobject.timeout_add(
+                1000 * timeout, self.__volume_hide_callback )
 
     def __volume_hide_callback(self):
         self.volume_timer_id = None
@@ -806,9 +793,8 @@ class GTK_Main(dbus.service.Object):
         self.main_window.present()
 
     def queue_file(self, filepath):
-        self.__log.debug('Attempting to queue file: %s', filepath)
         filename = os.path.basename(filepath)
-        if self.playlist.append( filepath ):
+        if player.playlist.append( filepath ):
             self.__log.info(util.notify('%s added successfully.' % filename ))
         else:
             self.__log.error(
@@ -819,60 +805,53 @@ class GTK_Main(dbus.service.Object):
             self._play_file(filename)
 
     def _play_file(self, filename, pause_on_load=False):
-        self.stop_playing()
+        player.stop()
 
-        self.playlist.load( os.path.abspath(filename) )
-        if self.playlist.is_empty:
+        player.playlist.load( os.path.abspath(filename) )
+        if player.playlist.is_empty:
             return False
 
-        self.start_playback(pause_on_load)
+        player.play()
 
-    def stop_playing(self, save_resume_point=True):
-        if save_resume_point:
-            position_string, position = self.get_position()
-            self.playlist.stop(position)
-
-        if self.playing:
-            self.on_btn_play_pause_clicked(widget=None)
-
-        self.button.disconnect(self.button_handler_id)
-        self.button_handler_id = self.button.connect(
-            'clicked', self.open_file_callback )
-
-        if self.player is not None: 
-            self.player.set_state(gst.STATE_NULL)
-
+    def on_player_stopped(self):
         self.stop_progress_timer()
         self.title_label.set_size_request(-1,-1)
-        self.playing = False
         self.reset_progress()
         self.set_controls_sensitivity(False)
-        image(self.button, gtk.STOCK_OPEN, True)
 
-    def start_playback(self, pause_on_load=False):
-        self.want_to_seek = True
-        self.button.disconnect(self.button_handler_id)
-        self.button_handler_id = self.button.connect(
+    def on_player_playing(self):
+        self.start_progress_timer()
+        image(self.play_pause_button, 'media-playback-pause.png')
+
+    def on_player_new_track(self, metadata):
+        self.play_pause_button.disconnect(self.button_handler_id)
+        self.button_handler_id = self.play_pause_button.connect(
             'clicked', self.on_btn_play_pause_clicked )
 
         self.set_controls_sensitivity(True)
-        for widget in [ self.title_label, self.artist_label, self.album_label ]:
+        for widget in [self.title_label,self.artist_label,self.album_label]:
             widget.set_text('')
             widget.hide()
+
         self.cover_art.hide()
         self.has_coverart = False
-        metadata = self.playlist.get_file_metadata()
+
         estimated_length = metadata['length']
         self.set_metadata(metadata)
-        self.setup_player()
 
-        if pause_on_load:
-            image(self.button, 'media-playback-start.png')
-            self.set_controls_sensitivity(False)
-            self.set_progress_callback( self.playlist.get_current_position(),
-                estimated_length )
-        else:
-            self.on_btn_play_pause_clicked(widget=None)
+        if self.first_file:
+            self.first_file = False
+            player.pause()
+
+    def on_player_paused(self):
+        self.stop_progress_timer() # This should save some power
+        image(self.play_pause_button, 'media-playback-start.png')
+
+    def on_player_end_of_playlist(self):
+        self.play_pause_button.disconnect(self.button_handler_id)
+        self.button_handler_id = self.play_pause_button.connect(
+            'clicked', self.open_file_callback )
+        image(self.play_pause_button, gtk.STOCK_OPEN, True)
 
     def reset_progress(self):
         self.progress.set_fraction(0)
@@ -890,26 +869,14 @@ class GTK_Main(dbus.service.Object):
         if ( not self.lock_progress and
                 event.type == gtk.gdk.BUTTON_PRESS and event.button == 1 ):
             new_fraction = event.x/float(widget.get_allocation().width)
-            self.do_seek(percent=new_fraction)
+            player.do_seek(percent=new_fraction)
 
     def on_btn_play_pause_clicked(self, widget=None):
-        self.playing = not self.playing
-
-        if self.playing:
-            self.start_progress_timer()
-            self.playlist.play()
-            self.player.play()
-            image(self.button, 'media-playback-pause.png')
-        else:
-            self.stop_progress_timer() # This should save some power
-            pos, dur = self.player_get_position()
-            self.playlist.pause(pos)
-            self.player.pause()
-            image(self.button, 'media-playback-start.png')
-
+        player.play_pause_toggle()
+            
     def progress_timer_callback( self ):
-        if self.playing and not self.want_to_seek:
-            pos_int, dur_int = self.player_get_position()
+        if player.playing and not player.seeking:
+            pos_int, dur_int = player.get_position_duration()
             # This prevents bogus values from being set while seeking
             if ( pos_int > 10**9 ) and ( dur_int > 10**9 ):
                 self.set_progress_callback( pos_int, dur_int )
@@ -919,7 +886,8 @@ class GTK_Main(dbus.service.Object):
         if self.progress_timer_id is not None:
             self.stop_progress_timer()
 
-        self.progress_timer_id = gobject.timeout_add( 1000, self.progress_timer_callback )
+        self.progress_timer_id = gobject.timeout_add(
+            1000, self.progress_timer_callback )
 
     def stop_progress_timer( self ):
         if self.progress_timer_id is not None:
@@ -943,7 +911,7 @@ class GTK_Main(dbus.service.Object):
                 pbl.write(value)
                 pbl.close()
                 pixbuf = pbl.get_pixbuf().scale_simple(
-                    coverart_size[0], coverart_size[1], gtk.gdk.INTERP_BILINEAR )
+                  coverart_size[0], coverart_size[1], gtk.gdk.INTERP_BILINEAR )
                 self.set_coverart(pixbuf)
             except Exception, e:
                 self.__log.exception('Error setting coverart...')
@@ -956,7 +924,7 @@ class GTK_Main(dbus.service.Object):
                 tags[tag].set_alignment( 0.5*int(not self.has_coverart), 0.5)
                 tags[tag].show()
             if tag == 'title':
-                if running_on_tablet:
+                if util.platform == util.MAEMO:
                     self.main_window.set_title(value)
                     # oh man this is hacky :(
                     if self.has_coverart:
@@ -968,16 +936,17 @@ class GTK_Main(dbus.service.Object):
                 tags[tag].set_markup('<b><big>'+value+'</big></b>')
 
     def seekbutton_callback( self, widget, seek_amount ):
-        self.do_seek(from_current=seek_amount*10**9)
+        resp = player.do_seek(from_current=seek_amount*10**9)
+        if resp:
+            # Preemptively update the progressbar to make seeking smoother
+            self.set_progress_callback( *resp )
 
     def bookmarks_callback(self, w):
         BookmarksWindow(self)
 
 
 def run(filename=None):
-    session_bus = dbus.SessionBus(mainloop=dbus.glib.DBusGMainLoop())
-    bus_name = dbus.service.BusName('org.panucci', bus=session_bus)
-    GTK_Main(bus_name, filename)
+    GTK_Main( filename )
     gtk.main()
 
 if __name__ == '__main__':
