@@ -265,7 +265,7 @@ class Playlist(object):
 
         parsers = { 'm3u': M3U_Playlist, 'pls': PLS_Playlist }
         extension = util.detect_filetype(File)
-        if parsers.has_key(extension):
+        if parsers.has_key(extension): # importing a playlist
             self.__log.info('Loading playlist file (%s)', extension)
             parser = parsers[extension](self.filepath, self.id)
 
@@ -273,18 +273,15 @@ class Playlist(object):
                 self.__queue = parser.get_queue()
             else:
                 return False
-        else:
-            error = not self.single_file_import(File)
+        else:                          # importing a single file
+            self.__queue = Queue(self.id)
+            error = not self.__queue.append( 
+                PlaylistItem.create_by_filepath(filepath, filepath) )
 
         self.queue_modified = os.path.expanduser(
             settings.temp_playlist ) == self.filepath
 
         return not error
-
-    def single_file_import( self, filepath ):
-        """ Add a single track to the playlist """
-        return self.__queue.append( 
-            PlaylistItem.create_by_filepath(filepath, filepath) )
 
     ##################################
     # Playlist controls
