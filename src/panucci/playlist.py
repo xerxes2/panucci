@@ -644,7 +644,7 @@ class FileMetadata(object):
 
     def __init__(self, filepath):
         self.__log = logging.getLogger('panucci.playlist.FileMetadata')
-        self.filepath = filepath
+        self.__filepath = filepath
 
         self.title = ''
         self.artist = ''
@@ -655,7 +655,7 @@ class FileMetadata(object):
         self.__metadata_extracted = False
 
     def extract_metadata(self):
-        filetype = util.detect_filetype(self.filepath)
+        filetype = util.detect_filetype(self.__filepath)
 
         if filetype == 'mp3':
             import mutagen.mp3 as meta_parser
@@ -671,9 +671,9 @@ class FileMetadata(object):
             return False
 
         try:
-            metadata = meta_parser.Open(self.filepath)
+            metadata = meta_parser.Open(self.__filepath)
         except Exception, e:
-            self.title = util.pretty_filename(self.filepath)
+            self.title = util.pretty_filename(self.__filepath)
             self.__log.exception('Error running metadata parser...')
             return False
 
@@ -707,14 +707,14 @@ class FileMetadata(object):
                 setattr( self, self.tag_mappings[filetype][tag], value )
 
         if not str(self.title).strip():
-            self.title = util.pretty_filename(self.filepath)
+            self.title = util.pretty_filename(self.__filepath)
 
         if self.coverart is None:
             self.coverart = self.__find_coverart()
 
     def __find_coverart(self):
         """ Find coverart in the same directory as the filepath """
-        directory = os.path.dirname(self.filepath)
+        directory = os.path.dirname(self.__filepath)
         for cover in self.coverart_names:
             c = os.path.join( directory, cover )
             if os.path.isfile(c):
@@ -731,7 +731,7 @@ class FileMetadata(object):
         """ Returns a dict of metadata """
 
         if not self.__metadata_extracted:
-            self.__log.debug('Extracting metadata for %s', self.filepath)
+            self.__log.debug('Extracting metadata for %s', self.__filepath)
             self.extract_metadata()
             self.__metadata_extracted = True
 
