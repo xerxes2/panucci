@@ -27,8 +27,10 @@ class panucciPlayer(ObservableService):
         self.playlist = Playlist()
         self.__initial_seek = False # have we preformed the initial seek?
         self.seeking = False        # are we seeking?
+
         self.__player = None
         self.__volume_control = None
+        self.__volume_multiplier = 1
 
         # Placeholder functions, these are generated dynamically
         self.get_volume_level = lambda: 0
@@ -122,41 +124,40 @@ class panucciPlayer(ObservableService):
             gst.element_link_many(
                 source, audio_decoder, self.__volume_control, audiosink )
 
-            self.get_volume_level = lambda : self.__get_volume_level(
-                self.__volume_control )
-            self.set_volume_level = lambda x: self.__set_volume_level(
-                x, self.__volume_control )
-
             source.set_property( 'location', 'file://' + filepath )
         else:
-            self.__log.info( 'Using plain-old playbin.' )
-
-            self.__player = gst.element_factory_make('playbin', 'player')
-
             # Workaround for volume on maemo, they use a 0 to 10 scale
-            div = int(util.platform == util.MAEMO)*10 or 1
-            self.get_volume_level = lambda : self.__get_volume_level(
-                self.__player, div )
-            self.set_volume_level = lambda x: self.__set_volume_level(
-                x, self.__player, div )
-
+            self.__volume_multiplier = int(util.platform == util.MAEMO)*10 or 1
+            self.__log.info( 'Using plain-old playbin.' )
+            self.__player = gst.element_factory_make('playbin', 'player')
+            self.__volume_control = self.__player
             self.__player.set_property( 'uri', 'file://' + filepath )
 
         bus = self.__player.get_bus()
         bus.add_signal_watch()
         bus.connect('message', self.__on_message)
 
-        #self.set_volume_level(self.get_volume())
+        self.volume_level = settings.volume
         return True
 
     def __get_volume_level(self, volume_control, divisor=1):
-        vol = volume_control.get_property('volume') / float(divisor)
-        assert 0 <= vol <= 1
-        return vol
+        if self.__volume_control is not None:
+            vol = self.__volume_control.get_property(
+                'volume') / float(self.__volume_multiplier)
+            return vol
+        else:
+            return settings.volume
 
-    def __set_volume_level(self, value, volume_control, multiplier=1):
+    def __set_volume_level(self, value):
         assert  0 <= value <= 1
-        volume_control.set_property('volume', value * float(multiplier))
+
+        if self.__volume_control is not None:
+            self.__volume_control.set_property(
+                'volume', value * float(self.__volume_multiplier))
+
+        settings.volume = value
+
+    volume_level = property( __get_volume_level, __set_volume_level )
 
     def get_formatted_position(self, pos=None):
         if pos is None:
