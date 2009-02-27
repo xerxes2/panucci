@@ -84,6 +84,13 @@ def pretty_filename( filename ):
     filename, extension = os.path.basename(filename).rsplit('.',1)
     return filename.replace('_', ' ')
 
+def build_full_path( path ):
+    if path is not None:
+        if path.startswith('/'):
+            return os.path.abspath(path)
+        else:
+            return os.path.abspath( os.path.join(os.getcwdu(), path) )
+
 def open_link(d, url, data):
     webbrowser.open_new(url)
 

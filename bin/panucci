@@ -55,17 +55,19 @@ try:
 except dbus.exceptions.DBusException:
     remote_object = None
 
+from panucci import util
 if remote_object is None:
     from panucci import panucci
     log_level = logging.DEBUG if opts.debug else logging.ERROR
     logging.basicConfig(level=log_level)
     panucci.app_version = app_version
-    panucci.run(filename=opts.queue_filename or opts.open_filename)
+    panucci.run( filename=util.build_full_path(
+        opts.queue_filename or opts.open_filename )) 
 else:
     if opts.open_filename is not None:
-        remote_object.play_file( opts.open_filename )
+        remote_object.play_file( util.build_full_path( opts.open_filename ))
     elif opts.queue_filename is not None:
-        remote_object.queue_file( opts.queue_filename )
+        remote_object.queue_file( util.build_full_path( opts.queue_filename ))
 
     remote_object.show_main_window()
 
