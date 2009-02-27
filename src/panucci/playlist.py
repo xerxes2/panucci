@@ -401,9 +401,14 @@ class Queue(list):
 
     def get_bookmark(self, item_id, bookmark_id):
         item = self.get_item(item_id)
-        if item is not None and item.bookmarks.count(bookmark_id):
-            return item, item.bookmarks[item.bookmarks.index(bookmark_id)]
-        return None, None
+
+        if item is not None:
+            if item.bookmarks.count(bookmark_id):
+                return item, item.bookmarks[item.bookmarks.index(bookmark_id)]
+            else:
+                return item, None
+        else:
+            return None, None
 
     def set_new_playlist_id(self, id):
         self.playlist_id = id
