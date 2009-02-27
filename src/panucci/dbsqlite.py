@@ -97,7 +97,9 @@ class Storage(object):
 
     def get_bookmarks(self, playlist_id=None, bookmark_filepath=None,
         playlist_duplicate_id=None, request_resume_bookmark=None):
-        """ Note: """
+        """ Note: the request_resume_bookmark argument will only return resume
+                bookmarks if it's set to True. If you don't care whether you're
+                getting resume bookmarks or not set it to None """
 
         sql = 'SELECT * FROM bookmarks'
         conditions = []

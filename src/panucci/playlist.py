@@ -636,7 +636,7 @@ class PlaylistItem(object):
             playlist_id             = self.playlist_id,
             bookmark_filepath       = self.filepath,
             playlist_duplicate_id   = self.duplicate_id,
-            request_resume_bookmark = True  )
+            request_resume_bookmark = None  )
 
     def save_bookmark(self, name, position, resume_pos=False):
         b = Bookmark()
