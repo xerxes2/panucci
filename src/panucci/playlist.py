@@ -337,7 +337,7 @@ class Playlist(ObservableService):
             else:
                 return False
         else:                          # importing a single file
-            error = not self.append(filepath)
+            error = not self.append(filepath, dont_notify=True)
 
         self.load_from_resume_bookmark()
 
@@ -363,10 +363,12 @@ class Playlist(ObservableService):
 
         return successfull
 
-    def append(self, filepath):
+    def append(self, filepath, dont_notify=False):
         self.__log.debug('Attempting to queue file: %s', filepath)
-        return self.__file_queued( filepath, self.__queue.append(
-                    PlaylistItem.create_by_filepath(filepath, filepath) ))
+        success = self.__queue.append(
+            PlaylistItem.create_by_filepath(filepath, filepath) )
+
+        return success if dont_notify else self.__file_queued(filepath,success)
 
     def insert(self, position, filepath ):
         self.__log.debug(
