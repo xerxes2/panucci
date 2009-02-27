@@ -412,12 +412,15 @@ class Queue(list):
 
     @property
     def current_item(self):
-        if self.current_item_position > len(self):
-            self.__log.info( 'Current item position is greater '
-                'than queue length, resetting to 0.' )
-            self.current_item_position = 0
-        else:
+        if len(self) > 0:
+            if self.current_item_position >= len(self):
+                self.__log.info( 'Current item position is greater '
+                    'than queue length, resetting to 0.' )
+                self.current_item_position = 0
+
             return self[self.current_item_position]
+        else:
+            self.__log.info('Queue is empty...')
 
     def get_item(self, item_id):
         if self.count(item_id):
