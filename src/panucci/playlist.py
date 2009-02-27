@@ -113,13 +113,7 @@ class Playlist(object):
     # Bookmark-related functions
     ######################################
 
-    def load_from_bookmark( self, item_id, bookmark_id ):
-        item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)
-        
-        if item is None:
-            self.__log.info('Item with id "%s" not found', item_id)
-            return False
-
+    def __load_from_bookmark( self, item_id, bookmark ):
         self.__queue.current_item_position = self.__queue.index(item_id)
 
         if bookmark is None:
@@ -128,6 +122,26 @@ class Playlist(object):
             self.__queue.current_item.seek_to = bookmark.seek_position
 
         return True
+
+    def load_from_bookmark_id( self, item_id=None, bookmark_id=None ):
+        item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)
+
+        if item is not None:
+            return self.__load_from_bookmark( str(item), bookmark )
+        else:
+            self.__log.warning(
+                'item_id=%s,bookmark_id=%s not found', item_id, bookmark_id )
+            return False
+
+    def load_from_resume_bookmark(self):
+        """ Find a resume bookmark in the queue; this could be done better """
+        for item in self.__queue:
+            for bookmark in item.bookmarks:
+                if bookmark.is_resume_position:
+                    return self.__load_from_bookmark( str(item), bookmark )
+
+        self.__log.info('No resume bookmark found.')
+        return False
 
     def save_bookmark( self, bookmark_name, position ):
         self.__queue.current_item.save_bookmark(
@@ -285,6 +299,8 @@ class Playlist(object):
             self.__queue = Queue(self.id)
             error = not self.append(filepath)
 
+        self.load_from_resume_bookmark()
+
         self.queue_modified = os.path.expanduser(
             settings.temp_playlist ) == self.filepath
 
@@ -410,13 +426,21 @@ class Queue(list):
     def get_bookmark(self, item_id, bookmark_id):
         item = self.get_item(item_id)
 
-        if item is not None:
-            if item.bookmarks.count(bookmark_id):
-                return item, item.bookmarks[item.bookmarks.index(bookmark_id)]
-            else:
-                return item, None
+        if item is None:
+            self.__log.warning(
+                'Item with id "%s" not found, scanning for item...', item_id )
+
+            for item_ in self:
+                if item_.bookmarks.count(bookmark_id):
+                    item = item_
+                    break
+
+            if item is None: return None, None
+
+        if item.bookmarks.count(bookmark_id):
+            return item, item.bookmarks[item.bookmarks.index(bookmark_id)]
         else:
-            return None, None
+            return item, None
 
     def set_new_playlist_id(self, id):
         self.playlist_id = id
@@ -534,7 +558,7 @@ class PlaylistItem(object):
             playlist_id             = self.playlist_id,
             bookmark_filepath       = self.filepath,
             playlist_duplicate_id   = self.duplicate_id,
-            request_resume_bookmark = False  )
+            request_resume_bookmark = True  )
 
     def save_bookmark(self, name, position, resume_pos=False):
         b = Bookmark()

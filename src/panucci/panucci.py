@@ -350,7 +350,7 @@ class BookmarksWindow(gtk.Window):
         model, bkmk_id, bkmk_iter, item_id, item_iter = self.__cur_selection()
         if item_iter is not None:
             self.main.stop_playing()
-            self.main.playlist.load_from_bookmark( item_id, bkmk_id )
+            self.main.playlist.load_from_bookmark_id( item_id, bkmk_id )
             self.main.start_playback()
 
 class GTK_Main(dbus.service.Object):
