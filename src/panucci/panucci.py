@@ -557,21 +557,6 @@ class GTK_Main(object):
 
         menu.append(gtk.SeparatorMenuItem())
 
-        # the donate sub-menu
-        menu_donate = gtk.MenuItem(_('Donate'))
-        menu.append(menu_donate)
-
-        menu_donate_sub = gtk.Menu()
-        menu_donate.set_submenu(menu_donate_sub)
-
-        menu_donate_device = gtk.MenuItem(_('Developer device'))
-        menu_donate_device.connect("activate", lambda w: webbrowser.open_new(donate_device_url))
-        menu_donate_sub.append(menu_donate_device)
-
-        menu_donate_wishlist = gtk.MenuItem(_('Amazon Wishlist'))
-        menu_donate_wishlist.connect("activate", lambda w: webbrowser.open_new(donate_wishlist_url))
-        menu_donate_sub.append(menu_donate_wishlist)
-
         menu_about = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
         menu_about.connect("activate", self.show_about, self.main_window)
         menu.append(menu_about)
