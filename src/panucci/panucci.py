@@ -99,6 +99,29 @@ def image(widget, filename, is_stock=False):
         widget.add(image)
         image.show()
 
+def dialog( toplevel_window, title, question, description ):
+    """ Present the user with a yes/no/cancel dialog 
+        Reponse: Yes = True, No = False, Cancel = None """
+
+    dlg = gtk.MessageDialog( toplevel_window, gtk.DIALOG_MODAL,
+        gtk.MESSAGE_QUESTION )
+    dlg.set_title(title)
+    dlg.add_button( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL )
+    dlg.add_button( gtk.STOCK_NO, gtk.RESPONSE_NO )
+    dlg.add_button( gtk.STOCK_YES, gtk.RESPONSE_YES )
+    dlg.set_markup( '<span weight="bold" size="larger">%s</span>\n\n%s' % (
+        question, description ))
+
+    response = dlg.run()
+    dlg.destroy()
+
+    if response == gtk.RESPONSE_YES:
+        return True
+    elif response == gtk.RESPONSE_NO:
+        return False
+    elif response in [gtk.RESPONSE_CANCEL, gtk.RESPONSE_DELETE_EVENT]:
+        return None
+
 class BookmarksWindow(gtk.Window):
     def __init__(self, main):
         self.__log = logging.getLogger('panucci.panucci.BookmarksWindow')
@@ -607,29 +630,23 @@ class GTK_Main(dbus.service.Object):
                 False means the user does not want to continue """
 
         if self.playlist.queue_modified:
-            dlg = gtk.MessageDialog( self.main_window, gtk.DIALOG_MODAL,
-                gtk.MESSAGE_QUESTION )
-            dlg.set_title(_('Save queue to playlist file'))
-            dlg.add_button( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL )
-            dlg.add_button( gtk.STOCK_NO, gtk.RESPONSE_NO )
-            dlg.add_button( gtk.STOCK_YES, gtk.RESPONSE_YES )
-            dlg.set_markup('<span weight="bold" size="larger">' +
-                _('Save Queue?') + '</span>\n\n' +
-                _('The queue has been modified, you will lose all additions if you don\'t save.'))
+            response = dialog(
+                self.main_window, _('Save queue to playlist file'),
+                _('Save Queue?'), _("The queue has been modified, "
+                "you will lose all additions if you don't save.") )
 
-            response = dlg.run()
-            dlg.destroy()
+            self.__log.debug('Response to "Save Queue?": %s', response)
 
-            if response == gtk.RESPONSE_YES:
+            if response is None:
+                return False
+            elif response:
                 return self.save_to_playlist_callback()
-            elif response == gtk.RESPONSE_NO:
+            elif not response:
                 return True
-            elif response in [gtk.RESPONSE_CANCEL, gtk.RESPONSE_DELETE_EVENT]:
-                pass
+            else:
+                return False
         else:
             return True
-
-        return False
 
     def open_file_callback(self, widget=None):
         if self.check_queue():
