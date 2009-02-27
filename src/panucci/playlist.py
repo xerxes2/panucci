@@ -264,10 +264,7 @@ class Playlist(ObservableService):
     def move_item( self, from_row, to_row ):
         self.__log.info('Moving item from position %d to %d', from_row, to_row)
         assert isinstance(from_row, int) and isinstance(to_row, int)
-
-        temp = self.__queue[from_row]
-        self.__queue.remove(str(temp))
-        self.__queue.insert(to_row, temp)
+        self.__queue.move_item(from_row, to_row)
 
     ######################################
     # File-related convenience functions
@@ -506,6 +503,16 @@ class Queue(list, ObservableService):
         else:
             self.__log.info('Queue is empty...')
 
+    def move_item(self, from_pos, to_pos):
+        old_current_item = self.current_item_position
+
+        temp = self[from_pos]
+        self.remove(str(temp))
+        self.insert(to_pos, temp)
+
+        if old_current_item == from_pos:
+            self.__current_item_position = to_pos
+
     def clear(self):
         """ Reset the the queue to a known state """
 
@@ -564,7 +571,7 @@ class Queue(list, ObservableService):
             item.load_bookmarks()
 
         if position <= self.current_item_position:
-            self.current_item_position += 1
+            self.__current_item_position += 1
 
         list.insert(self, position, item)
         return True
@@ -584,7 +591,7 @@ class Queue(list, ObservableService):
             self.modified = True
 
             if self.index(item) < self.current_item_position:
-                self.current_item_position -= 1
+                self.__current_item_position -= 1
 
             list.remove(self, item)
 
