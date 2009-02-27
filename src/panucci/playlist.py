@@ -322,15 +322,15 @@ class Playlist(object):
     def pause(self, position):
         """ Called whenever the player is paused """
         self.__queue.current_item.seek_to = position
-        self.__queue.current_item.save_bookmark(
-            _('Auto Bookmark'), position, True )
 
-    def stop(self):
-        """ Caused when we reach the end of a file """
-        # for the time being, don't remove resume points at EOF to make sure
-        #   that the recent files list stays populated.
-        # db.remove_resume_bookmark( self.filepath )
-        self.pause(0)
+    def stop(self, position):
+        """ This should be run when the program is closed
+                or if the user switches playlists """
+    
+        db.remove_resume_bookmark( self.id )
+        if not self.is_empty():
+            self.__queue.current_item.save_bookmark(
+                _('Auto Bookmark'), position, True )
 
     def skip(self, skip_by=None, skip_to=None, dont_loop=False):
         """ Skip to another track in the playlist.

@@ -843,7 +843,11 @@ class GTK_Main(dbus.service.Object):
         self.start_playback(pause_on_load)
 
     @dbus.service.method('org.panucci.interface')
-    def stop_playing(self):
+    def stop_playing(self, save_resume_point=True):
+        if save_resume_point:
+            position_string, position = self.get_position()
+            self.playlist.stop(position)
+
         if self.playing:
             self.on_btn_play_pause_clicked(widget=None)
 
@@ -1056,11 +1060,9 @@ class GTK_Main(dbus.service.Object):
         t = message.type
 
         if t == gst.MESSAGE_EOS:
-            self.stop_playing()
+            self.stop_playing(save_resume_point=False)
             if self.playlist.next():
                 self.start_playback()
-            else:
-                self.playlist.stop()
 
         elif t == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
