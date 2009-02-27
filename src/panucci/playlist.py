@@ -38,7 +38,7 @@ from services import ObservableService
 _ = lambda x: x
 
 class Playlist(ObservableService):
-    signals = [ 'new_track', 'file_queued' ]
+    signals = [ 'new_track', 'new_track_metadata', 'file_queued' ]
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
@@ -118,8 +118,12 @@ class Playlist(ObservableService):
         return self.save_to_new_playlist(filepath)
 
     def on_queue_current_item_changed(self):
-        self.notify( 'new_track', self.get_file_metadata(),
-            caller=self.on_queue_current_item_changed )
+        self.send_new_metadata( self.on_queue_current_item_changed )
+        self.notify( 'new_track', caller=self.on_queue_current_item_changed )
+
+    def send_new_metadata(self, caller=None):
+        self.notify( 'new_track_metadata', self.get_file_metadata(),
+            caller=caller or self.send_new_metadata )
 
     def quit(self):
         self.__log.debug('quit() called.')
@@ -218,6 +222,9 @@ class Playlist(ObservableService):
             return False
 
         if bookmark_id is None:
+            if self.__queue.current_item_position == self.__queue.index(item_id):
+                self.next()
+
             item.delete_bookmark(None)
             self.__queue.remove(item_id)
         else:
@@ -331,12 +338,14 @@ class Playlist(ObservableService):
         else:                          # importing a single file
             error = not self.append(filepath, dont_notify=True)
 
+        self.__queue.disable_notifications = True
         self.load_from_resume_bookmark()
+        self.__queue.disable_notifications = False
 
         self.__queue.modified = os.path.expanduser(
             settings.temp_playlist ) == self.filepath
 
-        self.on_queue_current_item_changed()
+        self.send_new_metadata( caller=self.load )
 
         return not error
 
@@ -390,6 +399,8 @@ class Playlist(ObservableService):
         else:
             self.__log.warning('"%s" is not a directory.', directory)
             return False
+
+        return True
 
     ##################################
     # Playlist controls
@@ -471,6 +482,7 @@ class Queue(list, ObservableService):
 
         self.playlist_id = playlist_id
         self.modified = False # Has the queue been modified?
+        self.disable_notifications = False
         self.__current_item_position = 0
         list.__init__(self)
 
@@ -487,8 +499,9 @@ class Queue(list, ObservableService):
         if old_value != new_value:
             self.__log.debug( 'Current item changed from %d to %d',
                 old_value, new_value )
-            self.notify( 'current_item_changed',
-                caller=self.__set__current_item_position )
+            if not self.disable_notifications:
+                self.notify( 'current_item_changed',
+                    caller=self.__set__current_item_position )
 
     current_item_position = property(
         __get_current_item_position, __set__current_item_position )

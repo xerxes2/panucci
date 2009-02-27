@@ -42,6 +42,8 @@ class panucciPlayer(ObservableService):
         interface.register_player(self)
 
         self.playlist = Playlist()
+        self.playlist.register( 'new_track', self.on_new_track )
+
         self.__initial_seek = False # have we preformed the initial seek?
         self.seeking = False        # are we seeking?
 
@@ -240,16 +242,17 @@ class panucciPlayer(ObservableService):
         self.seeking = False
         return not error
 
+    def on_new_track(self):
+        self.stop(save_resume_point=False)
+        self.play()
+
     def __on_message(self, bus, message):
         t = message.type
         # self.__log.debug('Got message of type %s', t)
 
-        if t == gst.MESSAGE_EOS:
+        if t == gst.MESSAGE_EOS and not self.playlist.next():
             self.stop(save_resume_point=False)
-            if self.playlist.next():
-                self.play()
-            else:
-                self.notify( 'end_of_playlist', caller=self.__on_message )
+            self.notify( 'end_of_playlist', caller=self.__on_message )
 
         elif t == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()

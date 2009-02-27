@@ -337,9 +337,7 @@ class BookmarksWindow(gtk.Window):
     def jump_bookmark(self, w):
         model, bkmk_id, bkmk_iter, item_id, item_iter = self.__cur_selection()
         if item_iter is not None:
-            player.stop()
             player.playlist.load_from_bookmark_id( item_id, bkmk_id )
-            player.play()
 
 class GTK_Main(object):
 
@@ -364,7 +362,7 @@ class GTK_Main(object):
         player.register( 'playing', self.on_player_playing )
         player.register( 'paused', self.on_player_paused )
         player.register( 'end_of_playlist', self.on_player_end_of_playlist )
-        player.playlist.register( 'new_track', self.on_player_new_track )
+        player.playlist.register('new_track_metadata',self.on_player_new_track)
         player.playlist.register( 'file_queued', self.on_file_queued )
         player.init()
 
@@ -782,6 +780,7 @@ class GTK_Main(object):
     def on_player_playing(self):
         self.start_progress_timer()
         image(self.play_pause_button, 'media-playback-pause.png')
+        self.set_controls_sensitivity(True)
 
     def on_player_new_track(self, metadata):
         image(self.play_pause_button, 'media-playback-start.png')
@@ -789,7 +788,6 @@ class GTK_Main(object):
         self.button_handler_id = self.play_pause_button.connect(
             'clicked', self.on_btn_play_pause_clicked )
 
-        self.set_controls_sensitivity(True)
         for widget in [self.title_label,self.artist_label,self.album_label]:
             widget.set_text('')
             widget.hide()
