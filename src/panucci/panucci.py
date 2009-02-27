@@ -349,36 +349,19 @@ class GTK_Main(object):
     def __init__(self, filename=None):
         self.__log = logging.getLogger('panucci.panucci.GTK_Main')
         interface.register_gui(self)
-
-#        pickle_file = os.path.expanduser('~/.rmp-bookmarks')
-#        if os.path.isfile(pickle_file):
-#            import shutil
-#            import pickle_converter
-
-#            self.__log.info(
-#                util.notify( _('Converting old pickle format to SQLite.') ))
-#            self.__log.info( util.notify( _('This may take a while...') ))
-
-#            if pickle_converter.load_pickle_file(pickle_file):
-#                self.__log.info(
-#                    util.notify( _('Pickle file converted successfully.') ))
-#                shutil.move( pickle_file, pickle_file + '.bak' )
-#            else:
-#                self.__log.error( util.notify(
-#                    _('Error converting pickle file, check your log...') ))
+        self.pickle_file_conversion()
 
         self.recent_files = []
         self.progress_timer_id = None
         self.volume_timer_id = None
         self.make_main_window()
         self.has_coverart = False
+        self.set_volume(settings.volume)
 
         if util.platform==util.MAEMO and interface.headset_device is not None:
             # Enable play/pause with headset button
             interface.headset_device.connect_to_signal(
                 'Condition', self.handle_headset_button )
-
-        self.set_volume(settings.volume)
 
         player.register( 'stopped', self.on_player_stopped )
         player.register( 'playing', self.on_player_playing )
@@ -931,6 +914,21 @@ class GTK_Main(object):
     def bookmarks_callback(self, w):
         BookmarksWindow()
 
+    def pickle_file_conversion(self):
+        pickle_file = os.path.expanduser('~/.rmp-bookmarks')
+        if os.path.isfile(pickle_file):
+            import pickle_converter
+
+            self.__log.info(
+                util.notify( _('Converting old pickle format to SQLite.') ))
+            self.__log.info( util.notify( _('This may take a while...') ))
+
+            if pickle_converter.load_pickle_file(pickle_file):
+                self.__log.info(
+                    util.notify( _('Pickle file converted successfully.') ))
+            else:
+                self.__log.error( util.notify(
+                    _('Error converting pickle file, check your log...') ))
 
 def run(filename=None):
     GTK_Main( filename )

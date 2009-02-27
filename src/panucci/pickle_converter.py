@@ -24,6 +24,7 @@
 
 import os.path
 import pickle
+import shutil
 import time
 import logging
 
@@ -33,7 +34,7 @@ from playlist import Bookmark
 _ = lambda s: s
 log = logging.getLogger('panucci.pickle_converter')
 
-def load_pickle_file( pfile ):
+def load_pickle_file( pfile, create_backup=True ):
     try:
         f = open( pfile, 'r' )
     except Exception, e:
@@ -56,14 +57,20 @@ def load_pickle_file( pfile ):
             data['bookmarks'].append(
                 ( _('Auto Bookmark'), data.get('position', 0)) )
 
+        playlist_id = db.get_playlist_id( f, create_new=True )
+
         for name, position in data['bookmarks']:
             b = Bookmark()
-            b.playlist_filepath = f
+            b.playlist_id = playlist_id
+            b.bookmark_filepath = f
             b.timestamp = time.time()
             b.bookmark_name = name
             b.seek_position = position
             b.is_resume_position = name == _('Auto Bookmark')
             db.save_bookmark(b)
+
+    if create_backup:
+        shutil.move( pfile, pfile + '.bak' )
 
     return True
 
