@@ -151,6 +151,17 @@ class BookmarksWindow(gtk.Window):
 
         self.treeview.append_column(ncol)
         self.treeview.append_column(tcol)
+        self.treeview.connect('drag-data-received', self.drag_data_recieved)
+        self.treeview.connect('drag_data_get', self.drag_data_get_data)
+
+        treeview_targets = [
+            ( 'playlist_row_data', gtk.TARGET_SAME_WIDGET, 0 ) ]
+
+        self.treeview.enable_model_drag_source(
+            gtk.gdk.BUTTON1_MASK, treeview_targets, gtk.gdk.ACTION_COPY )
+
+        self.treeview.enable_model_drag_dest(
+            treeview_targets, gtk.gdk.ACTION_COPY )
 
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -177,6 +188,48 @@ class BookmarksWindow(gtk.Window):
         self.vbox.pack_start(self.hbox, False, True)
         self.add(self.vbox)
         self.show_all()
+
+    def drag_data_get_data(
+        self, treeview, context, selection, target_id, timestamp):
+
+        treeselection = treeview.get_selection()
+        model, iter = treeselection.get_selected()
+        # only allow moving around top-level parents
+        if model.iter_parent(iter) is None:
+            data = model.get_string_from_iter(iter)
+            selection.set(selection.target, 8, data)
+        else:
+            self.__log.debug("Can't move children...")
+
+    def drag_data_recieved(
+        self, treeview, context, x, y, selection, info, timestamp):
+
+        drop_info = treeview.get_dest_row_at_pos(x, y)
+
+        # TODO: If user drags the row past the last row, drop_info is None
+        #       I'm not sure if it's safe to simply assume that None is
+        #       euqivalent to the last row...
+        if None not in [ drop_info and selection.data ]:
+            model = treeview.get_model()
+            path, position = drop_info
+
+            from_iter = model.get_iter_from_string(selection.data)
+
+            # make sure the to_iter doesn't have a parent
+            to_iter = model.get_iter(path)
+            if model.iter_parent(to_iter) is not None:
+                to_iter = model.iter_parent(to_iter)
+
+            if ( position == gtk.TREE_VIEW_DROP_BEFORE or
+                 position == gtk.TREE_VIEW_DROP_INTO_OR_BEFORE ):
+                model.move_before( from_iter, to_iter )
+            elif ( position == gtk.TREE_VIEW_DROP_AFTER or
+                 position == gtk.TREE_VIEW_DROP_INTO_OR_AFTER ):
+                model.move_after( from_iter, to_iter )
+            else:
+                self.__log.debug('Drop not supported: %s', position)
+        else:
+            self.__log.debug('No drop_data or selection.data available')
 
     def update_model(self):
         self.model = self.main.playlist.get_bookmark_model()
