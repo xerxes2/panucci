@@ -156,15 +156,22 @@ class Playlist(ObservableService):
                 'item_id=%s,bookmark_id=%s not found', item_id, bookmark_id )
             return False
 
-    def load_from_resume_bookmark(self):
-        """ Find a resume bookmark in the queue; this could be done better """
+    def find_resume_bookmark(self):
+        """ Find a resume bookmark in the queue """
         for item in self.__queue:
             for bookmark in item.bookmarks:
                 if bookmark.is_resume_position:
-                    return self.__load_from_bookmark( str(item), bookmark )
+                    return str(item), str(bookmark)
+        else:
+            return None, None
 
-        self.__log.info('No resume bookmark found.')
-        return False
+    def load_from_resume_bookmark(self):
+        item_id, bookmark_id = self.find_resume_bookmark()
+        if None in ( item_id, bookmark_id ):
+            self.__log.info('No resume bookmark found.')
+            return False
+        else:
+            return self.load_from_bookmark_id( item_id, bookmark_id )
 
     def save_bookmark( self, bookmark_name, position ):
         self.__queue.current_item.save_bookmark(
@@ -222,6 +229,15 @@ class Playlist(ObservableService):
             item.delete_bookmark(bookmark_id)
 
         return True
+
+    def remove_resume_bookmarks(self):
+        item_id, bookmark_id = self.find_resume_bookmark()
+
+        if None in ( item_id, bookmark_id ):
+            return False
+        else:
+            return self.remove_bookmark( item_id, bookmark_id )
+                    
 
     def generate_bookmark_model(self, include_resume_marks=False):
         self.__bookmarks_model = gtk.TreeStore(
@@ -371,12 +387,12 @@ class Playlist(ObservableService):
         """ Called whenever the player is paused """
         self.__queue.current_item.seek_to = position
 
-    def stop(self, position):
+    def stop(self, position, save_resume_point=True):
         """ This should be run when the program is closed
                 or if the user switches playlists """
     
-        db.remove_resume_bookmark( self.id )
-        if not self.is_empty:
+        self.remove_resume_bookmarks()
+        if not self.is_empty and save_resume_point:
             self.__queue.current_item.save_bookmark(
                 _('Auto Bookmark'), position, True )
 
@@ -670,6 +686,7 @@ class PlaylistItem(object):
             bkmk = self.bookmarks.index(bookmark_id)
             if bkmk >= 0:
                 self.bookmarks[bkmk].delete()
+                self.bookmarks.remove(bookmark_id)
             else:
                 self.__log.info('Cannot find bookmark with id: %s',bookmark_id)
                 return False

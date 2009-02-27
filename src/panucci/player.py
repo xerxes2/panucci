@@ -67,10 +67,8 @@ class panucciPlayer(ObservableService):
         self.notify('stopped', caller=self.stop)
 
         if self.__player is not None:
-            if save_resume_point:
-                position_string, position = self.get_formatted_position()
-                self.playlist.stop(position)
-
+            position_string, position = self.get_formatted_position()
+            self.playlist.stop(position, save_resume_point)
             self.__player.set_state(gst.STATE_NULL)
             self.__player = None
 
@@ -234,13 +232,12 @@ class panucciPlayer(ObservableService):
             if self.playlist.next():
                 self.play()
             else:
-                self.stop()
                 self.notify( 'end_of_playlist', caller=self.__on_message )
 
         elif t == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
             self.__log.critical( 'Error: %s %s', err, debug )
-            self.stop_playing()
+            self.stop()
 
         elif t == gst.MESSAGE_STATE_CHANGED:
             if ( message.src == self.__player and
