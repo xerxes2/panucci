@@ -85,7 +85,8 @@ def image(widget, filename, is_stock=False):
     widget.remove(widget.get_child())
     image = None
     if is_stock:
-        image = gtk.image_new_from_stock(filename, gtk.icon_size_from_name('panucci-button'))
+        image = gtk.image_new_from_stock(
+            filename, gtk.icon_size_from_name('panucci-button') )
     else:
         filename = util.find_image(filename)
         if filename is not None:
@@ -121,6 +122,45 @@ def dialog( toplevel_window, title, question, description ):
         return False
     elif response in [gtk.RESPONSE_CANCEL, gtk.RESPONSE_DELETE_EVENT]:
         return None
+
+def get_file_from_filechooser( toplevel_window, save_file=False, save_to=None):
+    if running_on_tablet:
+        if save_file:
+            args = ( toplevel_window, gtk.FILE_CHOOSER_ACTION_SAVE )
+        else:
+            args = ( toplevel_window, gtk.FILE_CHOOSER_ACTION_OPEN )
+
+        dlg = hildon.FileChooserDialog( *args )
+    else:
+        if save_file:
+            args = ( _('Select file to save playlist to'), None,
+                gtk.FILE_CHOOSER_ACTION_SAVE,
+                (( gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                gtk.STOCK_SAVE, gtk.RESPONSE_OK )) )
+        else:
+            args = ( _('Select podcast or audiobook'), None,
+                gtk.FILE_CHOOSER_ACTION_OPEN,
+                (( gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                gtk.STOCK_MEDIA_PLAY, gtk.RESPONSE_OK )) )
+
+        dlg = gtk.FileChooserDialog(*args)
+
+    current_folder = os.path.expanduser(settings.last_folder)
+
+    if current_folder is not None and os.path.isdir(current_folder):
+        dlg.set_current_folder(current_folder)
+
+    if save_file and save_to is not None:
+        dlg.set_current_name(save_to)
+
+    if dlg.run() == gtk.RESPONSE_OK:
+        filename = dlg.get_filename()
+        settings.last_folder = dlg.get_current_folder()
+    else:
+        filename = None
+
+    dlg.destroy()
+    return filename
 
 class BookmarksWindow(gtk.Window):
     def __init__(self, main):
@@ -644,47 +684,8 @@ class GTK_Main(dbus.service.Object):
         if event == 'ButtonPressed' and button == 'phone':
             self.on_btn_play_pause_clicked(self.button)
 
-    def get_file_from_filechooser(self, save_file=False, save_to=None):
-        if running_on_tablet:
-            if save_file:
-                args = ( self.main_window, gtk.FILE_CHOOSER_ACTION_SAVE )
-            else:
-                args = ( self.main_window, gtk.FILE_CHOOSER_ACTION_OPEN )
-
-            dlg = hildon.FileChooserDialog( *args )
-        else:
-            if save_file:
-                args = ( _('Select file to save playlist to'), None,
-                    gtk.FILE_CHOOSER_ACTION_SAVE,
-                    (( gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                    gtk.STOCK_SAVE, gtk.RESPONSE_OK )) )
-            else:
-                args = ( _('Select podcast or audiobook'), None,
-                    gtk.FILE_CHOOSER_ACTION_OPEN,
-                    (( gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                    gtk.STOCK_MEDIA_PLAY, gtk.RESPONSE_OK )) )
-
-            dlg = gtk.FileChooserDialog(*args)
-
-        current_folder = os.path.expanduser(settings.last_folder)
-
-        if current_folder is not None and os.path.isdir(current_folder):
-            dlg.set_current_folder(current_folder)
-
-        if save_file and save_to is not None:
-            dlg.set_current_name(save_to)
-
-        if dlg.run() == gtk.RESPONSE_OK:
-            filename = dlg.get_filename()
-            settings.last_folder = dlg.get_current_folder()
-        else:
-            filename = None
-
-        dlg.destroy()
-        return filename
-
     def queue_file_callback(self, widget=None):
-        filename = self.get_file_from_filechooser()
+        filename = get_file_from_filechooser(self.main_window)
         if filename is not None:
             self.queue_file(filename)
 
@@ -714,13 +715,13 @@ class GTK_Main(dbus.service.Object):
 
     def open_file_callback(self, widget=None):
         if self.check_queue():
-            filename = self.get_file_from_filechooser()
+            filename = get_file_from_filechooser(self.main_window)
             if filename is not None:
                 self._play_file(filename)
 
     def save_to_playlist_callback(self, widget=None):
-        filename = self.get_file_from_filechooser(
-            save_file=True, save_to='playlist.m3u' )
+        filename = get_file_from_filechooser(
+            self.main_window, save_file=True, save_to='playlist.m3u' )
 
         if filename is None:
             return False
