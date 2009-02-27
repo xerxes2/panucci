@@ -485,8 +485,13 @@ class Queue(list):
         return True
 
     def remove(self, item):
-        self.modified = True
-        list.remove(self, item)
+        if self.count(item):
+            self.modified = True
+
+            if self.index(item) < self.current_item_position:
+                self.current_item_position -= 1
+
+            list.remove(self, item)
 
     def extend(self, items):
         self.__log.warning('FIXME: extend not supported yet...')
