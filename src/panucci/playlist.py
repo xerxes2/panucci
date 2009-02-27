@@ -254,22 +254,22 @@ class Playlist(object):
     # File importing functions
     ##################################
 
-    def load(self, File):
-        """ Detects File's filetype then loads it using
+    def load(self, filepath):
+        """ Detects filepath's filetype then loads it using
             the appropriate loader function """
-        self.__log.debug('Attempting to load %s', File)
+        self.__log.debug('Attempting to load %s', filepath)
 
         error = False
         self.reset_playlist()
-        self.filepath = File
+        self.filepath = filepath
 
         parsers = { 'm3u': M3U_Playlist, 'pls': PLS_Playlist }
-        extension = util.detect_filetype(File)
+        extension = util.detect_filetype(filepath)
         if parsers.has_key(extension): # importing a playlist
             self.__log.info('Loading playlist file (%s)', extension)
             parser = parsers[extension](self.filepath, self.id)
 
-            if parser.parse(File):
+            if parser.parse(filepath):
                 self.__queue = parser.get_queue()
             else:
                 return False
