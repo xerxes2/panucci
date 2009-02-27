@@ -52,7 +52,6 @@ except:
             'for this to work properly.' )
 
 from simplegconf import gconf
-from playlist import Playlist
 from settings import settings
 from player import player
 from dbusinterface import interface
@@ -373,7 +372,6 @@ class GTK_Main(object):
         self.volume_timer_id = None
         self.make_main_window()
         self.has_coverart = False
-        self.first_file = True
 
         if util.platform==util.MAEMO and interface.headset_device is not None:
             # Enable play/pause with headset button
@@ -384,16 +382,10 @@ class GTK_Main(object):
 
         player.register( 'stopped', self.on_player_stopped )
         player.register( 'playing', self.on_player_playing )
-        player.register( 'new_track', self.on_player_new_track )
         player.register( 'paused', self.on_player_paused )
         player.register( 'end_of_playlist', self.on_player_end_of_playlist )
-
-# this should be taken care of by the panucci executable, or playlist.py
-#        if filename is None:
-#            if self.recent_files:
-#                self._play_file(self.recent_files[0], pause_on_load=True)
-#        else:
-#            self._play_file(filename)
+        player.playlist.register( 'new_track', self.on_player_new_track )
+        player.init()
 
     def make_main_window(self):
         import pango
@@ -649,6 +641,7 @@ class GTK_Main(object):
 
     def destroy(self, widget):
         settings.volume = self.get_volume()
+        player.quit()
         gtk.main_quit()
 
     def handle_headset_button(self, event, button):
@@ -819,6 +812,7 @@ class GTK_Main(object):
         image(self.play_pause_button, 'media-playback-pause.png')
 
     def on_player_new_track(self, metadata):
+        image(self.play_pause_button, 'media-playback-start.png')
         self.play_pause_button.disconnect(self.button_handler_id)
         self.button_handler_id = self.play_pause_button.connect(
             'clicked', self.on_btn_play_pause_clicked )
@@ -830,13 +824,11 @@ class GTK_Main(object):
 
         self.cover_art.hide()
         self.has_coverart = False
-
-        estimated_length = metadata['length']
         self.set_metadata(metadata)
 
-        if self.first_file:
-            self.first_file = False
-            player.pause()
+        text, position = player.get_formatted_position()
+        estimated_length = metadata['length']
+        self.set_progress_callback( position, estimated_length )
 
     def on_player_paused(self):
         self.stop_progress_timer() # This should save some power

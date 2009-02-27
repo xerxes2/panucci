@@ -13,14 +13,11 @@ from dbusinterface import interface
 
 import util
 
-running_on_tablet=False
-
-
 PLAYING, PAUSED, STOPPED, NULL = range(4)
 
 class panucciPlayer(ObservableService):
     """ """
-    signals = ['playing', 'paused', 'stopped', 'new_track', 'end_of_playlist']
+    signals = ['playing', 'paused', 'stopped', 'end_of_playlist']
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.player.panucciPlayer')
@@ -38,6 +35,11 @@ class panucciPlayer(ObservableService):
         self.set_volume_level = lambda x: 0
 
         self.time_format = gst.Format(gst.FORMAT_TIME)
+
+    def init(self, load_last_played=True):
+        """ This should be called by the UI once it has initialized """
+        if load_last_played:
+            self.playlist.load_last_played()
 
     def play(self):
         have_player = self.__player is not None
@@ -96,7 +98,7 @@ class panucciPlayer(ObservableService):
             self.__player = None
             return False
 
-        if filetype.startswith('ogg') and running_on_tablet:
+        if filetype.startswith('ogg') and util.platform == util.MAEMO:
             self.__log.info( 'Using OGG workaround, I hope this works...' )
 
             self.__player = gst.Pipeline('player')
@@ -132,7 +134,7 @@ class panucciPlayer(ObservableService):
             self.__player = gst.element_factory_make('playbin', 'player')
 
             # Workaround for volume on maemo, they use a 0 to 10 scale
-            div = int(running_on_tablet)*10 or 1
+            div = int(util.platform == util.MAEMO)*10 or 1
             self.get_volume_level = lambda : self.__get_volume_level(
                 self.__player, div )
             self.set_volume_level = lambda x: self.__set_volume_level(
@@ -143,9 +145,6 @@ class panucciPlayer(ObservableService):
         bus = self.__player.get_bus()
         bus.add_signal_watch()
         bus.connect('message', self.__on_message)
-
-        self.notify( 'new_track', self.playlist.get_file_metadata(),
-            caller=self.__setup_player )
 
         #self.set_volume_level(self.get_volume())
         return True

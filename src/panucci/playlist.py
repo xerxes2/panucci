@@ -31,21 +31,36 @@ import logging
 from hashlib import md5
 from xml.sax.saxutils import escape
 
+# I don't know why, but without this logging doesn't work for this module...
+logging.basicConfig(level=logging.DEBUG)
+
 import util
 from dbsqlite import db
 from settings import settings
 from simplegconf import gconf
+from services import ObservableService
 
 _ = lambda x: x
 
-class Playlist(object):
+class Playlist(ObservableService):
+    signals = [ 'new_track' ]
+
     def __init__(self):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
+        ObservableService.__init__(self, self.signals, self.__log)
+
+        self.__queue = Queue(None)
+        self.__queue.register(
+            'current_item_changed', self.on_queue_current_item_changed )
+
+        self.reset_playlist()
+
+    def reset_playlist(self):
+        """ Sets the playlist to a default "known" state """
 
         self.filepath = None
         self._id = None
-        self.__queue = Queue(self.id)
-
+        self.__queue.clear()
         self.__bookmarks_model = None
         self.__bookmarks_model_changed = True
 
@@ -57,10 +72,6 @@ class Playlist(object):
                 self._id = db.get_playlist_id( self.filepath, True, True )
 
         return self._id
-
-    def reset_playlist(self):
-        """ clears all the files in the filelist """
-        self.__init__()
 
     @property
     def current_filepath(self):
@@ -96,8 +107,8 @@ class Playlist(object):
             playlist_type = 'm3u' # use m3u by default
             self.filepath += '.m3u'
 
-        playlist = playlist[playlist_type](self.filepath, self.id)
-        if not playlist.export_items( filepath, self.__queue ):
+        playlist = playlist[playlist_type](self.filepath, self.__queue)
+        if not playlist.export_items( filepath ):
             self.__log.error('Error exporting playlist to %s', self.filepath)
             return False
 
@@ -111,7 +122,12 @@ class Playlist(object):
         filepath = os.path.expanduser(settings.temp_playlist)
         return self.save_to_new_playlist(filepath)
 
+    def on_queue_current_item_changed(self):
+        self.notify( 'new_track', self.get_file_metadata(),
+            caller=self.on_queue_current_item_changed )
+
     def quit(self):
+        self.__log.debug('quit() called.')
         if self.queue_modified:
             self.__log.info('Queue modified, saving temporary playlist')
             self.save_temp_playlist()
@@ -291,19 +307,19 @@ class Playlist(object):
         error = False
         self.reset_playlist()
         self.filepath = filepath
+        self.__queue.playlist_id = self.id
 
         parsers = { 'm3u': M3U_Playlist, 'pls': PLS_Playlist }
         extension = util.detect_filetype(filepath)
         if parsers.has_key(extension): # importing a playlist
             self.__log.info('Loading playlist file (%s)', extension)
-            parser = parsers[extension](self.filepath, self.id)
+            parser = parsers[extension](self.filepath, self.__queue)
 
             if parser.parse(filepath):
                 self.__queue = parser.get_queue()
             else:
                 return False
         else:                          # importing a single file
-            self.__queue = Queue(self.id)
             error = not self.append(filepath)
 
         self.load_from_resume_bookmark()
@@ -311,7 +327,16 @@ class Playlist(object):
         self.queue_modified = os.path.expanduser(
             settings.temp_playlist ) == self.filepath
 
+        self.on_queue_current_item_changed()
+
         return not error
+
+    def load_last_played(self):
+        recent = self.get_recent_files(max_files=1)
+        if recent:
+            self.load(recent[0])
+
+        return bool(recent)
 
     def append(self, filepath):
         self.__log.debug('Attempting to queue file: %s', filepath)
@@ -378,6 +403,7 @@ class Playlist(object):
         self.__queue.current_item_position = skip
         self.__log.debug('Skipping to file %d (%s)', skip,
             self.__queue.current_item.filepath )
+
         return True
 
     def next(self):
@@ -390,16 +416,38 @@ class Playlist(object):
         return self.skip( skip_by=-1, dont_loop=True )
 
 
-class Queue(list):
+class Queue(list, ObservableService):
     """ A Simple list of PlaylistItems """
+
+    signals = [ 'current_item_changed', ]
 
     def __init__(self, playlist_id):
         self.__log = logging.getLogger('panucci.playlist.Queue')
+        ObservableService.__init__(self, self.signals, self.__log)
 
         self.playlist_id = playlist_id
         self.modified = False # Has the queue been modified?
-        self.current_item_position = 0
+        self.__current_item_position = 0
         list.__init__(self)
+
+    def __get_current_item_position(self):
+        return self.__current_item_position
+
+    def __set__current_item_position(self, new_value):
+
+        # set the new position before notify()'ing 
+        # or else we'll end up load the old file's metadata
+        old_value = self.__current_item_position
+        self.__current_item_position = new_value
+
+        if old_value != new_value:
+            self.__log.debug( 'Current item changed from %d to %d',
+                old_value, new_value )
+            self.notify( 'current_item_changed',
+                caller=self.__set__current_item_position )
+
+    current_item_position = property(
+        __get_current_item_position, __set__current_item_position )
 
     def __count_dupe_items(self, subset, item):
         # Count the number of duplicate items (by filepath only) in a list
@@ -414,15 +462,15 @@ class Queue(list):
 
         assert isinstance( item, PlaylistItem )
         item.playlist_id = self.playlist_id
-        s = os.path.isfile(item.filepath) and util.is_supported(item.filepath)
 
-        if s:
+        if os.path.isfile(item.filepath) and util.is_supported(item.filepath):
             self.modified = True
+            return True
         else:
             self.__log.warning(
                 'File not found or not supported: %s', item.filepath )
 
-        return s
+            return False
 
     @property
     def current_item(self):
@@ -435,6 +483,14 @@ class Queue(list):
             return self[self.current_item_position]
         else:
             self.__log.info('Queue is empty...')
+
+    def clear(self):
+        """ Reset the the queue to a known state """
+
+        self[:] = []
+        self.playlist_id = None
+        self.modified = False
+        self.__current_item_position = 0
 
     def get_item(self, item_id):
         if self.count(item_id):
@@ -803,11 +859,11 @@ class PlaylistFile(object):
     """ The base class for playlist file parsers/exporters,
         this should not be used directly but instead subclassed. """
 
-    def __init__(self, filepath, id):
+    def __init__(self, filepath, queue):
         self.__log = logging.getLogger('panucci.playlist.PlaylistFile')
         self._filepath = filepath
         self._file = None
-        self._items = Queue(id)
+        self._items = queue
 
     def __open_file(self, filepath, mode):
         if self._file is not None:
@@ -867,12 +923,9 @@ class PlaylistFile(object):
     def get_queue(self):
         return self._items
 
-    def export_items(self, filepath=None, playlist_items=None):
+    def export_items(self, filepath=None):
         if filepath is not None:
             self._filepath = filepath
-
-        if playlist_items is not None:
-            self._items = playlist_items
 
         if self.__open_file(filepath, 'w'):
             self.export_hook(self._items)
