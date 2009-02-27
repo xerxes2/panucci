@@ -175,7 +175,7 @@ class Storage(object):
             self.remove_resume_bookmark( bookmark.playlist_id )
 
         log('Saving %s, %d (%s)' % ( bookmark.bookmark_name,
-            bookmark.seek_position, bookmark.playlist_id ))
+            bookmark.seek_position, bookmark.bookmark_filepath ))
 
         cursor = self.cursor()
         cursor.execute(
@@ -292,8 +292,11 @@ class Storage(object):
 
         return playlist_id
 
-    def add_playlist(self, filepath, timestamp=time.time()):
+    def add_playlist(self, filepath, timestamp=None):
         log( 'Adding playlist: %s' % filepath )
+
+        if timestamp is None:
+            timestamp = time.time()
 
         cursor = self.cursor()
         cursor.execute(
@@ -307,8 +310,11 @@ class Storage(object):
 
         return r_id
 
-    def update_playlist(self, playlist_id, filepath, timestamp=time.time()):
+    def update_playlist(self, playlist_id, filepath, timestamp=None):
         log( 'Updating playlist: %s' % filepath )
+
+        if timestamp is None:
+            timestamp = time.time()
 
         cursor = self.cursor()
         cursor.execute(
