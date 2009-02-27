@@ -164,10 +164,15 @@ def get_file_from_filechooser( toplevel_window, save_file=False, save_to=None):
 
 class BookmarksWindow(gtk.Window):
     def __init__(self, main):
-        self.__log = logging.getLogger('panucci.panucci.BookmarksWindow')
-        self.main = main
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        self.__log = logging.getLogger('panucci.panucci.BookmarksWindow')
+
+        self.main = main
         self.set_title('Bookmarks')
+        window_icon = util.find_image('panucci.png')
+        if window_icon is not None:
+            self.set_icon_from_file( window_icon )
+
         self.set_default_size(400, 300)
         self.set_border_width(10)
         self.vbox = gtk.VBox()
