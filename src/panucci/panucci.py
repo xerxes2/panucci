@@ -196,6 +196,7 @@ class BookmarksWindow(gtk.Window):
         model, iter = treeselection.get_selected()
         # only allow moving around top-level parents
         if model.iter_parent(iter) is None:
+            # send the path of the selected row
             data = model.get_string_from_iter(iter)
             selection.set(selection.target, 8, data)
         else:
@@ -220,14 +221,24 @@ class BookmarksWindow(gtk.Window):
             if model.iter_parent(to_iter) is not None:
                 to_iter = model.iter_parent(to_iter)
 
+            from_row = model.get_path(from_iter)[0]
+            to_row = path[0]
+
             if ( position == gtk.TREE_VIEW_DROP_BEFORE or
                  position == gtk.TREE_VIEW_DROP_INTO_OR_BEFORE ):
                 model.move_before( from_iter, to_iter )
+                to_row = to_row - 1 if from_row < to_row else to_row
             elif ( position == gtk.TREE_VIEW_DROP_AFTER or
                  position == gtk.TREE_VIEW_DROP_INTO_OR_AFTER ):
                 model.move_after( from_iter, to_iter )
+                to_row = to_row + 1 if from_row > to_row else to_row
             else:
                 self.__log.debug('Drop not supported: %s', position)
+
+            # don't do anything if we're not actually moving rows around
+            if from_row != to_row: 
+                self.main.playlist.move_item( from_row, to_row )
+
         else:
             self.__log.debug('No drop_data or selection.data available')
 

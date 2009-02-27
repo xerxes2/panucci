@@ -212,6 +212,14 @@ class Playlist(object):
 
         return self.__bookmarks_model
 
+    def move_item( self, from_row, to_row ):
+        self.__log.info('Moving item from position %d to %d', from_row, to_row)
+        assert isinstance(from_row, int) and isinstance(to_row, int)
+
+        temp = self.__queue[from_row]
+        self.__queue.remove(str(temp))
+        self.__queue.insert(to_row, temp)
+
     ######################################
     # File-related convenience functions
     ######################################
