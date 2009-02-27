@@ -772,17 +772,17 @@ class GTK_Main(object):
            self.__volume_hide_callback()
 
     def volume_changed_gtk(self, widget, new_value=0.5):
-        self.set_volume_level( new_value )
+        player.set_volume_level( new_value )
 
     def volume_changed_hildon(self, widget):
         self.__set_volume_hide_timer( 4, force_show=True )
-        self.set_volume_level( widget.get_level()/100.0 )
+        player.set_volume_level( widget.get_level()/100.0 )
 
     def mute_toggled(self, widget):
         if widget.get_mute():
-            self.set_volume_level( 0 )
+            player.set_volume_level( 0 )
         else:
-            self.set_volume_level( widget.get_level()/100.0 )
+            player.set_volume_level( widget.get_level()/100.0 )
 
     def show_main_window(self):
         self.main_window.present()
