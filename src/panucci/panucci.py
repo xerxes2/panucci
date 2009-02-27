@@ -157,17 +157,20 @@ class BookmarksWindow(gtk.Window):
         self.treeview.set_model(self.model)
 
     def close(self, w):
+        self.main.playlist.update_bookmarks()
         self.destroy()
 
     def label_edited(self, cellrenderer, path, new_text):
         iter = self.model.get_iter(path)
-        bkmk_id  = self.model.get_value(iter, 0)
         old_text = self.model.get_value(iter, 1)
 
         if new_text.strip():
             if old_text != new_text:
                 self.model.set_value(iter, 1, new_text)
-                self.main.playlist.update_bookmark( bkmk_id, name=new_text )
+                m, bkmk_id, biter, item_id, iiter = self.__cur_selection()
+
+                self.main.playlist.update_bookmark(
+                    item_id, bkmk_id, name=new_text )
         else:
             self.model.set_value(iter, 1, old_text)
 
@@ -178,21 +181,42 @@ class BookmarksWindow(gtk.Window):
         self.main.playlist.save_bookmark( label, position )
         self.update_model()
 
-    def remove_bookmark(self, w):
+    def __cur_selection(self):
+        bookmark_id, bookmark_iter, item_id, item_iter = (None,)*4
+
         selection = self.treeview.get_selection()
-        (model, iter) = selection.get_selected()
-        if iter is not None:
-            bookmark_id = model.get_value(iter, 0)
-            self.main.playlist.remove_bookmark( bookmark_id )
-            model.remove(iter)
+        # Assume the user selects a bookmark.
+        #   bookmark_iter will get set to None if that is not the case...
+        model, bookmark_iter = selection.get_selected()
+
+        if bookmark_iter is not None:
+            item_iter = model.iter_parent(bookmark_iter)
+
+            # bookmark_iter is actually an item_iter
+            if item_iter is None:
+                item_iter = bookmark_iter
+                item_id = model.get_value(item_iter, 0)
+                bookmark_id, bookmark_iter = None, None
+            else:
+                bookmark_id = model.get_value(bookmark_iter, 0)
+                item_id = model.get_value(item_iter, 0)
+
+        return model, bookmark_id, bookmark_iter, item_id, item_iter
+
+    def remove_bookmark(self, w):
+        model, bkmk_id, bkmk_iter, item_id, item_iter = self.__cur_selection()
+        self.main.playlist.remove_bookmark( item_id, bkmk_id )
+        if bkmk_iter is not None:
+            model.remove(bkmk_iter)
+        elif item_iter is not None:
+            model.remove(item_iter)
 
     def jump_bookmark(self, w):
-        selection = self.treeview.get_selection()
-        (model, iter) = selection.get_selected()
-        if iter is not None:
-            bookmark_id = model.get_value(iter, 0)
+        model, bkmk_id, bkmk_iter, item_id, item_iter = self.__cur_selection()
+        self.main.playlist.print_queue_layout()
+        if item_iter is not None:
             self.main.stop_playing()
-            self.main.playlist.load_from_bookmark( bookmark_id )
+            self.main.playlist.load_from_bookmark( item_id, bkmk_id )
             self.main.start_playback()
 
 class GTK_Main(dbus.service.Object):
@@ -737,14 +761,16 @@ class GTK_Main(dbus.service.Object):
             widget.hide()
         self.cover_art.hide()
         self.has_coverart = False
-        self.set_metadata(self.playlist.get_file_metadata())
+        metadata = self.playlist.get_file_metadata()
+        estimated_length = metadata['length']
+        self.set_metadata(metadata)
         self.setup_player()
 
         if pause_on_load:
             image(self.button, 'media-playback-start.png')
             self.set_controls_sensitivity(False)
             self.set_progress_callback( self.playlist.get_current_position(),
-                self.playlist.get_estimated_duration() )
+                estimated_length )
         else:
             self.on_btn_play_pause_clicked(widget=None)
 

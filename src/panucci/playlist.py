@@ -25,9 +25,9 @@
 import gobject, gtk
 import time
 import os.path
-import hashlib
-import glob
+import os
 import re
+from hashlib import md5
 from xml.sax.saxutils import escape
 
 import util
@@ -40,32 +40,22 @@ _ = lambda x: x
 
 class Playlist(object):
     def __init__(self):
-        self.filename = None
-        self.queue_modified = False
+        self.filepath = None
 
-        self._current_file = 0
-        self.__current_fileobj = None
-        self.__filelist = []
-        self.__bookmarks = {}
+        self._id = None
+        self.__queue = Queue(self.id)
+
         self.__bookmarks_model = None
         self.__bookmarks_model_changed = True
 
-    def insert( self, position, filepath ):
-        if os.path.isfile(filepath) and util.is_supported(filepath):
-            if position <= self._current_file:
-                self._current_file += 1
-            self.__filelist.insert( position, filepath )
-            self.__generate_per_file_bookmarks()
-            self.__bookmarks_model_changed = True
-            self.queue_modified = True
-            return True
-        else:
-            log('File not found or not supported: %s' % filepath)
-            return False
+    @property
+    def id(self):
+        if self.filepath is None:
+            log('Can\'t get playlist id without having filepath')
+        elif self._id is None:
+                self._id = db.get_playlist_id( self.filepath, True, True )
 
-    def append( self, filepath ):
-        """ Append a file to the queue """
-        return self.insert( self.queue_length(), filepath )
+        return self._id
 
     def reset_playlist(self):
         """ clears all the files in the filelist """
@@ -74,46 +64,34 @@ class Playlist(object):
     @property
     def current_filepath(self):
         """ Get the current file """
-        if self._current_file >= self.queue_length():
-            log('Current file is greater than queue length, setting to 0.')
-            self._current_file = 0
+        if self.__queue.current_item is not None:
+            return self.__queue.current_item.filepath
 
-        if self.__filelist:
-            return self.__filelist[self._current_file]
-
-    @property
-    def current_fileobj(self):
-        """ Get the FileObject of the current file """
-        if self.__current_fileobj is None or (
-                self.__current_fileobj.filepath != self.current_filepath ):
-            log('Cached FileObject is out of date, loading a new one')
-            self.__current_fileobj = FileObject( self.current_filepath )
-
-        return self.__current_fileobj
-
-    def get_current_file_number(self):
-        return self._current_file
+    def get_queue_modified(self):    return self.__queue.modified
+    def set_queue_modified(self, v): self.__queue.modified = v
+    queue_modified = property(get_queue_modified,set_queue_modified)
 
     def queue_length(self):
-        return len(self.__filelist)
+        return len(self.__queue)
 
     def is_empty(self):
-        """ Returns False if we're at the end of the
-                playlist or if no files have been loaded """
-        return self.get_current_file_number() >= self.queue_length() 
+        return not self.__queue
 
-    def md5( self, string ):
-        """ Return the md5sum of 'string' """
-        return hashlib.md5(string).hexdigest()
+    def print_queue_layout(self):
+        """ This helps with debugging ;) """
+        for item in self.__queue:
+            print str(item), item.reported_filepath
+            for bookmark in item.bookmarks:
+                print '\t', str(bookmark), bookmark.bookmark_filepath
 
     def save_to_new_playlist(self, filepath, playlist_type='m3u'):
-        self.filename = filepath
+        self.filepath = filepath
         self.__bookmarks_model_changed = True
 
         playlist = { 'm3u': M3U_Playlist, 'pls': PLS_Playlist }
         if not playlist.has_key(playlist_type):
-            playlist_type = 'm3u'
-            self.filename += '.m3u'
+            playlist_type = 'm3u' # use m3u by default
+            self.filepath += '.m3u'
 
         playlist = playlist[playlist_type]()
         playlist.import_filelist(self.__filelist)
@@ -121,13 +99,13 @@ class Playlist(object):
             return False
 
         # copy the bookmarks over to new playlist
-        db.remove_all_bookmarks(self.filename)
+        db.remove_all_bookmarks(self.filepath)
         bookmarks = self.__bookmarks.copy()
         self.__bookmarks.clear()
 
         for bookmark in bookmarks.itervalues():
             if bookmark.id >= 0:
-                bookmark.playlist_filepath = self.filename
+                bookmark.playlist_filepath = self.filepath
                 bookmark.id = db.save_bookmark(bookmark)
                 self.append_bookmark(bookmark)
         
@@ -141,77 +119,93 @@ class Playlist(object):
     # Bookmark-related functions
     ######################################
 
-    def append_bookmark(self, bookmark):
-        self.__bookmarks[bookmark.id] = bookmark
+    def load_from_bookmark( self, item_id, bookmark_id ):
+        item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)
+        
+        if item is None:
+            log('Item with id "%s" not found' % item_id)
+            return False
 
-    def load_from_bookmark( self, bkmk ):
-        if self.__bookmarks.has_key(bkmk):
-            bookmark = self.__bookmarks[bkmk]
-        elif isinstance( bkmk, Bookmark ):
-            bookmark = bkmk
+        self.__queue.current_item_position = self.__queue.index(item_id)
+
+        if bookmark is None:
+            self.__queue.current_item.seek_to = 0
         else:
-            log('No such bookmark, type: %s' % type(bkmk))
-            return
+            self.__queue.current_item.seek_to = bookmark.seek_position
 
-        self._current_file = bookmark.playlist_index
-        if self.current_fileobj is not None:
-            self.current_fileobj.seek_to = bookmark.seek_position
+        return True
 
     def save_bookmark( self, bookmark_name, position ):
-        self.__save_bookmark( bookmark_name, position, resume_pos=False )
+        self.__queue.current_item.save_bookmark(
+            bookmark_name, position, resume_pos=False )
         self.__bookmarks_model_changed = True
 
-    def __save_bookmark( self, bookmark_name, position, resume_pos=False ):
-        b = Bookmark()
-        b.playlist_filepath = self.filename
-        b.bookmark_name = bookmark_name
-        b.playlist_index = self.get_current_file_number()
-        b.seek_position = position
-        b.timestamp = time.time()
-        b.is_resume_position = resume_pos
-        b.id = db.save_bookmark(b)
-        self.append_bookmark(b)
-
-    def update_bookmark( self, bookmark_id, name=None, seek_position=None ):
-        if not self.__bookmarks.has_key(bookmark_id):
+    def update_bookmark(self, item_id, bookmark_id, name=None, seek_pos=None):
+        item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)
+        
+        if item is None:
+            log('No such item id (%s)' % item_id)
+            return False
+        
+        if bookmark_id is not None and bookmark is None:
             log('No such bookmark id (%s)' % bookmark_id)
             return False
 
-        bookmark = self.__bookmarks[bookmark_id]
-        bookmark.timestamp = time.time()
+        if bookmark_id is None:
+            if name is not None:
+                item.title = name
+        else:
+            bookmark.timestamp = time.time()
 
-        if name is not None:
-            bookmark.bookmark_name = name
+            if name is not None:
+                bookmark.bookmark_name = name
 
-        if seek_position is not None:
-            bookmark.seek_position = seek_position
+            if seek_pos is not None:
+                bookmark.seek_position = seek_pos
 
-        db.update_bookmark(bookmark)
+            db.update_bookmark(bookmark)
+
         return True
 
-    def remove_bookmark( self, bookmark_id ):
-        if self.__bookmarks.has_key(bookmark_id):
-            db.remove_bookmark( bookmark_id )
-            self.__bookmarks_model_changed = True
-            del self.__bookmarks[bookmark_id]
+    def update_bookmarks(self):
+        """ Updates the database entries for items that have been modified """
+        for item in self.__queue:
+            if item.is_modified:
+                log('Playlist Item "%s" is modified, updating bookmarks'%item)
+                item.update_bookmarks()
+                item.is_modified = False
+
+    def remove_bookmark( self, item_id, bookmark_id ):
+        item = self.__queue.get_item(item_id)
+
+        if item is None:
+            log('Cannot find item with id: %s' % item_id)
+            return False
+
+        if bookmark_id is None:
+            item.delete_bookmark(None)
+            self.__queue.remove(item_id)
+        else:
+            item.delete_bookmark(bookmark_id)
+
+        return True
 
     def generate_bookmark_model(self, include_resume_marks=False):
-        self.__bookmarks_model = gtk.ListStore(
-            gobject.TYPE_INT64, gobject.TYPE_STRING, gobject.TYPE_STRING )
+        self.__bookmarks_model = gtk.TreeStore(
+            # uid, name, position
+            gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING )
 
-        bookmarks = self.__bookmarks.values()
-        bookmarks.sort()
+        for item in self.__queue:
+            title = util.pretty_filename(
+                item.filepath ) if item.title is None else item.title
+            row = [ str(item), title, None ]
+            parent = self.__bookmarks_model.append( None, row )
 
-        for bookmark in bookmarks:
-            if not bookmark.is_resume_position or (
-                bookmark.is_resume_position and include_resume_marks ):
-
-                self.__bookmarks_model.append([
-                    bookmark.id, bookmark.bookmark_name,
-                    '[%02d - %s] %s' % ( bookmark.playlist_index+1,
-                    util.convert_ns(bookmark.seek_position),
-                    os.path.basename(self.__filelist[bookmark.playlist_index])
-                    ) ])
+            for bkmk in item.bookmarks:
+                if not bkmk.is_resume_position or include_resume_marks:
+                    row = [ str(bkmk), bkmk.bookmark_name,
+                        util.convert_ns(bkmk.seek_position) ]
+                    self.__bookmarks_model.append( parent, row )
 
     def get_bookmark_model(self, include_resume_marks=False):
         if self.__bookmarks_model is None or self.__bookmarks_model_changed:
@@ -223,24 +217,6 @@ class Playlist(object):
 
         return self.__bookmarks_model
 
-    def __create_per_file_bookmarks(self):
-        for n, filepath in enumerate(self.__filelist):
-            b = Bookmark()
-            b.id = -1*(n+1)
-            b.bookmark_name = '%s %d' % (_('File'), n+1)
-            b.playlist_index = n
-            self.append_bookmark(b)
-
-    def __remove_per_file_bookmarks(self):
-        bookmarks = self.__bookmarks.keys()
-        for bmark in bookmarks:
-            if bmark < 0:
-                del self.__bookmarks[bmark]
-
-    def __generate_per_file_bookmarks(self):
-        self.__remove_per_file_bookmarks()
-        self.__create_per_file_bookmarks()
-
     ######################################
     # File-related convenience functions
     ######################################
@@ -248,15 +224,8 @@ class Playlist(object):
     def get_current_position(self):
         """ Returns the saved position for the current
                 file or 0 if no file is available"""
-        if self.current_fileobj is not None:
-            return self.current_fileobj.seek_to
-        else:
-            return 0
-
-    def get_estimated_duration(self):
-        """ Returns the file's duration as determined by mutagen """
-        if self.current_fileobj is not None:
-            return int( self.current_fileobj.length * 10**9 )
+        if self.__queue.current_item is not None:
+            return self.__queue.current_item.seek_to
         else:
             return 0
 
@@ -264,19 +233,19 @@ class Playlist(object):
         """ Returns the filetype of the current
                 file or None if no file is available """
 
-        if self.current_fileobj is not None:
-            return self.current_fileobj.filetype
+        if self.__queue.current_item is not None:
+            return self.__queue.current_item.filetype
 
     def get_file_metadata(self):
         """ Return the metadata associated with the current FileObject """
-        if self.current_fileobj is not None:
-            return self.current_fileobj.get_metadata()
+        if self.__queue.current_item is not None:
+            return self.__queue.current_item.metadata
         else:
             return {}
 
     def get_current_filepath(self):
-        if self.current_fileobj is not None:
-            return self.current_fileobj.filepath
+        if self.__queue.current_item is not None:
+            return self.__queue.current_item.filepath
 
     def get_recent_files(self, max_files=10):
         files = db.get_latest_files()
@@ -297,63 +266,52 @@ class Playlist(object):
 
         error = False
         self.reset_playlist()
-        self.filename = File
+        self.filepath = File
 
         parsers = { 'm3u': M3U_Playlist, 'pls': PLS_Playlist }
         extension = util.detect_filetype(File)
         if parsers.has_key(extension):
             log('Loading playlist file (%s)' % extension)
-            parser = parsers[extension]()
+            parser = parsers[extension](self.filepath, self.id)
 
             if parser.parse(File):
-                for f in parser.get_filelist(): self.append(f)
+                self.__queue = parser.get_queue()
             else:
                 return False
         else:
             error = not self.single_file_import(File)
 
-        bookmarks = db.load_bookmarks( self.filename,
-            factory=Bookmark().load_from_dict )
-
-        self.__bookmarks = dict([ [b.id, b] for b in bookmarks ])
-        self.__create_per_file_bookmarks()
-
-        for id, bkmk in self.__bookmarks.iteritems():
-            if bkmk.is_resume_position:
-                log('Found resume position, loading bookmark...')
-                self.load_from_bookmark( bkmk )
-                break
-
         self.queue_modified = os.path.expanduser(
-            settings.temp_playlist ) == self.filename
+            settings.temp_playlist ) == self.filepath
 
         return not error
 
-    def single_file_import( self, filename ):
+    def single_file_import( self, filepath ):
         """ Add a single track to the playlist """
-        self.reset_playlist()
-        self.filename = filename
-        return self.append( filename )
+        self.filepath = filepath
+        return self.__queue.append( 
+            self.__queue.create_item_by_filepath(filepath, filepath) )
 
     ##################################
-    # Plalist controls
+    # Playlist controls
     ##################################
 
     def play(self):
         """ This gets called by the player to get
                 the last time the file was paused """
-        return self.current_fileobj.play()
+        return self.__queue.current_item.seek_to
 
     def pause(self, position):
         """ Called whenever the player is paused """
-        self.current_fileobj.pause(position)
-        self.__save_bookmark( _('Auto Bookmark'), position, True )
+        self.__queue.current_item.seek_to = position
+        self.__queue.current_item.save_bookmark(
+            _('Auto Bookmark'), position, True )
 
     def stop(self):
         """ Caused when we reach the end of a file """
         # for the time being, don't remove resume points at EOF to make sure
         #   that the recent files list stays populated.
-        # db.remove_resume_bookmark( self.filename )
+        # db.remove_resume_bookmark( self.filepath )
         self.pause(0)
 
     def skip(self, skip_by=None, skip_to=None, dont_loop=False):
@@ -364,14 +322,16 @@ class Playlist(object):
                 dont_loop: applies only to skip_by, if we're skipping past
                     the last track loop back to the begining.
         """
-        if not self.__filelist:
+        if not self.__queue:
             return False
+
+        current_item = self.__queue.current_item_position
 
         if skip_by is not None:
             if dont_loop:
-                skip = self._current_file + skip_by
+                skip = current_item + skip_by
             else:
-                skip = ( self._current_file + skip_by ) % self.queue_length()
+                skip = ( current_item + skip_by ) % self.queue_length()
         elif skip_to is not None:
             skip = skip_to
         else:
@@ -382,8 +342,9 @@ class Playlist(object):
                 skip, self.queue_length()) )
             return False
 
-        self._current_file = skip
-        log('Skipping to file %d (%s)' % (skip, self.current_fileobj.filepath) )
+        self.__queue.current_item_position = skip
+        log('Skipping to file %d (%s)' % (
+            skip, self.__queue.current_item.filepath ))
         return True
 
     def next(self):
@@ -396,15 +357,207 @@ class Playlist(object):
         return self.skip( skip_by=-1, dont_loop=True )
 
 
+class Queue(list):
+    """ A Simple list of PlaylistItems """
+
+    def __init__(self, playlist_id):
+        self.playlist_id = playlist_id
+        self.modified = False # Has the queue been modified?
+        self.current_item_position = 0
+        list.__init__(self)
+
+    def create_item_by_filepath(self, reported_filepath, filepath):
+        item = PlaylistItem()
+        item.reported_filepath = reported_filepath
+        item.filepath = filepath
+        return item
+
+    def __count_dupe_items(self, subset, item):
+        """ Count the number of duplicate items (by filepath only) in a list """
+        tally = 0
+        for i in subset:
+            tally += int( i.filepath == item.filepath )
+        return tally
+
+    def __prep_item(self, item):
+        """ Do some error checking and other stuff that's
+            common to the insert and append functions """
+
+        assert isinstance( item, PlaylistItem )
+        item.playlist_id = self.playlist_id
+        s = os.path.isfile(item.filepath) and util.is_supported(item.filepath)
+
+        if s:
+            self.modified = True
+        else:
+            log('File not found or not supported: %s' % filepath)
+
+        return s
+
+    @property
+    def current_item(self):
+        if self.current_item_position > len(self):
+            log('Current item position is greater than queue length, resetting to 0.')
+            self.current_item_position = 0
+        else:
+            return self[self.current_item_position]
+
+    def get_item(self, item_id):
+        if self.count(item_id):
+            return self[self.index(item_id)]
+
+    def get_bookmark(self, item_id, bookmark_id):
+        item = self.get_item(item_id)
+        if item is not None and item.bookmarks.count(bookmark_id):
+            return item, item.bookmarks[item.bookmarks.index(bookmark_id)]
+        return None, None
+
+    def insert(self, position, item):
+        if not self.__prep_item(item):
+            return False
+
+        item.duplicate_id = self[:position].count(item)
+
+        if self.__count_dupe_items(self[position:], item):
+            for i in self[position:]:
+                if i.filepath == item.filepath:
+                    i.is_modified = True
+                    i.duplicate_id += 1
+        elif not self.__count_dupe_items(self[:position], item):
+            # there are no other items like this one so it's *safe* to load
+            # bookmarks without a potential conflict, but there's a good chance
+            # that there aren't any bookmarks to load (might be useful in the
+            # event of a crash)...
+            item.load_bookmarks()
+
+        if position <= self.current_item_position:
+            self.current_item_position += 1
+
+        list.insert(self, position, item)
+        return True
+
+    def append(self, item):
+        if not self.__prep_item(item):
+            return False
+
+        item.duplicate_id = self.__count_dupe_items(self, item)
+        item.load_bookmarks()
+
+        list.append(self, item)
+        return True
+
+    def remove(self, item):
+        self.modified = True
+        list.remove(self, item)
+
+    def extend(self, items):
+        log('FIXME: extend not supported yet...')
+
+    def pop(self, item):
+        log('FIXME: pop not supported yet...')
+
+class PlaylistItem(object):
+    """ A (hopefully) lightweight object to hold the bare minimum amount of
+        data about a single item in a playlist and it's bookmark objects. """
+
+    def __init__(self):
+        # metadata that's pulled from the playlist file (pls/extm3u)
+        self.reported_filepath = None
+        self.title = None
+        self.length = None
+
+        self.playlist_id = None
+        self.filepath = None
+        self.duplicate_id = 0
+        self.seek_to = 0
+
+        # a flag to determine whether the item's bookmarks need updating
+        # ( used for example, if the duplicate_id is changed )
+        self.is_modified = False
+        self.bookmarks = []
+
+    def __eq__(self, b):
+        if isinstance( b, PlaylistItem ):
+            return ( self.filepath == b.filepath and 
+                     self.duplicate_id == b.duplicate_id )
+        elif isinstance( b, str ):
+            return str(self) == b
+        else:
+            log('[PlaylistItem] Unsupported comparison...')
+            return False
+
+    def __str__(self):
+        uid = self.filepath + str(self.duplicate_id)
+        return md5(uid).hexdigest()
+
+    @property
+    def metadata(self):
+        """ Metadata is only needed once, so fetch it on-the-fly
+            If needed this could easily be cached at the cost of wasting a 
+            bunch of memory """
+
+        m = FileMetadata(self.filepath)
+        metadata = m.get_metadata()
+        del m   # *hopefully* save some memory
+        return metadata
+
+    @property
+    def filetype(self):
+        return util.detect_filetype(self.filepath)
+
+    def load_bookmarks(self):
+        self.bookmarks = db.load_bookmarks(
+            factory                = Bookmark().load_from_dict,
+            playlist_id            = self.playlist_id,
+            bookmark_filepath      = self.reported_filepath,
+            playlist_duplicate_id  = self.duplicate_id,
+            allow_resume_bookmarks = False  )
+
+    def save_bookmark(self, name, position, resume_pos=False):
+        b = Bookmark()
+        b.playlist_id = self.playlist_id
+        b.bookmark_name = name
+        b.bookmark_filepath = self.reported_filepath
+        b.seek_position = position
+        b.timestamp = time.time()
+        b.is_resume_position = resume_pos
+        b.playlist_duplicate_id = self.duplicate_id
+        b.save()
+        self.bookmarks.append(b)
+
+    def delete_bookmark(self, bookmark_id):
+        """ WARNING: if bookmark_id is None, ALL bookmarks will be deleted """
+        if bookmark_id is None:
+            log('Deleting all bookmarks for %s' % self.reported_filepath)
+            for bkmk in self.bookmarks:
+                bkmk.delete()
+        else:
+            bkmk = self.bookmarks.index(bookmark_id)
+            if bkmk >= 0:
+                self.bookmarks[bkmk].delete()
+            else:
+                log('Cannot find bookmark with id: %s' % bookmark_id)
+                return False
+        return True
+
+    def update_bookmarks(self):
+        for bookmark in self.bookmarks:
+            bookmark.playlist_duplicate_id = self.duplicate_id
+            bookmark.bookmark_filepath = self.reported_filepath
+            db.update_bookmark(bookmark)
+
 class Bookmark(object):
+    """ A single bookmark, nothing more, nothing less. """
+
     def __init__(self):
         self.id = 0
-        self.playlist_filepath = ''
+        self.playlist_id = ''
         self.bookmark_name = ''
-        self.playlist_index = 0
+        self.bookmark_filepath = ''
         self.seek_position = 0
         self.timestamp = 0
         self.is_resume_position = False
+        self.playlist_duplicate_id = 0
 
     @staticmethod
     def load_from_dict(bkmk_dict):
@@ -418,17 +571,40 @@ class Bookmark(object):
 
         return bkmkobj
 
+    def save(self):
+        self.id = db.save_bookmark(self)
+        return self.id
+
+    def delete(self):
+        return db.remove_bookmark(self.id)
+
+    def __eq__(self, b):
+        if isinstance(b, str):
+            return str(self) == b
+        else:
+            log('[Bookmark] Unsupported comparison...')
+            return False
+
+    def __str__(self):
+        uid =  self.bookmark_filepath
+        uid += str(self.playlist_duplicate_id)
+        uid += str(self.seek_position)
+        return md5(uid).hexdigest()
+
     def __cmp__(self, b):
-        if self.playlist_index == b.playlist_index:
+        if self.bookmark_filepath == b.bookmark_filepath:
             if self.seek_position == b.seek_position:
                 return 0
             else:
                 return -1 if self.seek_position < b.seek_position else 1
         else:
-            return -1 if self.playlist_index < b.playlist_index else 1
+            log('Can\'t compare bookmarks from different files...')
+            return 0
 
+class FileMetadata(object):
+    """ A class to hold all information about the file that's currently being
+        played. Basically it takes care of metadata extraction... """
 
-class FileObject(object):
     coverart_names = ['cover', 'cover.jpg', 'cover.png']
     tag_mappings = {
         'mp4': { '\xa9nam': 'title',
@@ -447,8 +623,7 @@ class FileObject(object):
     tag_mappings['flac'] = tag_mappings['ogg']
 
     def __init__(self, filepath):
-        self.filepath = filepath  # the full path to the file
-        self.seek_to = 0
+        self.filepath = filepath
 
         self.title = ''
         self.artist = ''
@@ -480,7 +655,7 @@ class FileObject(object):
             log('Error running metadata parser...', exception=e)
             return False
 
-        self.length = metadata.info.length
+        self.length = metadata.info.length * 10**9
         for tag,value in metadata.iteritems():
             if tag.find(':') != -1: # hack for weirdly named coverart tags
                 tag = tag.split(':')[0]
@@ -543,32 +718,19 @@ class FileObject(object):
             'artist':   self.artist,
             'album':    self.album,
             'image':    self.coverart,
+            'length':   self.length
         }
 
         return metadata
 
-    @property
-    def filetype(self):
-        return util.detect_filetype(self.filepath)
-
-    def play(self):
-        return max(0, self.seek_to)
-
-    def pause(self, position):
-        self.seek_to = position
-
-
-class PlaylistItem(object):
-    def __init__(self, filepath=None, title=None, length=None):
-        self.filepath = filepath
-        self.title = title
-        self.length = length
-
 class PlaylistFile(object):
-    def __init__(self):
-        self._filepath = None
+    """ The base class for playlist file parsers/exporters,
+        this should not be used directly but instead subclassed. """
+
+    def __init__(self, filepath, id):
+        self._filepath = filepath
         self._file = None
-        self._items = []
+        self._items = Queue(id)
 
     def __open_file(self, filepath, mode):
         if self._file is not None:
@@ -607,7 +769,7 @@ class PlaylistFile(object):
         if item_filepath.startswith('/'):
             path = item_filepath
         else:
-            path = os.path.join(os.path.dirname(self._filepath),item_filepath)
+            path = os.path.join(os.path.dirname(self._filepath), item_filepath)
 
         if os.path.exists( path ):
             return path
@@ -625,9 +787,12 @@ class PlaylistFile(object):
             dict_list.append(d)
         return dict_list
 
-    def import_filelist(self, filelist):
-        for f in filelist:
-            self._items.append(PlaylistItem(filepath=f))
+    def get_queue(self):
+        return self._items
+
+#    def import_filelist(self, filelist):
+#        for f in filelist:
+#            self._items.append(PlaylistItem(filepath=f))
 
     def export(self, filepath=None, playlist_items=None):
         if filepath is not None:
@@ -664,9 +829,17 @@ class PlaylistFile(object):
     def parse_eof_hook(self):
         pass
 
+    def _add_playlist_item(self, item):
+        path = self.get_absolute_filepath(item.reported_filepath)
+        if path is not None and os.path.isfile(path):
+            item.filepath = path
+            self._items.append(item)
+
 class M3U_Playlist(PlaylistFile):
-    def __init__(self):
-        PlaylistFile.__init__( self )
+    """ An (extended) m3u parser/writer """
+
+    def __init__(self, *args):
+        PlaylistFile.__init__( self, *args )
         self.extended_m3u = False
         self.current_item = PlaylistItem()
 
@@ -686,15 +859,16 @@ class M3U_Playlist(PlaylistFile):
         elif line:
             path = self.get_absolute_filepath( line )
             if path is not None:
-                if os.path.isfile( path ) and util.is_supported( path ):
-                    self.current_item.filepath = path
-                    self._items.append(self.current_item)
+                if os.path.isfile( path ):
+                    self.current_item.reported_filepath = line
+                    self._add_playlist_item(self.current_item)
                     self.current_item = PlaylistItem()
                 elif os.path.isdir( path ):
-                    files = glob.glob( path + '/*' )
+                    files = os.listdir( path )
                     for file in files:
-                        if os.path.isfile(file) and util.is_supported(file):
-                            self._items.append(PlaylistItem(filepath=file))
+                        item = PlaylistItem()
+                        item.reported_filepath = os.path.join(line, file)
+                        self._add_playlist_item(item)
 
     def export_hook(self, playlist_items):
         self._file.write('#EXTM3U\n\n')
@@ -706,20 +880,20 @@ class M3U_Playlist(PlaylistFile):
                 title = '' if item.title is None else item.title
                 string += '#EXTINF:%d,%s\n' % ( length, title )
                 
-            string += '%s\n' % item.filepath
+            string += '%s\n' % item.reported_filepath
             self._file.write(string)
 
 class PLS_Playlist(PlaylistFile):
-    def __init__(self):
-        PlaylistFile.__init__( self )
+    """ A somewhat simple pls parser/writer """
+
+    def __init__(self, *args):
+        PlaylistFile.__init__( self, *args )
         self.current_item = PlaylistItem()
         self.in_playlist_section = False
         self.current_item_number = None
 
     def __add_current_item(self):
-        path = self.get_absolute_filepath(self.current_item.filepath)
-        if path is not None and os.path.isfile(path): 
-            self._items.append(self.current_item)
+        self._add_playlist_item(self.current_item)
 
     def parse_line_hook(self, line):
         sect_regex = '\[([^\]]+)\]'
@@ -741,7 +915,8 @@ class PLS_Playlist(PlaylistFile):
         elif not self.in_playlist_section:
             pass # don't do anything if we're not in [playlist]
         elif line.lower().startswith('file'):
-            self.current_item.filepath = re.search(item_regex, line).group(2)
+            self.current_item.reported_filepath = re.search(
+                item_regex, line).group(2)
         elif line.lower().startswith('title'):
             self.current_item.title = re.search(item_regex, line).group(2)
         elif line.lower().startswith('length'):
@@ -759,7 +934,7 @@ class PLS_Playlist(PlaylistFile):
         for i,item in enumerate(playlist_items):
             title = '' if item.title is None else item.title
             length = -1 if item.length is None else item.length
-            self._file.write('File%d=%s\n' % (i+1, item.filepath))
+            self._file.write('File%d=%s\n' % (i+1, item.reported_filepath))
             self._file.write('Title%d=%s\n' % (i+1, title))
             self._file.write('Length%d=%s\n\n' % (i+1, length))
 

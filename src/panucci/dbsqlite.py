@@ -30,6 +30,8 @@ except ImportError:
     log( 'Error importing sqlite, FAIL!')
 
 import os.path
+import time
+import string
 
 from settings import settings
 from simplegconf import gconf
@@ -69,28 +71,73 @@ class Storage(object):
         """ CREATE TABLE IF NOT EXISTS bookmarks (
                 bookmark_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 bookmark_name TEXT,
-                playlist_filepath TEXT,
-                playlist_index INTEGER,
+                playlist_id INTEGER,
+                bookmark_filepath TEXT,
                 seek_position INTEGER,
                 timestamp INTEGER,
-                is_resume_position INTEGER
+                is_resume_position INTEGER,
+                playlist_duplicate_id INTEGER
+            ) """ )
+
+        cursor.execute(
+        """ CREATE TABLE IF NOT EXISTS playlists (
+                playlist_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filepath TEXT,
+                timestamp INTEGER
             ) """ )
 
         cursor.close()
 
-    def get_bookmarks(self, playlist_filepath):
+
+    #################################
+    # Bookmark-related functions
+
+    def get_bookmarks(self, playlist_id=None, bookmark_filepath=None,
+        playlist_duplicate_id=None, allow_resume_bookmarks=True):
+
+        sql = 'SELECT * FROM bookmarks'
+        conditions = []
+        args = []
+
+        if playlist_id is not None:
+            conditions.append('playlist_id = ?')
+            args.append(playlist_id)
+
+        if bookmark_filepath is not None:
+            conditions.append('bookmark_filepath = ?')
+            args.append(bookmark_filepath)
+
+        if playlist_duplicate_id is not None:
+            conditions.append('playlist_duplicate_id = ?')
+            args.append(playlist_duplicate_id)
+
+        if not allow_resume_bookmarks:
+            conditions.append('is_resume_position = ?')
+            args.append(False)
+
+        if conditions:
+            sql += ' WHERE '
+
+        sql += string.join(conditions, ' AND ')
+
         cursor = self.cursor()
-        sql = 'SELECT * FROM bookmarks WHERE playlist_filepath = ?'
-        cursor.execute( sql, [playlist_filepath,] )
+        cursor.execute( sql, args )
         bookmarks = cursor.fetchall()
         cursor.close()
+
         return bookmarks
 
-    def bookmark_exists(self, playlist_filepath):
-        return self.get_bookmarks( playlist_filepath ) is not None
+    def bookmark_exists(self, playlist_id):
+        return self.get_bookmarks( playlist_id ) is not None
 
-    def load_bookmarks(self, playlist_filepath, factory=None):
-        bkmks = self.get_bookmarks( playlist_filepath )
+    def load_bookmarks(self, factory, *args, **kwargs):
+        """ Load bookmarks into a dict and return a list of dicts or
+                return a list of the outputs from the factory function.
+                Set the factory function to None to not use it.
+            Note: This is a wrapper around get_bookmarks, see get_bookmarks
+                for all available arguments. """
+
+        bkmks = self.get_bookmarks( *args, **kwargs )
 
         if bkmks is None:
             return []
@@ -98,13 +145,14 @@ class Storage(object):
         bkmk_list = []
         for bkmk in bkmks:
             BKMK = {
-                'playlist_filepath' : playlist_filepath,
-                'id'                : bkmk[0],
-                'bookmark_name'     : bkmk[1],
-                'playlist_index'    : bkmk[3],
-                'seek_position'     : bkmk[4],
-                'timestamp'         : bkmk[5],
-                'is_resume_position': bool(bkmk[6]),
+                'id'                    : bkmk[0],
+                'bookmark_name'         : bkmk[1],
+                'playlist_id'           : bkmk[2],
+                'bookmark_filepath'     : bkmk[3],
+                'seek_position'         : bkmk[4],
+                'timestamp'             : bkmk[5],
+                'is_resume_position'    : bool(bkmk[6]),
+                'playlist_duplicate_id' : bkmk[7],
             }
 
             if factory is not None:
@@ -119,30 +167,32 @@ class Storage(object):
             log('Not saving bookmark with negative id (%d)' % bookmark.id)
             return bookmark.id
 
-        if bookmark.playlist_filepath is None:
+        if bookmark.playlist_id is None:
             log('Not saving bookmark without playlist filepath')
             return bookmark.id
 
         if bookmark.is_resume_position:
-            self.remove_resume_bookmark( bookmark.playlist_filepath )
+            self.remove_resume_bookmark( bookmark.playlist_id )
 
         log('Saving %s, %d (%s)' % ( bookmark.bookmark_name,
-            bookmark.seek_position, bookmark.playlist_filepath ))
+            bookmark.seek_position, bookmark.playlist_id ))
 
         cursor = self.cursor()
         cursor.execute(
             """ INSERT INTO bookmarks (
                 bookmark_name,
-                playlist_filepath,
-                playlist_index,
+                playlist_id,
+                bookmark_filepath,
                 seek_position,
                 timestamp,
-                is_resume_position
-                ) VALUES (?, ?, ?, ?, ?, ?) """,
+                is_resume_position,
+                playlist_duplicate_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?) """,
 
-            ( bookmark.bookmark_name, bookmark.playlist_filepath,
-            bookmark.playlist_index, bookmark.seek_position,
-            bookmark.timestamp, bookmark.is_resume_position ))
+            ( bookmark.bookmark_name, bookmark.playlist_id,
+            bookmark.bookmark_filepath, bookmark.seek_position,
+            bookmark.timestamp, bookmark.is_resume_position,
+            bookmark.playlist_duplicate_id ))
 
         r_id = self.__get__( 'SELECT last_insert_rowid()' )
 
@@ -153,22 +203,24 @@ class Storage(object):
 
     def update_bookmark(self, bookmark):
         log('Updating %s (%s)' % (
-            bookmark.bookmark_name, bookmark.playlist_filepath ))
+            bookmark.bookmark_name, bookmark.playlist_id ))
 
         cursor = self.cursor()
         cursor.execute(
             """ UPDATE bookmarks SET
                 bookmark_name = ?,
-                playlist_filepath = ?,
-                playlist_index = ?,
+                playlist_id = ?,
+                bookmark_filepath = ?,
                 seek_position = ?,
                 timestamp = ?,
-                is_resume_position = ?
+                is_resume_position = ?,
+                playlist_duplicate_id = ?
                 WHERE bookmark_id = ? """,
 
-            ( bookmark.bookmark_name, bookmark.playlist_filepath,
-            bookmark.playlist_index, bookmark.seek_position,
-            bookmark.timestamp, bookmark.is_resume_position, bookmark.id ))
+            ( bookmark.bookmark_name, bookmark.playlist_id,
+            bookmark.bookmark_filepath, bookmark.seek_position,
+            bookmark.timestamp, bookmark.is_resume_position,
+            bookmark.playlist_duplicate_id, bookmark.id ))
 
         cursor.close()
         self.commit()
@@ -184,29 +236,99 @@ class Storage(object):
         cursor.close()
         self.commit()
 
-    def remove_resume_bookmark(self, playlist_filepath):
-        log('Deleting resume bookmark for: %s' % playlist_filepath)
+    def remove_resume_bookmark(self, playlist_id):
+        log('Deleting resume bookmark for: %s' % playlist_id)
 
         cursor = self.cursor()
         cursor.execute(
             """ DELETE FROM bookmarks WHERE
-                playlist_filepath = ? AND
+                playlist_id = ? AND
                 is_resume_position = 1 """,
 
-            ( playlist_filepath, ))
+            ( playlist_id, ))
 
         cursor.close()
         self.commit()
 
-    def remove_all_bookmarks(self, playlist_filepath):
-        log('Deleting all bookmarks for: %s' % playlist_filepath)
+    def remove_all_bookmarks(self, playlist_id):
+        log('Deleting all bookmarks for: %s' % playlist_id)
 
         cursor = self.cursor()
         cursor.execute(
             """ DELETE FROM bookmarks WHERE
-                playlist_filepath = ? """,
+                playlist_id = ? """,
 
-            ( playlist_filepath, ))
+            ( playlist_id, ))
+
+        cursor.close()
+        self.commit()
+
+
+    #################################
+    # Playlist-related functions
+
+    def playlist_exists(self, filepath):
+        return self.__get__( 'SELECT * FROM playlists WHERE filepath = ?',
+            filepath ) is not None
+
+    def get_playlist_id(self, filepath, create_new=False, update_time=False):
+        """ Get a playlist_id by it's filepath
+                create_new: if True it will create a new playlist 
+                    entry if none exists for the filepath.
+                update_time: if True it updates the timestamp for the
+                    playlist entry of the filepath. """
+
+        if self.playlist_exists(filepath):
+            playlist_id = self.__get__( 
+                'SELECT playlist_id FROM playlists WHERE filepath = ?',
+                filepath )[0]
+        elif create_new:
+            playlist_id = self.add_playlist( filepath )
+        else:
+            playlist_id = None
+
+        if playlist_id is not None and update_time:
+            self.update_playlist( playlist_id, filepath )
+
+        return playlist_id
+
+    def add_playlist(self, filepath, timestamp=time.time()):
+        log( 'Adding playlist: %s' % filepath )
+
+        cursor = self.cursor()
+        cursor.execute(
+            """ INSERT INTO playlists (filepath, timestamp) VALUES (?,?) """,
+            ( filepath, timestamp ) )
+
+        cursor.close()
+        self.commit()
+
+        r_id = self.__get__( 'SELECT last_insert_rowid()' )[0]
+
+        return r_id
+
+    def update_playlist(self, playlist_id, filepath, timestamp=time.time()):
+        log( 'Updating playlist: %s' % filepath )
+
+        cursor = self.cursor()
+        cursor.execute(
+            """ UPDATE playlists SET
+                filepath = ?,
+                timestamp = ?
+                WHERE playlist_id = ? """,
+
+            ( filepath, timestamp, playlist_id ) )
+
+        cursor.close()
+        self.commit()
+
+    def delete_playlist(self, playlist_id):
+        log( 'Deleting playlist: %d' % playlist_id )
+
+        cursor = self.cursor()
+        cursor.execute(
+            """ DELETE FROM playlists WHERE playlist_id = ? """,
+            ( playlist_id, ))
 
         cursor.close()
         self.commit()
@@ -216,14 +338,14 @@ class Storage(object):
         cursor = self.cursor()
 
         cursor.execute(
-            """ SELECT playlist_filepath FROM bookmarks 
-                WHERE is_resume_position = 1
+            """ SELECT filepath FROM playlists
                 ORDER BY timestamp DESC """)
 
         files = cursor.fetchall()
         cursor.close()
 
         return [ f[0] for f in files ]
+
 
     def __get__(self, sql, params=None):
         """ Returns the first row of a query result """
