@@ -117,6 +117,7 @@ class panucciPlayer(ObservableService):
             self.__log.info( 'Using OGG workaround, I hope this works...' )
 
             self.__player = gst.Pipeline('player')
+            self.__volume_multiplier = 0.6 # 1 is much too loud
             source = gst.element_factory_make('gnomevfssrc', 'file-source')
 
             try:
