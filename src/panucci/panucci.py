@@ -661,6 +661,19 @@ class GTK_Main(dbus.service.Object):
         if filename is None:
             return False
 
+        if os.path.isfile(filename):
+            response = dialog(
+                self.main_window, _('Overwrite File Warning'),
+                _('Overwrite ') + '%s?' % os.path.basename(filename),
+                _('All data in the file will be erased.') )
+
+            if response is None:
+                return None
+            elif response:
+                pass
+            elif not response:
+                return self.save_to_playlist_callback()
+
         ext = util.detect_filetype(filename)
         if not self.playlist.save_to_new_playlist(filename, ext):
             util.notify(_('Error saving playlist...'))
