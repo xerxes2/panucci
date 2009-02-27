@@ -510,7 +510,7 @@ class PlaylistItem(object):
         self.bookmarks = db.load_bookmarks(
             factory                = Bookmark().load_from_dict,
             playlist_id            = self.playlist_id,
-            bookmark_filepath      = self.reported_filepath,
+            bookmark_filepath      = self.filepath,
             playlist_duplicate_id  = self.duplicate_id,
             allow_resume_bookmarks = False  )
 
@@ -518,7 +518,7 @@ class PlaylistItem(object):
         b = Bookmark()
         b.playlist_id = self.playlist_id
         b.bookmark_name = name
-        b.bookmark_filepath = self.reported_filepath
+        b.bookmark_filepath = self.filepath
         b.seek_position = position
         b.timestamp = time.time()
         b.is_resume_position = resume_pos
@@ -544,7 +544,7 @@ class PlaylistItem(object):
     def update_bookmarks(self):
         for bookmark in self.bookmarks:
             bookmark.playlist_duplicate_id = self.duplicate_id
-            bookmark.bookmark_filepath = self.reported_filepath
+            bookmark.bookmark_filepath = self.filepath
             db.update_bookmark(bookmark)
 
 class Bookmark(object):
@@ -877,7 +877,7 @@ class M3U_Playlist(PlaylistFile):
                 title = '' if item.title is None else item.title
                 string += '#EXTINF:%d,%s\n' % ( length, title )
                 
-            string += '%s\n' % item.reported_filepath
+            string += '%s\n' % item.filepath
             self._file.write(string)
 
 class PLS_Playlist(PlaylistFile):
@@ -931,7 +931,7 @@ class PLS_Playlist(PlaylistFile):
         for i,item in enumerate(playlist_items):
             title = '' if item.title is None else item.title
             length = -1 if item.length is None else item.length
-            self._file.write('File%d=%s\n' % (i+1, item.reported_filepath))
+            self._file.write('File%d=%s\n' % (i+1, item.filepath))
             self._file.write('Title%d=%s\n' % (i+1, title))
             self._file.write('Length%d=%s\n\n' % (i+1, length))
 
