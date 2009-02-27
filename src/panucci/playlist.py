@@ -375,7 +375,9 @@ class Playlist(ObservableService):
     def play(self):
         """ This gets called by the player to get
                 the last time the file was paused """
-        return self.__queue.current_item.seek_to
+        pos = self.__queue.current_item.seek_to
+        self.__queue.current_item.seek_to = 0
+        return pos
 
     def pause(self, position):
         """ Called whenever the player is paused """
