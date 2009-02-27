@@ -318,6 +318,12 @@ class Playlist(object):
         return self.__queue.append(
             PlaylistItem.create_by_filepath(filepath, filepath) )
 
+    def insert(self, position, filepath ):
+        self.__log.debug(
+            'Attempting to insert %s at position %s', filepath, position )
+        return self.__queue.insert(
+            position, PlaylistItem.create_by_filepath(filepath, filepath) )
+
     ##################################
     # Playlist controls
     ##################################
@@ -357,16 +363,16 @@ class Playlist(object):
             if dont_loop:
                 skip = current_item + skip_by
             else:
-                skip = ( current_item + skip_by ) % self.queue_length()
+                skip = ( current_item + skip_by ) % self.queue_length
         elif skip_to is not None:
             skip = skip_to
         else:
             self.__log.warning('No skip method provided...')
 
-        if not ( 0 <= skip < self.queue_length() ):
+        if not ( 0 <= skip < self.queue_length ):
             self.__log.warning(
                 'Can\'t skip to non-existant file. (requested=%d, total=%d)',
-                skip, self.queue_length() )
+                skip, self.queue_length )
             return False
 
         self.__queue.current_item_position = skip

@@ -54,7 +54,8 @@ if os.path.isdir(local_module_dir):
 
 session_bus = dbus.SessionBus()
 try:
-    remote_object = session_bus.get_object('org.panucci', '/player')
+    remote_object = session_bus.get_object(
+        'org.panucci.panucciInterface', '/panucciInterface' )
     print _('Found panucci instance already running, will try to use it...')
 except dbus.exceptions.DBusException:
     remote_object = None
@@ -67,11 +68,9 @@ if remote_object is None:
     panucci.run(filename=opts.queue_filename or opts.open_filename)
 else:
     if opts.open_filename is not None:
-        remote_object.play_file(
-            opts.open_filename, dbus_interface='org.panucci.interface' )
+        remote_object.play_file( opts.open_filename )
     elif opts.queue_filename is not None:
-        remote_object.queue_file(
-            opts.queue_filename, dbus_interface='org.panucci.interface' )
+        remote_object.queue_file( opts.queue_filename )
 
-    remote_object.show_main_window(dbus_interface='org.panucci.interface')
+    remote_object.show_main_window()
 

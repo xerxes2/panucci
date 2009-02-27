@@ -9,8 +9,8 @@ import gst
 from playlist import Playlist
 from settings import settings
 from services import ObservableService
+from dbusinterface import interface
 
-import dbusinterface
 import util
 
 running_on_tablet=False
@@ -24,8 +24,8 @@ class panucciPlayer(ObservableService):
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.player.panucciPlayer')
-        #dbusinterface.init_dbus(self)
         ObservableService.__init__(self, self.signals, self.__log)
+        interface.register_player(self)
 
         self.playlist = Playlist()
         self.__initial_seek = False # have we preformed the initial seek?
@@ -82,6 +82,11 @@ class panucciPlayer(ObservableService):
             return { gst.STATE_NULL    : STOPPED,
                      gst.STATE_PAUSED  : PAUSED,
                      gst.STATE_PLAYING : PLAYING }.get( state, NULL )
+
+    def play_file(self, filepath):
+        self.stop()
+        self.playlist.load(filepath)
+        self.play()
 
     def __setup_player(self):
         filetype = self.playlist.get_current_filetype()

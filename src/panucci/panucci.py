@@ -55,6 +55,7 @@ from simplegconf import gconf
 from playlist import Playlist
 from settings import settings
 from player import player
+from dbusinterface import interface
 
 about_name = 'Panucci'
 about_text = _('Resuming audiobook and podcast player')
@@ -349,6 +350,7 @@ class GTK_Main(object):
 
     def __init__(self, filename=None):
         self.__log = logging.getLogger('panucci.panucci.GTK_Main')
+        interface.register_gui(self)
 
 #        pickle_file = os.path.expanduser('~/.rmp-bookmarks')
 #        if os.path.isfile(pickle_file):
