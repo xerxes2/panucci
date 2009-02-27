@@ -63,3 +63,7 @@ distclean: clean
 test:
 	PYTHONPATH=src/ python bin/panucci --debug
 
+ptest:
+	LD_LIBRARY_PATH=/usr/lib/gtk-2.0/modules GTK_MODULES=gtkparasite \
+	PYTHONPATH=src/ python bin/panucci --debug
+
