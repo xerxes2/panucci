@@ -86,28 +86,21 @@ class Playlist(object):
 
     def save_to_new_playlist(self, filepath, playlist_type='m3u'):
         self.filepath = filepath
-        self.__bookmarks_model_changed = True
+        self._id = None
 
         playlist = { 'm3u': M3U_Playlist, 'pls': PLS_Playlist }
         if not playlist.has_key(playlist_type):
             playlist_type = 'm3u' # use m3u by default
             self.filepath += '.m3u'
 
-        playlist = playlist[playlist_type]()
-        playlist.import_filelist(self.__filelist)
-        if not playlist.export(filepath=filepath):
+        playlist = playlist[playlist_type](self.filepath, self.id)
+        if not playlist.export_items( filepath, self.__queue ):
+            log('Error exporting playlist to %s' % self.filepath)
             return False
 
         # copy the bookmarks over to new playlist
-        db.remove_all_bookmarks(self.filepath)
-        bookmarks = self.__bookmarks.copy()
-        self.__bookmarks.clear()
-
-        for bookmark in bookmarks.itervalues():
-            if bookmark.id >= 0:
-                bookmark.playlist_filepath = self.filepath
-                bookmark.id = db.save_bookmark(bookmark)
-                self.append_bookmark(bookmark)
+        db.remove_all_bookmarks(self.id)
+        self.__queue.set_new_playlist_id(self.id)
         
         return True
 
@@ -390,7 +383,7 @@ class Queue(list):
         if s:
             self.modified = True
         else:
-            log('File not found or not supported: %s' % filepath)
+            log('File not found or not supported: %s' % item.filepath)
 
         return s
 
@@ -411,6 +404,14 @@ class Queue(list):
         if item is not None and item.bookmarks.count(bookmark_id):
             return item, item.bookmarks[item.bookmarks.index(bookmark_id)]
         return None, None
+
+    def set_new_playlist_id(self, id):
+        self.playlist_id = id
+        for item in self:
+            item.playlist_id = id
+            for bookmark in item.bookmarks:
+                bookmark.playlist_id = id
+                bookmark.save()
 
     def insert(self, position, item):
         if not self.__prep_item(item):
@@ -551,7 +552,7 @@ class Bookmark(object):
 
     def __init__(self):
         self.id = 0
-        self.playlist_id = ''
+        self.playlist_id = None
         self.bookmark_name = ''
         self.bookmark_filepath = ''
         self.seek_position = 0
@@ -790,11 +791,7 @@ class PlaylistFile(object):
     def get_queue(self):
         return self._items
 
-#    def import_filelist(self, filelist):
-#        for f in filelist:
-#            self._items.append(PlaylistItem(filepath=f))
-
-    def export(self, filepath=None, playlist_items=None):
+    def export_items(self, filepath=None, playlist_items=None):
         if filepath is not None:
             self._filepath = filepath
 
