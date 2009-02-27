@@ -834,7 +834,10 @@ class GTK_Main(object):
         if ( not self.lock_progress and
                 event.type == gtk.gdk.BUTTON_PRESS and event.button == 1 ):
             new_fraction = event.x/float(widget.get_allocation().width)
-            player.do_seek(percent=new_fraction)
+            resp = player.do_seek(percent=new_fraction)
+            if resp:
+                # Preemptively update the progressbar to make seeking smoother
+                self.set_progress_callback( *resp )
 
     def on_btn_play_pause_clicked(self, widget=None):
         player.play_pause_toggle()
