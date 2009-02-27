@@ -368,6 +368,29 @@ class Playlist(ObservableService):
         return self.__file_queued( filepath, self.__queue.insert(
             position, PlaylistItem.create_by_filepath(filepath, filepath) ))
 
+    def load_directory(self, directory, append=False):
+        self.__log.debug('Attempting to load directory "%s"', directory)
+
+        if not append:
+            self.reset_playlist()
+
+        if os.path.isdir(directory):
+            self.filepath = settings.temp_playlist
+            self.__queue.playlist_id = self.id
+            items = []
+
+            for item in os.listdir(directory):
+                filepath = os.path.join( directory, item )
+                if os.path.isfile(filepath) and util.is_supported(filepath):
+                    items.append(filepath)
+
+            items.sort()
+            for item in items:
+                self.append( item, dont_notify=True )
+        else:
+            self.__log.warning('"%s" is not a directory.', directory)
+            return False
+
     ##################################
     # Playlist controls
     ##################################

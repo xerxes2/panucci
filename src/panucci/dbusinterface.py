@@ -84,6 +84,12 @@ class panucciInterface(dbus.service.Object):
         self.__log.debug('insert_file() called')
         if self.player is not None: self.player.playlist.insert(pos, filepath)
 
+    @dbus.service.method('org.panucci.panucciInterface', in_signature='sb')
+    def load_directory(self, directory, append):
+        self.__log.debug('load_directory() called')
+        if self.player is not None: self.player.playlist.load_directory(
+            directory, append )
+
     @dbus.service.method('org.panucci.panucciInterface')
     def show_main_window(self):
         self.__log.debug('show_main_window() called')
