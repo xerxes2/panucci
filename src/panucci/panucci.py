@@ -348,7 +348,6 @@ class BookmarksWindow(gtk.Window):
 
     def jump_bookmark(self, w):
         model, bkmk_id, bkmk_iter, item_id, item_iter = self.__cur_selection()
-        self.main.playlist.print_queue_layout()
         if item_iter is not None:
             self.main.stop_playing()
             self.main.playlist.load_from_bookmark( item_id, bkmk_id )
