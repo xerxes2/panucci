@@ -49,7 +49,7 @@ post-install:
 	update-desktop-database $(PREFIX)/share/applications/
 
 clean:
-	rm -rf build src/panucci/*.pyc
+	rm -rf build src/panucci/*.{pyc,pyo}
 
 distclean: clean
 	rm -rf dist
