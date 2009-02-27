@@ -183,8 +183,9 @@ class Playlist(ObservableService):
             return False
 
         if bookmark_id is None:
-            if name is not None:
+            if name and item.title != name:
                 item.title = name
+                self.__queue.modified = True
         else:
             bookmark.timestamp = time.time()
 
