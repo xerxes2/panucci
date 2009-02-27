@@ -275,13 +275,16 @@ class Playlist(object):
                 return False
         else:                          # importing a single file
             self.__queue = Queue(self.id)
-            error = not self.__queue.append( 
-                PlaylistItem.create_by_filepath(filepath, filepath) )
+            error = not self.append(filepath)
 
         self.queue_modified = os.path.expanduser(
             settings.temp_playlist ) == self.filepath
 
         return not error
+
+    def append(self, filepath):
+        return self.__queue.append(
+            PlaylistItem.create_by_filepath(filepath, filepath) )
 
     ##################################
     # Playlist controls
@@ -361,7 +364,7 @@ class Queue(list):
         list.__init__(self)
 
     def __count_dupe_items(self, subset, item):
-        """ Count the number of duplicate items (by filepath only) in a list """
+        # Count the number of duplicate items (by filepath only) in a list
         tally = 0
         for i in subset:
             tally += int( i.filepath == item.filepath )
