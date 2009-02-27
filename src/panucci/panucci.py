@@ -156,11 +156,10 @@ def get_file_from_filechooser( toplevel_window, save_file=False, save_to=None):
     return filename
 
 class BookmarksWindow(gtk.Window):
-    def __init__(self, main):
+    def __init__(self):
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
         self.__log = logging.getLogger('panucci.panucci.BookmarksWindow')
 
-        self.main = main
         self.set_title('Bookmarks')
         window_icon = util.find_image('panucci.png')
         if window_icon is not None:
@@ -275,17 +274,17 @@ class BookmarksWindow(gtk.Window):
 
             # don't do anything if we're not actually moving rows around
             if from_row != to_row: 
-                self.main.playlist.move_item( from_row, to_row )
+                player.playlist.move_item( from_row, to_row )
 
         else:
             self.__log.debug('No drop_data or selection.data available')
 
     def update_model(self):
-        self.model = self.main.playlist.get_bookmark_model()
+        self.model = player.playlist.get_bookmark_model()
         self.treeview.set_model(self.model)
 
     def close(self, w):
-        self.main.playlist.update_bookmarks()
+        player.playlist.update_bookmarks()
         self.destroy()
 
     def label_edited(self, cellrenderer, path, new_text):
@@ -297,7 +296,7 @@ class BookmarksWindow(gtk.Window):
                 self.model.set_value(iter, 1, new_text)
                 m, bkmk_id, biter, item_id, iiter = self.__cur_selection()
 
-                self.main.playlist.update_bookmark(
+                player.playlist.update_bookmark(
                     item_id, bkmk_id, name=new_text )
         else:
             self.model.set_value(iter, 1, old_text)
@@ -306,7 +305,7 @@ class BookmarksWindow(gtk.Window):
         (label, position) = player.get_formatted_position(pos)
         label = label if lbl is None else lbl
         position = position if pos is None else pos
-        self.main.playlist.save_bookmark( label, position )
+        player.playlist.save_bookmark( label, position )
         self.update_model()
 
     def __cur_selection(self):
@@ -333,7 +332,7 @@ class BookmarksWindow(gtk.Window):
 
     def remove_bookmark(self, w):
         model, bkmk_id, bkmk_iter, item_id, item_iter = self.__cur_selection()
-        self.main.playlist.remove_bookmark( item_id, bkmk_id )
+        player.playlist.remove_bookmark( item_id, bkmk_id )
         if bkmk_iter is not None:
             model.remove(bkmk_iter)
         elif item_iter is not None:
@@ -944,7 +943,7 @@ class GTK_Main(object):
             self.set_progress_callback( *resp )
 
     def bookmarks_callback(self, w):
-        BookmarksWindow(self)
+        BookmarksWindow()
 
 
 def run(filename=None):
