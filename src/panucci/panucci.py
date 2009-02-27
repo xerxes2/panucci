@@ -128,12 +128,12 @@ class BookmarksWindow(gtk.Window):
         self.main = main
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
         self.set_title('Bookmarks')
-        self.set_modal(True)
         self.set_default_size(400, 300)
         self.set_border_width(10)
         self.vbox = gtk.VBox()
         self.vbox.set_spacing(5)
         self.treeview = gtk.TreeView()
+        self.treeview.set_enable_tree_lines(True)
         self.treeview.set_headers_visible(True)
         self.update_model()
 
