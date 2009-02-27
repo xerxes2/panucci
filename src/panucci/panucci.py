@@ -385,6 +385,7 @@ class GTK_Main(object):
         player.register( 'paused', self.on_player_paused )
         player.register( 'end_of_playlist', self.on_player_end_of_playlist )
         player.playlist.register( 'new_track', self.on_player_new_track )
+        player.playlist.register( 'file_queued', self.on_file_queued )
         player.init()
 
     def make_main_window(self):
@@ -779,14 +780,6 @@ class GTK_Main(object):
     def show_main_window(self):
         self.main_window.present()
 
-    def queue_file(self, filepath):
-        filename = os.path.basename(filepath)
-        if player.playlist.append( filepath ):
-            self.__log.info(util.notify('%s added successfully.' % filename ))
-        else:
-            self.__log.error(
-                util.notify('Error adding %s to the queue.' % filename) )
-
     def play_file(self, filename):
         if self.check_queue():
             self._play_file(filename)
@@ -839,6 +832,14 @@ class GTK_Main(object):
             'clicked', self.open_file_callback )
         image(self.play_pause_button, gtk.STOCK_OPEN, True)
 
+    def on_file_queued(self, filepath, success):
+        filename = os.path.basename(filepath)
+        if success:
+            self.__log.info(util.notify('%s added successfully.' % filename ))
+        else:
+            self.__log.error(
+                util.notify('Error adding %s to the queue.' % filename) )
+
     def reset_progress(self):
         self.progress.set_fraction(0)
         self.set_progress_callback(0,0)
@@ -859,7 +860,7 @@ class GTK_Main(object):
 
     def on_btn_play_pause_clicked(self, widget=None):
         player.play_pause_toggle()
-            
+
     def progress_timer_callback( self ):
         if player.playing and not player.seeking:
             pos_int, dur_int = player.get_position_duration()

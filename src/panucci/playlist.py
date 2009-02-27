@@ -43,7 +43,7 @@ from services import ObservableService
 _ = lambda x: x
 
 class Playlist(ObservableService):
-    signals = [ 'new_track' ]
+    signals = [ 'new_track', 'file_queued' ]
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
@@ -339,16 +339,24 @@ class Playlist(ObservableService):
 
         return bool(recent)
 
+    def __file_queued(self, filepath, successfull):
+        if successfull:
+            self.__bookmarks_model_changed = True
+            self.notify(
+              'file_queued', filepath, successfull, caller=self.__file_queued )
+
+        return successfull
+
     def append(self, filepath):
         self.__log.debug('Attempting to queue file: %s', filepath)
-        return self.__queue.append(
-            PlaylistItem.create_by_filepath(filepath, filepath) )
+        return self.__file_queued( filepath, self.__queue.append(
+                    PlaylistItem.create_by_filepath(filepath, filepath) ))
 
     def insert(self, position, filepath ):
         self.__log.debug(
             'Attempting to insert %s at position %s', filepath, position )
-        return self.__queue.insert(
-            position, PlaylistItem.create_by_filepath(filepath, filepath) )
+        return self.__file_queued( filepath, self.__queue.insert(
+            position, PlaylistItem.create_by_filepath(filepath, filepath) ))
 
     ##################################
     # Playlist controls
