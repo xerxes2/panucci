@@ -96,7 +96,8 @@ class Storage(object):
     # Bookmark-related functions
 
     def get_bookmarks(self, playlist_id=None, bookmark_filepath=None,
-        playlist_duplicate_id=None, allow_resume_bookmarks=True):
+        playlist_duplicate_id=None, request_resume_bookmark=None):
+        """ Note: """
 
         sql = 'SELECT * FROM bookmarks'
         conditions = []
@@ -114,9 +115,9 @@ class Storage(object):
             conditions.append('playlist_duplicate_id = ?')
             args.append(playlist_duplicate_id)
 
-        if not allow_resume_bookmarks:
+        if request_resume_bookmark is not None:
             conditions.append('is_resume_position = ?')
-            args.append(False)
+            args.append(request_resume_bookmark)
 
         if conditions:
             sql += ' WHERE '

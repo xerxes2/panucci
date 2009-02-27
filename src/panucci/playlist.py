@@ -530,11 +530,11 @@ class PlaylistItem(object):
 
     def load_bookmarks(self):
         self.bookmarks = db.load_bookmarks(
-            factory                = Bookmark().load_from_dict,
-            playlist_id            = self.playlist_id,
-            bookmark_filepath      = self.filepath,
-            playlist_duplicate_id  = self.duplicate_id,
-            allow_resume_bookmarks = False  )
+            factory                 = Bookmark().load_from_dict,
+            playlist_id             = self.playlist_id,
+            bookmark_filepath       = self.filepath,
+            playlist_duplicate_id   = self.duplicate_id,
+            request_resume_bookmark = False  )
 
     def save_bookmark(self, name, position, resume_pos=False):
         b = Bookmark()
