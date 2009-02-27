@@ -61,3 +61,7 @@ ptest:
 	LD_LIBRARY_PATH=/usr/lib/gtk-2.0/modules GTK_MODULES=gtkparasite \
 	PYTHONPATH=src/ python bin/panucci --debug
 
+build-package:
+	# See: http://wiki.maemo.org/Uploading_to_Extras#Debian_tooling
+	dpkg-buildpackage -rfakeroot -sa -i -I.git
+
