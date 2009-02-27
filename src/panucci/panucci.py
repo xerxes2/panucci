@@ -150,9 +150,11 @@ def get_file_from_filechooser( toplevel_window, save_file=False, save_to=None):
     return filename
 
 class BookmarksWindow(gtk.Window):
-    def __init__(self):
+    def __init__(self, main_window):
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
         self.__log = logging.getLogger('panucci.panucci.BookmarksWindow')
+        self.main = main_window
+        self.main.bookmarks_window_open = True
 
         self.set_title('Bookmarks')
         window_icon = util.find_image('panucci.png')
@@ -283,6 +285,7 @@ class BookmarksWindow(gtk.Window):
 
     def close(self, w):
         player.playlist.update_bookmarks()
+        self.main.bookmarks_window_open = False
         self.destroy()
 
     def label_edited(self, cellrenderer, path, new_text):
@@ -353,6 +356,7 @@ class GTK_Main(object):
         self.volume_timer_id = None
         self.make_main_window()
         self.has_coverart = False
+        self.bookmarks_window_open = False
         self.set_volume(settings.volume)
 
         if util.platform==util.MAEMO and interface.headset_device is not None:
@@ -912,7 +916,8 @@ class GTK_Main(object):
             self.set_progress_callback( *resp )
 
     def bookmarks_callback(self, w):
-        BookmarksWindow()
+        if not self.bookmarks_window_open:
+            BookmarksWindow(self)
 
     def pickle_file_conversion(self):
         pickle_file = os.path.expanduser('~/.rmp-bookmarks')
