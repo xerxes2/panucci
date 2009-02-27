@@ -23,7 +23,7 @@ import sys
 import traceback
 import webbrowser
 
-supported_extensions = [ '.mp3', '.ogg', '.flac', '.m4a', '.wav', '.mp4' ]
+supported_extensions = ['.mp2','.mp3','.mp4','.ogg','.flac','.m4a','.wav']
 MAEMO, LINUX = range(2)
 
 def get_platform():
