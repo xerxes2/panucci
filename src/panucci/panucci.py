@@ -63,7 +63,7 @@ short_seek = 10
 long_seek = 60
 
 coverart_names = [ 'cover', 'cover.jpg', 'cover.png' ]
-coverart_size = [240, 240] if util.platform == util.MAEMO else [130, 130]
+coverart_size = [200, 200] if util.platform == util.MAEMO else [110, 110]
         
 gtk.about_dialog_set_url_hook(util.open_link, None)
 gtk.icon_size_register('panucci-button', 32, 32)
@@ -149,22 +149,13 @@ def get_file_from_filechooser( toplevel_window, save_file=False, save_to=None):
     dlg.destroy()
     return filename
 
-class BookmarksWindow(gtk.Window):
+class PlaylistTab(gtk.VBox):
     def __init__(self, main_window):
-        gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        gtk.VBox.__init__(self)
         self.__log = logging.getLogger('panucci.panucci.BookmarksWindow')
         self.main = main_window
-        self.main.bookmarks_window_open = True
 
-        self.set_title('Bookmarks')
-        window_icon = util.find_image('panucci.png')
-        if window_icon is not None:
-            self.set_icon_from_file( window_icon )
-
-        self.set_default_size(400, 300)
-        self.set_border_width(10)
-        self.vbox = gtk.VBox()
-        self.vbox.set_spacing(5)
+        self.set_spacing(5)
         self.treeview = gtk.TreeView()
         self.treeview.set_headers_visible(True)
 
@@ -203,7 +194,7 @@ class BookmarksWindow(gtk.Window):
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         sw.set_shadow_type(gtk.SHADOW_IN)
         sw.add(self.treeview)
-        self.vbox.add(sw)
+        self.add(sw)
         self.hbox = gtk.HButtonBox()
         self.add_button = gtk.Button(gtk.STOCK_ADD)
         self.add_button.set_use_stock(True)
@@ -221,8 +212,7 @@ class BookmarksWindow(gtk.Window):
         self.close_button.set_use_stock(True)
         self.close_button.connect('clicked', self.close)
         self.hbox.pack_start(self.close_button)
-        self.vbox.pack_start(self.hbox, False, True)
-        self.add(self.vbox)
+        self.pack_start(self.hbox, False, True)
         self.show_all()
 
     def drag_data_get_data(
@@ -285,7 +275,6 @@ class BookmarksWindow(gtk.Window):
 
     def close(self, w):
         player.playlist.update_bookmarks()
-        self.main.bookmarks_window_open = False
         self.destroy()
 
     def label_edited(self, cellrenderer, path, new_text):
@@ -360,7 +349,6 @@ class GTK_Main(object):
         self.volume_timer_id = None
         self.make_main_window()
         self.has_coverart = False
-        self.bookmarks_window_open = False
         self.set_volume(settings.volume)
 
         if util.platform==util.MAEMO and interface.headset_device is not None:
@@ -408,12 +396,16 @@ class GTK_Main(object):
             menu_vbox.pack_start(menu_bar, False, False, 0)
             menu_bar.show()
 
-        main_hbox = gtk.HBox()
-        main_hbox.set_spacing(6)
+        self.notebook = gtk.Notebook()
+
         if util.platform == util.MAEMO:
-            window.add(main_hbox)
+            window.add(self.notebook)
         else:
-            menu_vbox.pack_end(main_hbox, True, True, 6)
+            menu_vbox.pack_end(self.notebook, True, True, 6)
+
+        main_hbox = gtk.HBox()
+        self.notebook.append_page(main_hbox, gtk.Label(_('Player')))
+        self.notebook.set_tab_label_packing(main_hbox,True,True,gtk.PACK_START)
 
         main_vbox = gtk.VBox()
         main_vbox.set_spacing(6)
@@ -448,7 +440,8 @@ class GTK_Main(object):
 
         progress_eventbox = gtk.EventBox()
         progress_eventbox.set_events(gtk.gdk.BUTTON_PRESS_MASK)
-        progress_eventbox.connect('button-press-event', self.on_progressbar_changed)
+        progress_eventbox.connect(
+            'button-press-event', self.on_progressbar_changed )
         self.progress = gtk.ProgressBar()
         # make the progress bar more "finger-friendly"
         if util.platform == util.MAEMO:
@@ -460,11 +453,13 @@ class GTK_Main(object):
         buttonbox = gtk.HBox()
         self.rrewind_button = gtk.Button('')
         image(self.rrewind_button, 'media-skip-backward.png')
-        self.rrewind_button.connect('clicked', self.seekbutton_callback, -1*long_seek)
+        self.rrewind_button.connect(
+            'clicked', self.seekbutton_callback, -1*long_seek )
         buttonbox.add(self.rrewind_button)
         self.rewind_button = gtk.Button('')
         image(self.rewind_button, 'media-seek-backward.png')
-        self.rewind_button.connect('clicked', self.seekbutton_callback, -1*short_seek)
+        self.rewind_button.connect(
+            'clicked', self.seekbutton_callback, -1*short_seek )
         buttonbox.add(self.rewind_button)
         self.play_pause_button = gtk.Button('')
         image(self.play_pause_button, gtk.STOCK_OPEN, True)
@@ -473,20 +468,28 @@ class GTK_Main(object):
         buttonbox.add(self.play_pause_button)
         self.forward_button = gtk.Button('')
         image(self.forward_button, 'media-seek-forward.png')
-        self.forward_button.connect('clicked', self.seekbutton_callback, short_seek)
+        self.forward_button.connect(
+            'clicked', self.seekbutton_callback, short_seek )
         buttonbox.add(self.forward_button)
         self.fforward_button = gtk.Button('')
         image(self.fforward_button, 'media-skip-forward.png')
-        self.fforward_button.connect('clicked', self.seekbutton_callback, long_seek)
+        self.fforward_button.connect(
+            'clicked', self.seekbutton_callback, long_seek )
         buttonbox.add(self.fforward_button)
         self.bookmarks_button = gtk.Button('')
         image(self.bookmarks_button, 'bookmark-new.png')
-        self.bookmarks_button.connect('clicked', self.bookmarks_callback)
         buttonbox.add(self.bookmarks_button)
         self.set_controls_sensitivity(False)
         main_vbox.pack_start(buttonbox, False, False)
 
+        self.playlist_tab = PlaylistTab(self)
+        self.bookmarks_button.connect('clicked',self.playlist_tab.add_bookmark)
+        self.notebook.append_page(self.playlist_tab, gtk.Label(_('Playlist')))
+        self.notebook.set_tab_label_packing(
+            self.playlist_tab, True, True, gtk.PACK_START )
+
         window.show_all()
+        self.notebook.set_current_page(0)
 
         if util.platform == util.MAEMO:
             self.volume = hildon.VVolumebar()
@@ -538,13 +541,6 @@ class GTK_Main(object):
         self.menu_recent = gtk.MenuItem(_('Recent Files'))
         menu.append(self.menu_recent)
         self.create_recent_files_menu()
-
-        menu.append(gtk.SeparatorMenuItem())
-
-        menu_bookmarks = gtk.MenuItem(_('Bookmarks'))
-        menu_bookmarks.connect('activate', self.bookmarks_callback)
-        menu.append(menu_bookmarks)
-
         
         # the settings sub-menu
         menu_settings = gtk.MenuItem(_('Settings'))
@@ -903,10 +899,6 @@ class GTK_Main(object):
         if resp:
             # Preemptively update the progressbar to make seeking smoother
             self.set_progress_callback( *resp )
-
-    def bookmarks_callback(self, w):
-        if not self.bookmarks_window_open:
-            BookmarksWindow(self)
 
     def pickle_file_conversion(self):
         pickle_file = os.path.expanduser('~/.rmp-bookmarks')
