@@ -35,7 +35,8 @@ from services import ObservableService
 _ = lambda x: x
 
 class Playlist(ObservableService):
-    signals = [ 'new_track', 'new_track_metadata', 'file_queued' ]
+    signals = [ 'new_track', 'new_track_metadata', 'file_queued',
+        'bookmark_added' ]
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
@@ -169,7 +170,8 @@ class Playlist(ObservableService):
         else:
             return self.load_from_bookmark_id( item_id, bookmark_id )
 
-    def save_bookmark( self, bookmark_name, position ):
+    def save_bookmark( self, bookmark_name, position ): 
+        self.notify( 'bookmark_added', caller=self.save_bookmark )
         self.__queue.current_item.save_bookmark(
             bookmark_name, position, resume_pos=False )
         self.__bookmarks_model_changed = True
@@ -330,10 +332,11 @@ class Playlist(ObservableService):
 
             if parser.parse(filepath):
                 self.__queue = parser.get_queue()
+                self.__file_queued( filepath, True, False )
             else:
                 return False
         else:                          # importing a single file
-            error = not self.append(filepath, dont_notify=True)
+            error = not self.append(filepath, notify=False)
 
         self.__queue.disable_notifications = True
         self.load_from_resume_bookmark()
@@ -353,26 +356,26 @@ class Playlist(ObservableService):
 
         return bool(recent)
 
-    def __file_queued(self, filepath, successfull):
+    def __file_queued(self, filepath, successfull, notify):
         if successfull:
             self.__bookmarks_model_changed = True
-            self.notify(
-              'file_queued', filepath, successfull, caller=self.__file_queued )
+            self.notify( 'file_queued', filepath, successfull, notify,
+                caller=self.__file_queued )
 
         return successfull
 
-    def append(self, filepath, dont_notify=False):
+    def append(self, filepath, notify=True):
         self.__log.debug('Attempting to queue file: %s', filepath)
         success = self.__queue.append(
             PlaylistItem.create_by_filepath(filepath, filepath) )
 
-        return success if dont_notify else self.__file_queued(filepath,success)
+        return self.__file_queued( filepath, success, notify)
 
     def insert(self, position, filepath ):
         self.__log.debug(
             'Attempting to insert %s at position %s', filepath, position )
-        return self.__file_queued( filepath, self.__queue.insert(
-            position, PlaylistItem.create_by_filepath(filepath, filepath) ))
+        return self.__file_queued( filepath, self.__queue.insert( position,
+            PlaylistItem.create_by_filepath(filepath, filepath)), True )
 
     def load_directory(self, directory, append=False):
         self.__log.debug('Attempting to load directory "%s"', directory)
@@ -392,7 +395,7 @@ class Playlist(ObservableService):
 
             items.sort()
             for item in items:
-                self.append( item, dont_notify=True )
+                self.append( item, notify=False )
         else:
             self.__log.warning('"%s" is not a directory.', directory)
             return False

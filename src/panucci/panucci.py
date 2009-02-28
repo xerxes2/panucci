@@ -155,6 +155,12 @@ def get_file_from_filechooser(
     dlg.destroy()
     return filename
 
+def set_stock_button_text( button, text ):
+    alignment = button.get_child()
+    hbox = alignment.get_child()
+    image, label = hbox.get_children()
+    label.set_text(text)
+
 class PlaylistTab(gtk.VBox):
     def __init__(self, main_window):
         gtk.VBox.__init__(self)
@@ -201,24 +207,35 @@ class PlaylistTab(gtk.VBox):
         sw.set_shadow_type(gtk.SHADOW_IN)
         sw.add(self.treeview)
         self.add(sw)
-        self.hbox = gtk.HButtonBox()
-        self.add_button = gtk.Button(gtk.STOCK_ADD)
+
+        self.hbox = gtk.HBox()
+
+        self.add_button = gtk.Button(gtk.STOCK_NEW)
         self.add_button.set_use_stock(True)
-        self.add_button.connect('clicked', self.add_bookmark)
-        self.hbox.pack_start(self.add_button)
+        set_stock_button_text( self.add_button, _('Add File') )
+        self.add_button.connect('clicked', self.add_file)
+        self.hbox.pack_start(self.add_button, True, False)
+
+        self.dir_button = gtk.Button(gtk.STOCK_OPEN)
+        self.dir_button.set_use_stock(True)
+        set_stock_button_text( self.dir_button, _('Add Directory') )
+        self.dir_button.connect('clicked', self.add_directory)
+        self.hbox.pack_start(self.dir_button, True, False)
+
         self.remove_button = gtk.Button(gtk.STOCK_REMOVE)
         self.remove_button.set_use_stock(True)
         self.remove_button.connect('clicked', self.remove_bookmark)
-        self.hbox.pack_start(self.remove_button)
+        self.hbox.pack_start(self.remove_button, True, False)
+
         self.jump_button = gtk.Button(gtk.STOCK_JUMP_TO)
         self.jump_button.set_use_stock(True)
         self.jump_button.connect('clicked', self.jump_bookmark)
-        self.hbox.pack_start(self.jump_button)
-        self.close_button = gtk.Button(gtk.STOCK_CLOSE)
-        self.close_button.set_use_stock(True)
-        self.close_button.connect('clicked', self.close)
-        self.hbox.pack_start(self.close_button)
+        self.hbox.pack_start(self.jump_button, True, False)
         self.pack_start(self.hbox, False, True)
+
+        player.playlist.register(
+            'file_queued', lambda x,y,z: self.update_model() )
+
         self.show_all()
 
     def drag_data_get_data(
@@ -279,10 +296,6 @@ class PlaylistTab(gtk.VBox):
         self.treeview.set_model(self.model)
         self.treeview.expand_all()
 
-    def close(self, w):
-        player.playlist.update_bookmarks()
-        self.destroy()
-
     def label_edited(self, cellrenderer, path, new_text):
         iter = self.model.get_iter(path)
         old_text = self.model.get_value(iter, 1)
@@ -302,7 +315,19 @@ class PlaylistTab(gtk.VBox):
         label = label if lbl is None else lbl
         position = position if pos is None else pos
         player.playlist.save_bookmark( label, position )
+        util.notify(_('Bookmark Added.'))
         self.update_model()
+
+    def add_file(self, widget):
+        filename = get_file_from_filechooser(self.main.main_window)
+        if filename is not None:
+            player.playlist.append(filename)
+
+    def add_directory(self, widget):
+        directory = get_file_from_filechooser(
+            self.main.main_window, folder=True )
+        if directory is not None:
+            player.playlist.load_directory(directory, append=True)
 
     def __cur_selection(self):
         bookmark_id, bookmark_iter, item_id, item_iter = (None,)*4
@@ -539,10 +564,6 @@ class GTK_Main(object):
         menu_open.connect("activate", self.open_file_callback)
         menu.append(menu_open)
 
-        menu_queue = gtk.MenuItem(_('Add file to the queue'))
-        menu_queue.connect('activate', self.queue_file_callback)
-        menu.append(menu_queue)
-
         # the recent files menu
         self.menu_recent = gtk.MenuItem(_('Recent Files'))
         menu.append(self.menu_recent)
@@ -622,11 +643,6 @@ class GTK_Main(object):
     def handle_headset_button(self, event, button):
         if event == 'ButtonPressed' and button == 'phone':
             self.on_btn_play_pause_clicked()
-
-    def queue_file_callback(self, widget=None):
-        filename = get_file_from_filechooser(self.main_window)
-        if filename is not None:
-            player.playlist.append(filename)
 
     def check_queue(self):
         """ Makes sure the queue is saved if it has been modified
@@ -807,13 +823,15 @@ class GTK_Main(object):
             'clicked', self.open_file_callback )
         image(self.play_pause_button, gtk.STOCK_OPEN, True)
 
-    def on_file_queued(self, filepath, success):
-        filename = os.path.basename(filepath)
-        if success:
-            self.__log.info(util.notify('%s added successfully.' % filename ))
-        else:
-            self.__log.error(
-                util.notify('Error adding %s to the queue.' % filename) )
+    def on_file_queued(self, filepath, success, notify):
+        if notify:
+            filename = os.path.basename(filepath)
+            if success:
+                self.__log.info(
+                    util.notify( '%s added successfully.' % filename ))
+            else:
+                self.__log.error(
+                    util.notify( 'Error adding %s to the queue.' % filename))
 
     def reset_progress(self):
         self.progress.set_fraction(0)
