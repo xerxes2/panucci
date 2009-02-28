@@ -110,12 +110,19 @@ def dialog( toplevel_window, title, question, description ):
     elif response in [gtk.RESPONSE_CANCEL, gtk.RESPONSE_DELETE_EVENT]:
         return None
 
-def get_file_from_filechooser( toplevel_window, save_file=False, save_to=None):
+def get_file_from_filechooser(
+    toplevel_window, folder=False, save_file=False, save_to=None):
+
+    if folder:
+        open_action = gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER
+    else:
+        open_action = gtk.FILE_CHOOSER_ACTION_OPEN
+
     if util.platform == util.MAEMO:
         if save_file:
             args = ( toplevel_window, gtk.FILE_CHOOSER_ACTION_SAVE )
         else:
-            args = ( toplevel_window, gtk.FILE_CHOOSER_ACTION_OPEN )
+            args = ( toplevel_window, open_action )
 
         dlg = hildon.FileChooserDialog( *args )
     else:
@@ -125,10 +132,9 @@ def get_file_from_filechooser( toplevel_window, save_file=False, save_to=None):
                 (( gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                 gtk.STOCK_SAVE, gtk.RESPONSE_OK )) )
         else:
-            args = ( _('Select podcast or audiobook'), None,
-                gtk.FILE_CHOOSER_ACTION_OPEN,
+            args = ( _('Select podcast or audiobook'), None, open_action,
                 (( gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                gtk.STOCK_MEDIA_PLAY, gtk.RESPONSE_OK )) )
+                gtk.STOCK_OPEN, gtk.RESPONSE_OK )) )
 
         dlg = gtk.FileChooserDialog(*args)
 
