@@ -788,7 +788,7 @@ class GTK_Main(object):
         self.set_metadata(metadata)
 
         text, position = player.get_formatted_position()
-        estimated_length = metadata['length']
+        estimated_length = metadata.get('length', 0)
         self.set_progress_callback( position, estimated_length )
 
     def on_player_paused(self):
