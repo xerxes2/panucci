@@ -214,23 +214,23 @@ class PlaylistTab(gtk.VBox):
         self.add_button.set_use_stock(True)
         set_stock_button_text( self.add_button, _('Add File') )
         self.add_button.connect('clicked', self.add_file)
-        self.hbox.pack_start(self.add_button, True, False)
+        self.hbox.pack_start(self.add_button, True, True)
 
         self.dir_button = gtk.Button(gtk.STOCK_OPEN)
         self.dir_button.set_use_stock(True)
         set_stock_button_text( self.dir_button, _('Add Directory') )
         self.dir_button.connect('clicked', self.add_directory)
-        self.hbox.pack_start(self.dir_button, True, False)
+        self.hbox.pack_start(self.dir_button, True, True)
 
         self.remove_button = gtk.Button(gtk.STOCK_REMOVE)
         self.remove_button.set_use_stock(True)
         self.remove_button.connect('clicked', self.remove_bookmark)
-        self.hbox.pack_start(self.remove_button, True, False)
+        self.hbox.pack_start(self.remove_button, True, True)
 
         self.jump_button = gtk.Button(gtk.STOCK_JUMP_TO)
         self.jump_button.set_use_stock(True)
         self.jump_button.connect('clicked', self.jump_bookmark)
-        self.hbox.pack_start(self.jump_button, True, False)
+        self.hbox.pack_start(self.jump_button, True, True)
         self.pack_start(self.hbox, False, True)
 
         player.playlist.register(
