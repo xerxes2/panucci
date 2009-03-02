@@ -45,6 +45,9 @@ def load_pickle_file( pfile, create_backup=True ):
     f.close()
 
     for f, data in d.iteritems():
+        if f is None or not f:
+            continue
+
         if not data.has_key('bookmarks'):
             data['bookmarks'] = []
 

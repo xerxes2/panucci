@@ -269,8 +269,11 @@ class Storage(object):
     # Playlist-related functions
 
     def playlist_exists(self, filepath):
-        return self.__get__( 'SELECT * FROM playlists WHERE filepath = ?',
-            filepath ) is not None
+        if filepath is not None and filepath:
+            return self.__get__( 'SELECT * FROM playlists WHERE filepath = ?',
+                filepath ) is not None
+        else:
+            return False
 
     def get_playlist_id(self, filepath, create_new=False, update_time=False):
         """ Get a playlist_id by it's filepath
