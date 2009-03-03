@@ -55,10 +55,10 @@ class panucciPlayer(ObservableService):
 
     def init(self, filepath=None):
         """ This should be called by the UI once it has initialized """
-        if filepath is None:
-            self.playlist.load_last_played()
+        if filepath is not None and self.playlist.load( filepath ):
+            self.play()
         else:
-            self.playlist.load( filepath )
+            self.playlist.load_last_played()            
 
     def play(self):
         have_player = self.__player is not None
