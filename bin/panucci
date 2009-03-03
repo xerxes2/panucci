@@ -17,7 +17,7 @@
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-app_version = '0.3.0'
+app_version = '0.3'
 
 import dbus
 import dbus.glib
@@ -29,23 +29,23 @@ from optparse import OptionParser
 _ = lambda s: s
 
 usage = 'usage: %prog [options] FILE'
-parser = OptionParser(usage=usage, version='%prog '+'%s' % app_version)
+parser = OptionParser(usage=usage, version='%prog ' + app_version)
 parser.add_option('-q', '--queue', action='store', type='string',
     dest='queue_filename', help='Add FILE to the queue', metavar='FILE')
-parser.add_option('-f', '--file', action='store', type='string',
-    dest='open_filename', help='Clear the queue and play FILE',
-    metavar='FILE')
 parser.add_option('-d', '--debug', action='store_true', default=False,
     dest='debug', help='Enable verbose logging')
 opts, args = parser.parse_args()
 
-if None not in [ opts.queue_filename, opts.open_filename ] or len(args):
+if len(args) > 1 or ( opts.queue_filename and len(args) ):
     parser.print_help()
     sys.exit(1)
 
 local_module_dir = os.path.join(os.path.dirname(sys.argv[0]), '..', 'src')
 if os.path.isdir(local_module_dir):
     sys.path.append(local_module_dir)
+
+from panucci import util
+filepath = util.build_full_path(args[0] if len(args) else opts.queue_filename)
 
 session_bus = dbus.SessionBus()
 try:
@@ -55,19 +55,18 @@ try:
 except dbus.exceptions.DBusException:
     remote_object = None
 
-from panucci import util
 if remote_object is None:
     from panucci import panucci
     log_level = logging.DEBUG if opts.debug else logging.ERROR
     logging.basicConfig(level=log_level)
     panucci.app_version = app_version
-    panucci.run( filename=util.build_full_path(
-        opts.queue_filename or opts.open_filename )) 
+    panucci.run( filename=filepath ) 
 else:
-    if opts.open_filename is not None:
-        remote_object.play_file( util.build_full_path( opts.open_filename ))
-    elif opts.queue_filename is not None:
-        remote_object.queue_file( util.build_full_path( opts.queue_filename ))
+    if filepath is not None:
+        if opts.queue_filename is not None:
+            remote_object.queue_file( filepath )
+        else:
+            remote_object.play_file( filepath )
 
     remote_object.show_main_window()
 
