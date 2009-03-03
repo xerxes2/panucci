@@ -29,6 +29,9 @@ all:
 	@echo "    test - test the application"
 
 install: python-install post-install install-schemas
+	replace @INSTALL_PREFIX@ $(DESTDIR)$(PREFIX) < \
+	  data/panucci.service.in > data/panucci.service
+	install data/panucci.service $(DESTDIR)$(PREFIX)/share/dbus-1/services/
 
 python-install:
 	$(PYTHON) setup.py install --optimize 2 --root=$(DESTDIR) --prefix=$(PREFIX)
@@ -45,11 +48,11 @@ install-schemas:
 	-killall gconfd-2
 
 post-install:
-	gtk-update-icon-cache -f -i $(PREFIX)/share/icons/hicolor/
-	update-desktop-database $(PREFIX)/share/applications/
+	gtk-update-icon-cache -f -i $(DESTDIR)$(PREFIX)/share/icons/hicolor/
+	update-desktop-database $(DESTDIR)$(PREFIX)/share/applications/
 
 clean:
-	rm -rf build src/panucci/*.{pyc,pyo}
+	rm -rf build src/panucci/*.{pyc,pyo} data/panucci.service
 
 distclean: clean
 	rm -rf dist
