@@ -21,6 +21,8 @@ import logging
 import dbus
 import dbus.service
 
+session_bus = dbus.SessionBus()
+
 import util
 
 class panucciInterface(dbus.service.Object):
@@ -48,6 +50,14 @@ class panucciInterface(dbus.service.Object):
     def register_gui(self, gui):
         self.__log.debug('Registered GUI.')
         self.gui = gui
+
+    def start_service_by_name_noblock(
+        self, service_name, reply_handler=None, error_handler=None ):
+        # it's dbus.SessionBus.start_service_by_name except it doesn't block
+
+        return session_bus.call_async(
+            dbus.BUS_DAEMON_NAME, dbus.BUS_DAEMON_PATH, dbus.BUS_DAEMON_IFACE,
+            'StartServiceByName', 'su', ( service_name, 0 ), None, None )
 
     @dbus.service.method('org.panucci.panucciInterface')
     def play(self):
@@ -96,5 +106,5 @@ class panucciInterface(dbus.service.Object):
         if self.gui is not None: self.gui.show_main_window()
 
 interface = panucciInterface(
-    dbus.service.BusName('org.panucci.panucciInterface', dbus.SessionBus()) )
+    dbus.service.BusName('org.panucci.panucciInterface', session_bus) )
 
