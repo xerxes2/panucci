@@ -97,5 +97,29 @@
         </locale>
       </schema>
 
+      <schema>
+        <key>/schemas/apps/panucci/skip_delay</key>
+        <applyto>/apps/panucci/skip_delay</applyto>
+        <owner>panucci</owner>
+        <type>float</type>
+        <default>0.5</default>
+        <locale name="C">
+          <short>How many seconds to wait before skipping to the next/previous track.</short>
+          <long>If the user presses and holds |&lt;&lt; or &gt;&gt;| for X amount of seconds the Panucci will skip to the next track.</long>
+        </locale>
+      </schema>
+
+      <schema>
+        <key>/schemas/apps/panucci/disable_delayed_skip</key>
+        <applyto>/apps/panucci/disable_delayed_skip</applyto>
+        <owner>panucci</owner>
+        <type>bool</type>
+        <default>FALSE</default>
+        <locale name="C">
+          <short>Disable skipping tracks by pressing and holding |&lt;&lt; or &gt;&gt;|</short>
+          <long>This makes the |&lt;&lt; or &gt;&gt;| buttons act like they used to which is seeking forward/backward.</long>
+        </locale>
+      </schema>
+
   </schemalist>
 </gconfschemafile>

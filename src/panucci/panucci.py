@@ -378,6 +378,8 @@ class GTK_Main(object):
         self.make_main_window()
         self.has_coverart = False
         self.set_volume(settings.volume)
+        self.last_seekbutton_pressed = None
+        self.last_seekbutton_pressed_time = 0
 
         if util.platform==util.MAEMO and interface.headset_device is not None:
             # Enable play/pause with headset button
@@ -481,8 +483,9 @@ class GTK_Main(object):
         buttonbox = gtk.HBox()
         self.rrewind_button = gtk.Button('')
         image(self.rrewind_button, 'media-skip-backward.png')
+        self.rrewind_button.connect( 'pressed', self.on_seekbutton_pressed )
         self.rrewind_button.connect(
-            'clicked', self.seekbutton_callback, -1*settings.seek_long )
+            'clicked', self.long_seekbutton_callback, -1*settings.seek_long )
         buttonbox.add(self.rrewind_button)
         self.rewind_button = gtk.Button('')
         image(self.rewind_button, 'media-seek-backward.png')
@@ -501,8 +504,9 @@ class GTK_Main(object):
         buttonbox.add(self.forward_button)
         self.fforward_button = gtk.Button('')
         image(self.fforward_button, 'media-skip-forward.png')
+        self.fforward_button.connect( 'pressed', self.on_seekbutton_pressed )
         self.fforward_button.connect(
-            'clicked', self.seekbutton_callback, settings.seek_long )
+            'clicked', self.long_seekbutton_callback, settings.seek_long )
         buttonbox.add(self.fforward_button)
         self.bookmarks_button = gtk.Button('')
         image(self.bookmarks_button, 'bookmark-new.png')
@@ -573,10 +577,17 @@ class GTK_Main(object):
         menu_settings_sub = gtk.Menu()
         menu_settings.set_submenu(menu_settings_sub)
 
+        menu_settings_disable_skip = gtk.CheckMenuItem(
+            _('Disable Delayed Track Skipping') )
+        menu_settings_disable_skip.connect('toggled', lambda w: 
+            setattr( settings, 'disable_delayed_skip', w.get_active()))
+        menu_settings_disable_skip.set_active(settings.disable_delayed_skip)
+        menu_settings_sub.append(menu_settings_disable_skip)
+
         menu_settings_lock_progress = gtk.CheckMenuItem(_('Lock Progress Bar'))
         menu_settings_lock_progress.connect('toggled', lambda w: 
             setattr( settings, 'progress_locked', w.get_active()))
-        menu_settings_lock_progress.set_active(self.lock_progress)
+        menu_settings_lock_progress.set_active(settings.progress_locked)
         menu_settings_sub.append(menu_settings_lock_progress)
 
         menu.append(gtk.SeparatorMenuItem())
@@ -617,10 +628,6 @@ class GTK_Main(object):
 
     def on_recent_file_activate(self, widget, filepath):
         self.play_file(filepath)
-
-    @property
-    def lock_progress(self):
-        return settings.progress_locked
 
     def show_about(self, w, win):
         dialog = gtk.AboutDialog()
@@ -843,7 +850,7 @@ class GTK_Main(object):
         self.progress.set_fraction( fraction )
 
     def on_progressbar_changed(self, widget, event):
-        if ( not self.lock_progress and
+        if ( not settings.progress_locked and
                 event.type == gtk.gdk.BUTTON_PRESS and event.button == 1 ):
             new_fraction = event.x/float(widget.get_allocation().width)
             resp = player.do_seek(percent=new_fraction)
@@ -914,6 +921,28 @@ class GTK_Main(object):
                     self.main_window.set_title('Panucci - ' + value)
 
                 tags[tag].set_markup('<b><big>'+value+'</big></b>')
+
+    def on_seekbutton_pressed(self, widget):
+        self.last_seekbutton_pressed = widget
+        self.last_seekbutton_pressed_time = time.time()
+        self.__log.debug( 'Seekbutton %s pressed at %f', 
+            hash(widget), self.last_seekbutton_pressed_time )
+
+    def long_seekbutton_callback(self, widget, seek_amount):
+        time_delta = time.time() - self.last_seekbutton_pressed_time
+        self.__log.debug('Seekbutton %s released, delta t = %f',
+            hash(widget), time_delta )
+
+        if ( not settings.disable_delayed_skip and
+            widget == self.last_seekbutton_pressed and
+            time_delta > settings.skip_delay ):
+
+            if seek_amount > 0:
+                player.playlist.next()
+            else:
+                player.playlist.prev()
+        else:
+            self.seekbutton_callback( widget, seek_amount )
 
     def seekbutton_callback( self, widget, seek_amount ):
         resp = player.do_seek(from_current=seek_amount*10**9)

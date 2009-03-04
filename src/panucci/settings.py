@@ -24,11 +24,13 @@ from simplegconf import gconf
 
 default_settings = {
     'db_location'          : '~/.panucci.sqlite',
+    'disable_delayed_skip' : False,
     'last_folder'          : '~',
     'max_recent_files'     : 10,
     'progress_locked'      : False,
     'seek_long'            : 60,
     'seek_short'           : 10,
+    'skip_delay'           : 0.5,
     'temp_playlist'        : '~/.panucci.m3u',
     'volume'               : 0.3,
 }
