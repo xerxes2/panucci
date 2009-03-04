@@ -380,6 +380,7 @@ class GTK_Main(object):
         self.set_volume(settings.volume)
         self.last_seekbutton_pressed = None
         self.last_seekbutton_pressed_time = 0
+        self.__window_fullscreen = False
 
         if util.platform==util.MAEMO and interface.headset_device is not None:
             # Enable play/pause with headset button
@@ -626,6 +627,19 @@ class GTK_Main(object):
 
         self.menu_recent.set_submenu(menu_recent_sub)
 
+    def __get_fullscreen(self):
+        return self.__window_fullscreen
+
+    def __set_fullscreen(self, value):
+        if value and not self.__window_fullscreen:
+            self.main_window.fullscreen()
+        elif not value and self.__window_fullscreen:
+            self.main_window.unfullscreen()
+
+        self.__window_fullscreen = value
+
+    fullscreen = property( __get_fullscreen, __set_fullscreen )
+
     def on_recent_file_activate(self, widget, filepath):
         self.play_file(filepath)
 
@@ -712,16 +726,20 @@ class GTK_Main(object):
         self.rrewind_button.set_sensitive(sensitive)
 
     def on_key_press(self, widget, event):
-        if event.keyval == gtk.keysyms.F7: #plus
-            self.set_volume( min( 1, self.get_volume() + 0.10 ))
-        elif event.keyval == gtk.keysyms.F8: #minus
-            self.set_volume( max( 0, self.get_volume() - 0.10 ))
-        elif event.keyval == gtk.keysyms.Left: # seek back
-            self.rewind_callback(self.rewind_button)
-        elif event.keyval == gtk.keysyms.Right: # seek forward
-            self.forward_callback(self.forward_button)
-        elif event.keyval == gtk.keysyms.Return: # play/pause
-            self.on_btn_play_pause_clicked()
+        # this stuff is only maemo-related
+        if util.platform == util.MAEMO:
+            if event.keyval == gtk.keysyms.F7: #plus
+                self.set_volume( min( 1, self.get_volume() + 0.10 ))
+            elif event.keyval == gtk.keysyms.F8: #minus
+                self.set_volume( max( 0, self.get_volume() - 0.10 ))
+            elif event.keyval == gtk.keysyms.Left: # seek back
+                self.rewind_callback(self.rewind_button)
+            elif event.keyval == gtk.keysyms.Right: # seek forward
+                self.forward_callback(self.forward_button)
+            elif event.keyval == gtk.keysyms.Return: # play/pause
+                self.on_btn_play_pause_clicked()
+            elif event.keyval == gtk.keysyms.F6:
+                self.fullscreen = not self.fullscreen
 
     # The following two functions get and set the
     #   volume from the volume control widgets.
