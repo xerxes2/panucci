@@ -23,12 +23,14 @@ from simplegconf import gconf
 # If you add a setting _please_ update the schemas file
 
 default_settings = {
-    'db_location'       : '~/.panucci.sqlite',
-    'last_folder'       : '~',
-    'max_recent_files'  : 10,
-    'progress_locked'   : False,
-    'temp_playlist'     : '~/.panucci.m3u',
-    'volume'            : 0.3,
+    'db_location'          : '~/.panucci.sqlite',
+    'last_folder'          : '~',
+    'max_recent_files'     : 10,
+    'progress_locked'      : False,
+    'seek_long'            : 60,
+    'seek_short'           : 10,
+    'temp_playlist'        : '~/.panucci.m3u',
+    'volume'               : 0.3,
 }
 
 class Settings(object):

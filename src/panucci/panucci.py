@@ -59,9 +59,6 @@ app_version = ''
 donate_wishlist_url = 'http://www.amazon.de/gp/registry/2PD2MYGHE6857'
 donate_device_url = 'http://maemo.gpodder.org/donate.html'
 
-short_seek = 10
-long_seek = 60
-
 coverart_names = [ 'cover', 'cover.jpg', 'cover.png' ]
 coverart_size = [200, 200] if util.platform == util.MAEMO else [110, 110]
         
@@ -485,12 +482,12 @@ class GTK_Main(object):
         self.rrewind_button = gtk.Button('')
         image(self.rrewind_button, 'media-skip-backward.png')
         self.rrewind_button.connect(
-            'clicked', self.seekbutton_callback, -1*long_seek )
+            'clicked', self.seekbutton_callback, -1*settings.seek_long )
         buttonbox.add(self.rrewind_button)
         self.rewind_button = gtk.Button('')
         image(self.rewind_button, 'media-seek-backward.png')
         self.rewind_button.connect(
-            'clicked', self.seekbutton_callback, -1*short_seek )
+            'clicked', self.seekbutton_callback, -1*settings.seek_short )
         buttonbox.add(self.rewind_button)
         self.play_pause_button = gtk.Button('')
         image(self.play_pause_button, gtk.STOCK_OPEN, True)
@@ -500,12 +497,12 @@ class GTK_Main(object):
         self.forward_button = gtk.Button('')
         image(self.forward_button, 'media-seek-forward.png')
         self.forward_button.connect(
-            'clicked', self.seekbutton_callback, short_seek )
+            'clicked', self.seekbutton_callback, settings.seek_short )
         buttonbox.add(self.forward_button)
         self.fforward_button = gtk.Button('')
         image(self.fforward_button, 'media-skip-forward.png')
         self.fforward_button.connect(
-            'clicked', self.seekbutton_callback, long_seek )
+            'clicked', self.seekbutton_callback, settings.seek_long )
         buttonbox.add(self.fforward_button)
         self.bookmarks_button = gtk.Button('')
         image(self.bookmarks_button, 'bookmark-new.png')

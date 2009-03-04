@@ -73,5 +73,29 @@
         </locale>
       </schema>
 
+      <schema>
+        <key>/schemas/apps/panucci/seek_long</key>
+        <applyto>/apps/panucci/seek_long</applyto>
+        <owner>panucci</owner>
+        <type>int</type>
+        <default>60</default>
+        <locale name="C">
+          <short>Number of seconds the |&lt;&lt; or &gt;&gt;| button seeks.</short>
+          <long>Controls how many seconds are skipped during a "long" seek.</long>
+        </locale>
+      </schema>
+
+      <schema>
+        <key>/schemas/apps/panucci/seek_short</key>
+        <applyto>/apps/panucci/seek_short</applyto>
+        <owner>panucci</owner>
+        <type>int</type>
+        <default>10</default>
+        <locale name="C">
+          <short>Number of seconds the &lt;&lt; or &gt;&gt; button seeks.</short>
+          <long>Controls how many seconds are skipped during a "short" seek.</long>
+        </locale>
+      </schema>
+
   </schemalist>
 </gconfschemafile>
