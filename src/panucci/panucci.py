@@ -372,9 +372,11 @@ class GTK_Main(object):
         interface.register_gui(self)
         self.pickle_file_conversion()
 
-        self.recent_files = []
+        # Timers
         self.progress_timer_id = None
         self.volume_timer_id = None
+
+        self.recent_files = []
         self.make_main_window()
         self.has_coverart = False
         self.set_volume(settings.volume)
@@ -386,6 +388,8 @@ class GTK_Main(object):
             # Enable play/pause with headset button
             interface.headset_device.connect_to_signal(
                 'Condition', self.handle_headset_button )
+
+        settings.register( 'volume_changed', self.set_volume )
 
         player.register( 'stopped', self.on_player_stopped )
         player.register( 'playing', self.on_player_playing )
@@ -558,6 +562,8 @@ class GTK_Main(object):
             buttonbox.add(self.volume)
             self.volume.show()
 
+        self.set_volume(settings.volume)
+
     def create_menu(self):
         # the main menu
         menu = gtk.Menu()
@@ -580,15 +586,13 @@ class GTK_Main(object):
 
         menu_settings_disable_skip = gtk.CheckMenuItem(
             _('Disable Delayed Track Skipping') )
-        menu_settings_disable_skip.connect('toggled', lambda w: 
-            setattr( settings, 'disable_delayed_skip', w.get_active()))
-        menu_settings_disable_skip.set_active(settings.disable_delayed_skip)
+        settings.attach_checkbutton(
+            menu_settings_disable_skip, 'disable_delayed_skip' )
         menu_settings_sub.append(menu_settings_disable_skip)
 
         menu_settings_lock_progress = gtk.CheckMenuItem(_('Lock Progress Bar'))
-        menu_settings_lock_progress.connect('toggled', lambda w: 
-            setattr( settings, 'progress_locked', w.get_active()))
-        menu_settings_lock_progress.set_active(settings.progress_locked)
+        settings.attach_checkbutton(
+            menu_settings_lock_progress, 'progress_locked' )
         menu_settings_sub.append(menu_settings_lock_progress)
 
         menu.append(gtk.SeparatorMenuItem())
@@ -778,17 +782,17 @@ class GTK_Main(object):
            self.__volume_hide_callback()
 
     def volume_changed_gtk(self, widget, new_value=0.5):
-        player.volume_level = new_value
+        settings.volume = new_value
 
     def volume_changed_hildon(self, widget):
         self.__set_volume_hide_timer( 4, force_show=True )
-        player.volume_level = widget.get_level()/100.0
+        settings.volume = widget.get_level()/100.0
 
     def mute_toggled(self, widget):
         if widget.get_mute():
-            player.volume_level = 0
+            settings.volume = 0
         else:
-            player.volume_level = widget.get_level()/100.0
+            settings.volume = widget.get_level()/100.0
 
     def show_main_window(self):
         self.main_window.present()

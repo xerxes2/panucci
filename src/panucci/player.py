@@ -43,6 +43,7 @@ class panucciPlayer(ObservableService):
 
         self.playlist = Playlist()
         self.playlist.register( 'new_track', self.on_new_track )
+        settings.register( 'volume_changed', self.__set_volume_level )
 
         self.__initial_seek = False # have we preformed the initial seek?
         self.seeking = False        # are we seeking?
@@ -152,17 +153,14 @@ class panucciPlayer(ObservableService):
         bus = self.__player.get_bus()
         bus.add_signal_watch()
         bus.connect('message', self.__on_message)
+        self.__set_volume_level( settings.volume )
 
-        self.volume_level = settings.volume
         return True
 
-    def __get_volume_level(self, volume_control, divisor=1):
+    def __get_volume_level(self):
         if self.__volume_control is not None:
-            vol = self.__volume_control.get_property(
+            return self.__volume_control.get_property(
                 'volume') / float(self.__volume_multiplier)
-            return vol
-        else:
-            return settings.volume
 
     def __set_volume_level(self, value):
         assert  0 <= value <= 1
@@ -170,10 +168,6 @@ class panucciPlayer(ObservableService):
         if self.__volume_control is not None:
             self.__volume_control.set_property(
                 'volume', value * float(self.__volume_multiplier))
-
-        settings.volume = value
-
-    volume_level = property( __get_volume_level, __set_volume_level )
 
     def get_formatted_position(self, pos=None):
         if pos is None:
