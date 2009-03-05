@@ -28,6 +28,7 @@ SIGNAL_NAME_SUFFIX = '_changed'
 # If you add a setting _please_ update the schemas file
 
 default_settings = {
+    'allow_blanking'       : True,
     'db_location'          : '~/.panucci.sqlite',
     'disable_delayed_skip' : False,
     'last_folder'          : '~',

@@ -10,7 +10,7 @@ Homepage: http://panucci.garage.maemo.org/
 
 Package: panucci
 Architecture: all
-Depends: ${python:Depends}, python2.5-gtk2, python2.5-gstreamer, python2.5-dbus, python2.5-hildon, python2.5-gnome, python2.5-mutagen
+Depends: ${python:Depends}, python2.5-gtk2, python2.5-gstreamer, python2.5-dbus, python2.5-hildon, python2.5-gnome, python2.5-mutagen, python2.5-osso
 Suggests: gpodder, mogg
 Description: Play audio books, podcasts and live concerts with resuming
   Panucci will automatically resume the playback from the position

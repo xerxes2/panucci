@@ -375,6 +375,7 @@ class GTK_Main(object):
         # Timers
         self.progress_timer_id = None
         self.volume_timer_id = None
+        self.anti_blank_timer = None
 
         self.recent_files = []
         self.make_main_window()
@@ -390,6 +391,8 @@ class GTK_Main(object):
                 'Condition', self.handle_headset_button )
 
         settings.register( 'volume_changed', self.set_volume )
+        settings.register('allow_blanking_changed',self.__set_anti_blank_timer)
+        self.__set_anti_blank_timer( settings.allow_blanking )
 
         player.register( 'stopped', self.on_player_stopped )
         player.register( 'playing', self.on_player_playing )
@@ -766,6 +769,7 @@ class GTK_Main(object):
             self.volume.show()
             if self.volume_timer_id is not None:
                 gobject.source_remove(self.volume_timer_id)
+                self.volume_timer_id = None
 
             self.volume_timer_id = gobject.timeout_add(
                 1000 * timeout, self.__volume_hide_callback )
@@ -774,6 +778,19 @@ class GTK_Main(object):
         self.volume_timer_id = None
         self.volume.hide()
         return False
+
+    def __set_anti_blank_timer(self, allow_blanking):
+        if util.platform == util.MAEMO:
+            if allow_blanking and self.anti_blank_timer is not None:
+                self.__log.info('Screen blanking enabled.')
+                gobject.source_remove(self.anti_blank_timer)
+                self.anti_blank_timer = None
+            elif not allow_blanking and self.anti_blank_timer is None:
+                self.__log.info('Attempting to disable screen blanking.')
+                self.anti_blank_timer = gobject.timeout_add( 
+                    1000 * 59, util.poke_backlight )
+        else:
+            self.__log.info('Blanking controls are for Maemo only.')
 
     def toggle_volumebar(self, widget=None):
         if self.volume_timer_id is None:

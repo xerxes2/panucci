@@ -22,6 +22,9 @@ import os.path
 import sys
 import traceback
 import webbrowser
+import logging
+
+__log = logging.getLogger('panucci.util')
 
 supported_extensions = [ '.mp2', '.mp3', '.mp4', '.ogg', '.m4a', '.wav' ]
 MAEMO, LINUX = range(2)
@@ -54,8 +57,14 @@ if platform == LINUX:
         have_pynotify = True
     except:
         have_pynotify = False
-else:
+elif platform == MAEMO:
     import hildon
+
+try:
+    import osso
+    have_osso = True
+except:
+    have_osso = False
 
 
 def is_supported( filepath ):
@@ -129,4 +138,17 @@ def notify( msg, title='Panucci' ):
             gtk.Label(''), None, markup )
 
     return msg
+
+def poke_backlight():
+    """ Prevents the backlight from turning off (screen blanking).
+        Note: this needs to be called once a minute to be effective """
+
+    if have_osso:
+        dev = osso.DeviceState(osso.Context('ScreenManager', '0.0.1', False))
+        dev.display_blanking_pause()
+    elif platform == MAEMO:
+        __log.info('Please install python2.5-osso for backlight ctl support.')
+        return False
+
+    return True
 

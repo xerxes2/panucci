@@ -121,5 +121,17 @@
         </locale>
       </schema>
 
+      <schema>
+        <key>/schemas/apps/panucci/allow_blanking</key>
+        <applyto>/apps/panucci/allow_blanking</applyto>
+        <owner>panucci</owner>
+        <type>bool</type>
+        <default>TRUE</default>
+        <locale name="C">
+          <short>Allow the screen to blank (let the backlight turn off)</short>
+          <long>Set this to false if you don't want the screen to blank while panucci is running. This is useful in cars. NOTE: This is a Maemo-only setting.</long>
+        </locale>
+      </schema>
+
   </schemalist>
 </gconfschemafile>
