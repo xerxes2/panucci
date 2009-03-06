@@ -489,33 +489,41 @@ class GTK_Main(object):
 
         # make the button box
         buttonbox = gtk.HBox()
+
         self.rrewind_button = gtk.Button('')
         image(self.rrewind_button, 'media-skip-backward.png')
         self.rrewind_button.connect( 'pressed', self.on_seekbutton_pressed )
         self.rrewind_button.connect(
-            'clicked', self.long_seekbutton_callback, -1*settings.seek_long )
+          'clicked', self.on_seekbutton_clicked, -1*settings.seek_long, True )
         buttonbox.add(self.rrewind_button)
+
         self.rewind_button = gtk.Button('')
         image(self.rewind_button, 'media-seek-backward.png')
+        self.rewind_button.connect( 'pressed', self.on_seekbutton_pressed )
         self.rewind_button.connect(
-            'clicked', self.seekbutton_callback, -1*settings.seek_short )
+          'clicked', self.on_seekbutton_clicked, -1*settings.seek_short, False)
         buttonbox.add(self.rewind_button)
+
         self.play_pause_button = gtk.Button('')
         image(self.play_pause_button, gtk.STOCK_OPEN, True)
         self.button_handler_id = self.play_pause_button.connect( 
             'clicked', self.open_file_callback )
         buttonbox.add(self.play_pause_button)
+
         self.forward_button = gtk.Button('')
         image(self.forward_button, 'media-seek-forward.png')
+        self.forward_button.connect( 'pressed', self.on_seekbutton_pressed )
         self.forward_button.connect(
-            'clicked', self.seekbutton_callback, settings.seek_short )
+          'clicked', self.on_seekbutton_clicked, settings.seek_short, False )
         buttonbox.add(self.forward_button)
+
         self.fforward_button = gtk.Button('')
         image(self.fforward_button, 'media-skip-forward.png')
         self.fforward_button.connect( 'pressed', self.on_seekbutton_pressed )
         self.fforward_button.connect(
-            'clicked', self.long_seekbutton_callback, settings.seek_long )
+          'clicked', self.on_seekbutton_clicked, settings.seek_long, True )
         buttonbox.add(self.fforward_button)
+
         self.bookmarks_button = gtk.Button('')
         image(self.bookmarks_button, 'bookmark-new.png')
         buttonbox.add(self.bookmarks_button)
@@ -967,12 +975,12 @@ class GTK_Main(object):
         self.__log.debug( 'Seekbutton %s pressed at %f', 
             hash(widget), self.last_seekbutton_pressed_time )
 
-    def long_seekbutton_callback(self, widget, seek_amount):
+    def on_seekbutton_clicked(self, widget, seek_amount, long_seek):
         time_delta = time.time() - self.last_seekbutton_pressed_time
         self.__log.debug('Seekbutton %s released, delta t = %f',
             hash(widget), time_delta )
 
-        if ( not settings.disable_delayed_skip and
+        if ( long_seek and not settings.disable_delayed_skip and
             widget == self.last_seekbutton_pressed and
             time_delta > settings.skip_delay ):
 
@@ -981,13 +989,10 @@ class GTK_Main(object):
             else:
                 player.playlist.prev()
         else:
-            self.seekbutton_callback( widget, seek_amount )
-
-    def seekbutton_callback( self, widget, seek_amount ):
-        resp = player.do_seek(from_current=seek_amount*10**9)
-        if resp:
-            # Preemptively update the progressbar to make seeking smoother
-            self.set_progress_callback( *resp )
+            resp = player.do_seek(from_current=seek_amount*10**9)
+            if resp:
+                # Preemptively update the progressbar to make seeking smoother
+                self.set_progress_callback( *resp )
 
     def pickle_file_conversion(self):
         pickle_file = os.path.expanduser('~/.rmp-bookmarks')
