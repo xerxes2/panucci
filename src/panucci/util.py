@@ -27,7 +27,9 @@ supported_extensions = ['.mp2','.mp3','.mp4','.ogg','.flac','.m4a','.wav']
 MAEMO, LINUX = range(2)
 
 def get_platform():
-    if os.path.exists('/etc/osso_software_version'):
+    if ( os.path.exists('/etc/osso_software_version') or
+         os.path.exists('/proc/component_version') or
+         string_in_file('/etc/issue', 'maemo') ):
         return MAEMO
     else:
         return LINUX
@@ -49,6 +51,16 @@ else:
 def is_supported( filepath ):
     filepath, extension = os.path.splitext(filepath)
     return extension.lower() in supported_extensions
+
+def string_in_file( filepath, string ):
+    try:
+        f = open( filepath, 'r' )
+        found = f.read().find( string ) != -1
+        f.close()
+    except:
+        found = False
+
+    return found
 
 def convert_ns(time_int):
     time_int = max( 0, int(time_int) )
