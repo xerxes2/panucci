@@ -343,6 +343,10 @@ class BookmarksWindow(gtk.Window):
         model, bkmk_id, bkmk_iter, item_id, item_iter = self.__cur_selection()
         if item_iter is not None:
             player.playlist.load_from_bookmark_id( item_id, bkmk_id )
+            
+            # FIXME: The player/playlist should be able to take care of this
+            if not player.playing:
+                player.play()
 
 class GTK_Main(object):
 
