@@ -85,18 +85,37 @@ def image(widget, filename, is_stock=False):
         widget.add(image)
         image.show()
 
-def dialog( toplevel_window, title, question, description ):
-    """ Present the user with a yes/no/cancel dialog 
-        Reponse: Yes = True, No = False, Cancel = None """
+def dialog( toplevel_window, title, question, description,
+            affirmative_button=gtk.STOCK_YES, negative_button=gtk.STOCK_NO,
+            abortion_button=gtk.STOCK_CANCEL ):
 
+    """Present the user with a yes/no/cancel dialog.
+    The return value is either True, False or None, depending on which
+    button has been pressed in the dialog:
+
+        affirmative button (default: Yes)    => True
+        negative button    (defaut: No)      => False
+        abortion button    (default: Cancel) => None
+
+    When the dialog is closed with the "X" button in the window manager
+    decoration, the return value is always None (same as abortion button).
+
+    You can set any of the affirmative_button, negative_button or
+    abortion_button values to "None" to hide the corresponding action.
+    """
     dlg = gtk.MessageDialog( toplevel_window, gtk.DIALOG_MODAL,
-        gtk.MESSAGE_QUESTION )
+                             gtk.MESSAGE_QUESTION, message_format=question )
+
     dlg.set_title(title)
-    dlg.add_button( gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL )
-    dlg.add_button( gtk.STOCK_NO, gtk.RESPONSE_NO )
-    dlg.add_button( gtk.STOCK_YES, gtk.RESPONSE_YES )
-    dlg.set_markup( '<span weight="bold" size="larger">%s</span>\n\n%s' % (
-        question, description ))
+
+    if abortion_button is not None:
+        dlg.add_button(abortion_button, gtk.RESPONSE_CANCEL)
+    if negative_button is not None:
+        dlg.add_button(negative_button, gtk.RESPONSE_NO)
+    if affirmative_button is not None:
+        dlg.add_button(affirmative_button, gtk.RESPONSE_YES)
+
+    dlg.format_secondary_text(description)
 
     response = dlg.run()
     dlg.destroy()
@@ -580,15 +599,27 @@ class GTK_Main(object):
         # the main menu
         menu = gtk.Menu()
 
-        menu_open = gtk.ImageMenuItem(gtk.STOCK_OPEN)
+        menu_open = gtk.ImageMenuItem(_('Open playlist'))
+        menu_open.set_image(
+            gtk.image_new_from_stock(gtk.STOCK_OPEN, gtk.ICON_SIZE_MENU))
         menu_open.connect("activate", self.open_file_callback)
         menu.append(menu_open)
 
         # the recent files menu
-        self.menu_recent = gtk.MenuItem(_('Recent Files'))
+        self.menu_recent = gtk.MenuItem(_('Open recent playlist'))
         menu.append(self.menu_recent)
         self.create_recent_files_menu()
         
+        menu.append(gtk.SeparatorMenuItem())
+
+        menu_save = gtk.ImageMenuItem(_('Save current playlist'))
+        menu_save.set_image(
+            gtk.image_new_from_stock(gtk.STOCK_SAVE_AS, gtk.ICON_SIZE_MENU))
+        menu_save.connect("activate", self.save_to_playlist_callback)
+        menu.append(menu_save)
+
+        menu.append(gtk.SeparatorMenuItem())
+
         # the settings sub-menu
         menu_settings = gtk.MenuItem(_('Settings'))
         menu.append(menu_settings)
@@ -606,8 +637,6 @@ class GTK_Main(object):
         settings.attach_checkbutton(
             menu_settings_lock_progress, 'progress_locked' )
         menu_settings_sub.append(menu_settings_lock_progress)
-
-        menu.append(gtk.SeparatorMenuItem())
 
         menu_about = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
         menu_about.connect("activate", self.show_about, self.main_window)
@@ -685,9 +714,12 @@ class GTK_Main(object):
 
         if player.playlist.queue_modified:
             response = dialog(
-                self.main_window, _('Save queue to playlist file'),
-                _('Save Queue?'), _("The queue has been modified, "
-                "you will lose all additions if you don't save.") )
+                self.main_window, _('Save current playlist'),
+                _('Current playlist has been modified'),
+                _('Opening a new file will replace the current playlist. ') +
+                _('Do you want to save it before creating a new one?'),
+                affirmative_button=gtk.STOCK_SAVE,
+                negative_button=_('Discard changes'))
 
             self.__log.debug('Response to "Save Queue?": %s', response)
 
@@ -716,13 +748,16 @@ class GTK_Main(object):
             return False
 
         if os.path.isfile(filename):
-            response = dialog(
-                self.main_window, _('Overwrite File Warning'),
-                _('Overwrite ') + '%s?' % os.path.basename(filename),
-                _('All data in the file will be erased.') )
+            response = dialog( self.main_window, _('File already exists'),
+                _('File already exists'),
+                _('The file %s already exists. You can choose another name or '
+                  'overwrite the existing file.') % os.path.basename(filename),
+                affirmative_button=gtk.STOCK_SAVE,
+                negative_button=_('Rename file'))
 
             if response is None:
                 return None
+
             elif response:
                 pass
             elif not response:
