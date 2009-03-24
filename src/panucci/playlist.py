@@ -690,6 +690,14 @@ class PlaylistItem(object):
 
         m = FileMetadata(self.filepath)
         metadata = m.get_metadata()
+        if m.title_is_generated and self.title is not None:
+            # If our title in the metadata is generated (e.g. from
+            # the filename, NOT from the tag) and we have a title
+            # set for this specific item, use that (user-selected)
+            # title in our metadata to allow users to give pretty
+            # names to untagged files by editing the playlist.
+            metadata['title'] = self.title
+
         del m   # *hopefully* save some memory
         return metadata
 
@@ -830,7 +838,16 @@ class FileMetadata(object):
         self.length = 0
         self.coverart = None
 
+        self.__title_is_generated = False
         self.__metadata_extracted = False
+
+    @property
+    def title_is_generated(self):
+        """Returns True if the title for the returned metadata
+        object has been auto-generated from the filename.
+
+        If the title has been read from a tag, returns False."""
+        return self.__title_is_generated
 
     def extract_metadata(self):
         filetype = util.detect_filetype(self.__filepath)
@@ -886,6 +903,7 @@ class FileMetadata(object):
 
         if not str(self.title).strip():
             self.title = util.pretty_filename(self.__filepath)
+            self.__title_is_generated = True
 
         if self.coverart is None:
             self.coverart = self.__find_coverart()
