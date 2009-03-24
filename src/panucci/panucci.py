@@ -30,6 +30,7 @@ import time
 
 import gtk
 import gobject
+import pango
 
 # At the moment, we don't have gettext support, so
 # make a dummy "_" function to passthrough the string
@@ -175,8 +176,10 @@ class PlaylistTab(gtk.VBox):
 
         ncol = gtk.TreeViewColumn(_('Name'))
         ncell = gtk.CellRendererText()
+        ncell.set_property('ellipsize', pango.ELLIPSIZE_END)
         ncell.set_property('editable', True)
         ncell.connect('edited', self.label_edited)
+        ncol.set_expand(True)
         ncol.pack_start(ncell)
         ncol.add_attribute(ncell, 'text', 1)
 
@@ -403,8 +406,6 @@ class GTK_Main(object):
         player.init(filepath=filename)
 
     def make_main_window(self):
-        import pango
-
         if util.platform == util.MAEMO:
             self.app = hildon.Program()
             window = hildon.Window()
