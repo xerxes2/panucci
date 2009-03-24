@@ -187,6 +187,9 @@ class PlaylistTab(gtk.VBox):
         self.set_spacing(5)
         self.treeview = gtk.TreeView()
         self.treeview.set_headers_visible(True)
+        tree_selection = self.treeview.get_selection()
+        tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
+        tree_selection.connect('changed', self.tree_selection_changed)
 
         # The tree lines look nasty on maemo
         if util.platform == util.LINUX:
@@ -256,6 +259,11 @@ class PlaylistTab(gtk.VBox):
             'file_queued', lambda x,y,z: self.update_model() )
 
         self.show_all()
+
+    def tree_selection_changed(self, treeselection):
+        count = treeselection.count_selected_rows()
+        self.remove_button.set_sensitive(count > 0)
+        self.jump_button.set_sensitive(count == 1)
 
     def drag_data_get_data(
         self, treeview, context, selection, target_id, timestamp):
@@ -327,11 +335,13 @@ class PlaylistTab(gtk.VBox):
 
         if new_text.strip():
             if old_text != new_text:
-                self.model.set_value(iter, 1, new_text)
-                m, bkmk_id, biter, item_id, iiter = self.__cur_selection()
-
-                player.playlist.update_bookmark(
-                    item_id, bkmk_id, name=new_text )
+                for m, bkmk_id, biter, item_id, iiter in self.__cur_selection():
+                    if iiter is not None:
+                        self.model.set_value(iiter, 1, new_text)
+                    else:
+                        self.model.set_value(biter, 1, new_text)
+                    player.playlist.update_bookmark(
+                        item_id, bkmk_id, name=new_text )
         else:
             self.model.set_value(iter, 1, old_text)
 
@@ -355,14 +365,15 @@ class PlaylistTab(gtk.VBox):
             player.playlist.load_directory(directory, append=True)
 
     def __cur_selection(self):
-        bookmark_id, bookmark_iter, item_id, item_iter = (None,)*4
-
         selection = self.treeview.get_selection()
-        # Assume the user selects a bookmark.
-        #   bookmark_iter will get set to None if that is not the case...
-        model, bookmark_iter = selection.get_selected()
+        model, bookmark_paths = selection.get_selected_rows()
 
-        if bookmark_iter is not None:
+        # Convert the paths to gtk.TreeRowReference objects, because we
+        # might modify the model while this generator is running
+        bookmark_refs = [gtk.TreeRowReference(model, p) for p in bookmark_paths]
+
+        for reference in bookmark_refs:
+            bookmark_iter = model.get_iter(reference.get_path())
             item_iter = model.iter_parent(bookmark_iter)
 
             # bookmark_iter is actually an item_iter
@@ -374,20 +385,23 @@ class PlaylistTab(gtk.VBox):
                 bookmark_id = model.get_value(bookmark_iter, 0)
                 item_id = model.get_value(item_iter, 0)
 
-        return model, bookmark_id, bookmark_iter, item_id, item_iter
+            yield model, bookmark_id, bookmark_iter, item_id, item_iter
 
     def remove_bookmark(self, w):
-        model, bkmk_id, bkmk_iter, item_id, item_iter = self.__cur_selection()
-        player.playlist.remove_bookmark( item_id, bkmk_id )
-        if bkmk_iter is not None:
-            model.remove(bkmk_iter)
-        elif item_iter is not None:
-            model.remove(item_iter)
+        for model, bkmk_id, bkmk_iter, item_id, item_iter in self.__cur_selection():
+            player.playlist.remove_bookmark( item_id, bkmk_id )
+            if bkmk_iter is not None:
+                model.remove(bkmk_iter)
+            elif item_iter is not None:
+                model.remove(item_iter)
 
     def jump_bookmark(self, w):
-        model, bkmk_id, bkmk_iter, item_id, item_iter = self.__cur_selection()
-        if item_iter is not None:
-            player.playlist.load_from_bookmark_id( item_id, bkmk_id )
+        selected = list(self.__cur_selection())
+        if len(selected) == 1:
+            # It should be guranteed by the fact that we only enable the
+            # "Jump to" button when the selection count equals 1.
+            model, bkmk_id, bkmk_iter, item_id, item_iter = selected.pop(0)
+            player.playlist.load_from_bookmark_id(item_id, bkmk_id)
             
             # FIXME: The player/playlist should be able to take care of this
             if not player.playing:
