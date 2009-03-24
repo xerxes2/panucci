@@ -36,7 +36,7 @@ _ = lambda x: x
 
 class Playlist(ObservableService):
     signals = [ 'new_track', 'new_track_metadata', 'file_queued',
-        'bookmark_added' ]
+        'bookmark_added', 'seek-requested' ]
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
@@ -134,12 +134,19 @@ class Playlist(ObservableService):
     ######################################
 
     def __load_from_bookmark( self, item_id, bookmark ):
-        self.__queue.current_item_position = self.__queue.index(item_id)
+        new_pos = self.__queue.index(item_id)
+        same_pos = self.__queue.current_item_position == new_pos
+        self.__queue.current_item_position = new_pos
 
         if bookmark is None:
             self.__queue.current_item.seek_to = 0
         else:
             self.__queue.current_item.seek_to = bookmark.seek_position
+
+            # if we don't request a seek nothing will happen
+            if same_pos:
+                self.notify( 'seek-requested', bookmark.seek_position,
+                    caller=self.__load_from_bookmark )
 
         return True
 

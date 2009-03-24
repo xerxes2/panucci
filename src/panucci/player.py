@@ -43,6 +43,7 @@ class panucciPlayer(ObservableService):
 
         self.playlist = Playlist()
         self.playlist.register( 'new_track', self.on_new_track )
+        self.playlist.register( 'seek-requested', self.do_seek )
         settings.register( 'volume_changed', self.__set_volume_level )
 
         self.__initial_seek = False # have we preformed the initial seek?
