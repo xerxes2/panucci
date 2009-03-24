@@ -209,6 +209,9 @@ class Playlist(ObservableService):
 
             db.update_bookmark(bookmark)
 
+        if self.__queue.current_item == item:
+            self.send_new_metadata(self.update_bookmark)
+
         return True
 
     def update_bookmarks(self):
@@ -792,6 +795,8 @@ class Bookmark(object):
     def __eq__(self, b):
         if isinstance(b, str):
             return str(self) == b
+        elif b is None:
+            return False
         else:
             self.__log.warning('Unsupported comparison: %s', type(b))
             return False
