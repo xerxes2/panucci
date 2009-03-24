@@ -311,9 +311,15 @@ class PlaylistTab(gtk.VBox):
             self.__log.debug('No drop_data or selection.data available')
 
     def update_model(self):
+        path_info = self.treeview.get_path_at_pos(0,0)
+        path = path_info[0] if path_info is not None else None
+
         self.model = player.playlist.get_bookmark_model()
         self.treeview.set_model(self.model)
         self.treeview.expand_all()
+
+        if path is not None:
+            self.treeview.scroll_to_cell(path)
 
     def label_edited(self, cellrenderer, path, new_text):
         iter = self.model.get_iter(path)
