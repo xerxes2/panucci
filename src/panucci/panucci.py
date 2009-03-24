@@ -1007,7 +1007,7 @@ class GTK_Main(object):
                         tags[tag].set_size_request(420,-1)
                         if len(value) >= 80: value = value[:80] + '...'
                 else:
-                    self.main_window.set_title('Panucci - ' + value)
+                    self.main_window.set_title(value + ' - Panucci')
 
                 tags[tag].set_markup('<b><big>'+value+'</big></b>')
 
