@@ -178,6 +178,80 @@ def set_stock_button_text( button, text ):
     image, label = hbox.get_children()
     label.set_text(text)
 
+class PlaylistItemDetails(gtk.Dialog):
+    def __init__(self, main, playlist_item):
+        gtk.Dialog.__init__(self, _('Playlist item details'), main.main_window, gtk.DIALOG_MODAL, (gtk.STOCK_CLOSE, gtk.RESPONSE_OK))
+        self.main = main
+        self.fill(playlist_item)
+        self.set_has_separator(False)
+        self.set_resizable(False)
+        self.show_all()
+        self.run()
+        self.destroy()
+
+    def fill(self, playlist_item):
+        t = gtk.Table(10, 2)
+        self.vbox.pack_start(t, expand=False)
+
+        metadata = playlist_item.metadata
+
+        t.attach(gtk.Label(_('Custom title:')), 0, 1, 0, 1)
+        t.attach(gtk.Label(_('ID:')), 0, 1, 1, 2)
+        t.attach(gtk.Label(_('Playlist ID:')), 0, 1, 2, 3)
+        t.attach(gtk.Label(_('Filepath:')), 0, 1, 3, 4)
+
+        row_num = 4
+        for key in metadata:
+            if metadata[key] is not None:
+                t.attach(gtk.Label(key.capitalize()+':'), 0, 1, row_num, row_num+1)
+                row_num += 1
+
+        t.foreach(lambda x, y: x.set_alignment(1, 0.5), None)
+        t.foreach(lambda x, y: x.set_markup('<b>%s</b>' % x.get_label()), None)
+
+        t.attach(gtk.Label(playlist_item.title or _('<not modified>')), 1, 2, 0, 1)
+        t.attach(gtk.Label(str(playlist_item)), 1, 2, 1, 2)
+        t.attach(gtk.Label(playlist_item.playlist_id), 1, 2, 2, 3)
+        t.attach(gtk.Label(playlist_item.filepath), 1, 2, 3, 4)
+
+        row_num = 4
+        for key in metadata:
+            value = metadata[key]
+            if key == 'length':
+                value = util.convert_ns(value)
+            if metadata[key] is not None:
+                t.attach(gtk.Label(str(value) or _('<not set>')), 1, 2, row_num, row_num+1)
+                row_num += 1
+
+        t.foreach(lambda x, y: x.get_alignment() == (0.5, 0.5) and \
+                               x.set_alignment(0, 0.5), None)
+
+        t.set_border_width(8)
+        t.set_row_spacings(4)
+        t.set_col_spacings(8)
+
+        l = gtk.ListStore(str, str)
+        t = gtk.TreeView(l)
+        cr = gtk.CellRendererText()
+        cr.set_property('ellipsize', pango.ELLIPSIZE_END)
+        c = gtk.TreeViewColumn(_('Title'), cr, text=0)
+        c.set_expand(True)
+        t.append_column(c)
+        c = gtk.TreeViewColumn(_('Time'), gtk.CellRendererText(), text=1)
+        t.append_column(c)
+        playlist_item.load_bookmarks()
+        for bookmark in playlist_item.bookmarks:
+            l.append([bookmark.bookmark_name, \
+                    util.convert_ns(bookmark.seek_position)])
+
+        sw = gtk.ScrolledWindow()
+        sw.set_shadow_type(gtk.SHADOW_IN)
+        sw.add(t)
+        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        e = gtk.Expander(_('Bookmarks'))
+        e.add(sw)
+        self.vbox.pack_start(e)
+
 class PlaylistTab(gtk.VBox):
     def __init__(self, main_window):
         gtk.VBox.__init__(self)
@@ -253,6 +327,12 @@ class PlaylistTab(gtk.VBox):
         self.jump_button.set_use_stock(True)
         self.jump_button.connect('clicked', self.jump_bookmark)
         self.hbox.pack_start(self.jump_button, True, True)
+
+        self.info_button = gtk.Button()
+        self.info_button.add(gtk.image_new_from_stock(gtk.STOCK_INFO, gtk.ICON_SIZE_BUTTON))
+        self.info_button.connect('clicked', self.show_playlist_item_details)
+        self.hbox.pack_start(self.info_button, True, True)
+
         self.pack_start(self.hbox, False, True)
 
         player.playlist.register(
@@ -264,6 +344,7 @@ class PlaylistTab(gtk.VBox):
         count = treeselection.count_selected_rows()
         self.remove_button.set_sensitive(count > 0)
         self.jump_button.set_sensitive(count == 1)
+        self.info_button.set_sensitive(count == 1)
 
     def drag_data_get_data(
         self, treeview, context, selection, target_id, timestamp):
@@ -350,7 +431,7 @@ class PlaylistTab(gtk.VBox):
         label = label if lbl is None else lbl
         position = position if pos is None else pos
         player.playlist.save_bookmark( label, position )
-        util.notify(_('Bookmark Added.'))
+        util.notify(_('Bookmark added: %s') % label)
         self.update_model()
 
     def add_file(self, widget):
@@ -394,6 +475,14 @@ class PlaylistTab(gtk.VBox):
                 model.remove(bkmk_iter)
             elif item_iter is not None:
                 model.remove(item_iter)
+
+    def show_playlist_item_details(self, w):
+        selection = self.treeview.get_selection()
+        if selection.count_selected_rows() == 1:
+            selected = self.__cur_selection().next()
+            model, bkmk_id, bkmk_iter, item_id, item_iter = selected
+            playlist_item = player.playlist.get_item_by_id(item_id)
+            PlaylistItemDetails(self.main, playlist_item)
 
     def jump_bookmark(self, w):
         selected = list(self.__cur_selection())

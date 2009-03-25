@@ -150,6 +150,13 @@ class Playlist(ObservableService):
 
         return True
 
+    def get_item_by_id(self, item_id):
+        item, bookmark = self.__queue.get_bookmark(item_id, None)
+        if item is None:
+            self.__log.warning('Cannot get item for id: %s', item_id)
+
+        return item
+
     def load_from_bookmark_id( self, item_id=None, bookmark_id=None ):
         item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)
 
