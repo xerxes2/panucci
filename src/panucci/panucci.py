@@ -337,9 +337,9 @@ class PlaylistTab(gtk.VBox):
             if old_text != new_text:
                 for m, bkmk_id, biter, item_id, iiter in self.__cur_selection():
                     if iiter is not None:
-                        self.model.set_value(iiter, 1, new_text)
+                        self.model.set_value(iter, 1, new_text)
                     else:
-                        self.model.set_value(biter, 1, new_text)
+                        self.model.set_value(iter, 1, new_text)
                     player.playlist.update_bookmark(
                         item_id, bkmk_id, name=new_text )
         else:

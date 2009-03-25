@@ -198,6 +198,8 @@ class Playlist(ObservableService):
             if name and item.title != name:
                 item.title = name
                 self.__queue.modified = True
+            if self.__queue.current_item == item:
+                self.send_new_metadata(self.update_bookmark)
         else:
             bookmark.timestamp = time.time()
 
@@ -208,9 +210,6 @@ class Playlist(ObservableService):
                 bookmark.seek_position = seek_pos
 
             db.update_bookmark(bookmark)
-
-        if self.__queue.current_item == item:
-            self.send_new_metadata(self.update_bookmark)
 
         return True
 
