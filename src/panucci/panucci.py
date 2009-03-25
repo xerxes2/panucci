@@ -32,6 +32,8 @@ import gtk
 import gobject
 import pango
 
+import widgets
+
 # At the moment, we don't have gettext support, so
 # make a dummy "_" function to passthrough the string
 _ = lambda s: s
@@ -66,8 +68,7 @@ coverart_size = [200, 200] if util.platform == util.MAEMO else [110, 110]
 gtk.about_dialog_set_url_hook(util.open_link, None)
 gtk.icon_size_register('panucci-button', 32, 32)
 
-def image(widget, filename, is_stock=False):
-    widget.remove(widget.get_child())
+def generate_image(filename, is_stock=False):
     image = None
     if is_stock:
         image = gtk.image_new_from_stock(
@@ -76,14 +77,21 @@ def image(widget, filename, is_stock=False):
         filename = util.find_image(filename)
         if filename is not None:
             image = gtk.image_new_from_file(filename)
-
     if image is not None:
         if util.platform == util.MAEMO:
             image.set_padding(20, 20)
         else:
             image.set_padding(5, 5)
-        widget.add(image)
         image.show()
+    return image
+
+def image(widget, filename, is_stock=False):
+    child = widget.get_child()
+    if child is not None:
+        widget.remove(child)
+    image = generate_image(filename, is_stock)
+    if image is not None:
+        widget.add(image)
 
 def dialog( toplevel_window, title, question, description,
             affirmative_button=gtk.STOCK_YES, negative_button=gtk.STOCK_NO,
@@ -512,8 +520,6 @@ class GTK_Main(object):
         self.make_main_window()
         self.has_coverart = False
         self.set_volume(settings.volume)
-        self.last_seekbutton_pressed = None
-        self.last_seekbutton_pressed_time = 0
         self.__window_fullscreen = False
 
         if util.platform==util.MAEMO and interface.headset_device is not None:
@@ -619,18 +625,16 @@ class GTK_Main(object):
         # make the button box
         buttonbox = gtk.HBox()
 
-        self.rrewind_button = gtk.Button('')
-        image(self.rrewind_button, 'media-skip-backward.png')
-        self.rrewind_button.connect( 'pressed', self.on_seekbutton_pressed )
-        self.rrewind_button.connect(
-          'clicked', self.on_seekbutton_clicked, -1*settings.seek_long, True )
+        self.rrewind_button = widgets.DualActionButton(
+                generate_image('media-skip-backward.png'),
+                lambda: self.do_seek(-1*settings.seek_long),
+                generate_image(gtk.STOCK_GOTO_FIRST, True),
+                player.playlist.prev)
         buttonbox.add(self.rrewind_button)
 
-        self.rewind_button = gtk.Button('')
-        image(self.rewind_button, 'media-seek-backward.png')
-        self.rewind_button.connect( 'pressed', self.on_seekbutton_pressed )
-        self.rewind_button.connect(
-          'clicked', self.on_seekbutton_clicked, -1*settings.seek_short, False)
+        self.rewind_button = widgets.DualActionButton(
+                generate_image('media-seek-backward.png'),
+                lambda: self.do_seek(-1*settings.seek_short))
         buttonbox.add(self.rewind_button)
 
         self.play_pause_button = gtk.Button('')
@@ -639,28 +643,28 @@ class GTK_Main(object):
             'clicked', self.open_file_callback )
         buttonbox.add(self.play_pause_button)
 
-        self.forward_button = gtk.Button('')
-        image(self.forward_button, 'media-seek-forward.png')
-        self.forward_button.connect( 'pressed', self.on_seekbutton_pressed )
-        self.forward_button.connect(
-          'clicked', self.on_seekbutton_clicked, settings.seek_short, False )
+        self.forward_button = widgets.DualActionButton(
+                generate_image('media-seek-forward.png'),
+                lambda: self.do_seek(settings.seek_short))
         buttonbox.add(self.forward_button)
 
-        self.fforward_button = gtk.Button('')
-        image(self.fforward_button, 'media-skip-forward.png')
-        self.fforward_button.connect( 'pressed', self.on_seekbutton_pressed )
-        self.fforward_button.connect(
-          'clicked', self.on_seekbutton_clicked, settings.seek_long, True )
+        self.fforward_button = widgets.DualActionButton(
+                generate_image('media-skip-forward.png'),
+                lambda: self.do_seek(settings.seek_long),
+                generate_image(gtk.STOCK_GOTO_LAST, True),
+                player.playlist.next)
         buttonbox.add(self.fforward_button)
 
-        self.bookmarks_button = gtk.Button('')
-        image(self.bookmarks_button, 'bookmark-new.png')
+        self.playlist_tab = PlaylistTab(self)
+        self.bookmarks_button = widgets.DualActionButton(
+                generate_image('bookmark-new.png'),
+                self.playlist_tab.add_bookmark,
+                generate_image(gtk.STOCK_JUMP_TO, True),
+                self.go_to_current_track_in_playlist)
         buttonbox.add(self.bookmarks_button)
         self.set_controls_sensitivity(False)
         main_vbox.pack_start(buttonbox, False, False)
 
-        self.playlist_tab = PlaylistTab(self)
-        self.bookmarks_button.connect('clicked',self.playlist_tab.add_bookmark)
         self.notebook.append_page(self.playlist_tab, gtk.Label(_('Playlist')))
         self.notebook.set_tab_label_packing(
             self.playlist_tab, True, True, gtk.PACK_START )
@@ -1114,30 +1118,25 @@ class GTK_Main(object):
 
                 tags[tag].set_markup('<b><big>'+value+'</big></b>')
 
-    def on_seekbutton_pressed(self, widget):
-        self.last_seekbutton_pressed = widget
-        self.last_seekbutton_pressed_time = time.time()
-        self.__log.debug( 'Seekbutton %s pressed at %f', 
-            hash(widget), self.last_seekbutton_pressed_time )
+    def go_to_current_track_in_playlist(self):
+        # Select the currently playing track in the playlist tab
+        # and switch to it (so we can edit bookmarks, etc.. there)
+        treeview = self.playlist_tab.treeview
+        model = treeview.get_model()
+        selection = treeview.get_selection()
+        for row in iter(model):
+            if model.get_value(row.iter, 0) == str(player.playlist.get_current_item()):
+                selection.unselect_all()
+                treeview.set_cursor(row.path)
+                treeview.scroll_to_cell(row.path, use_align=True)
+                break
+        self.notebook.set_current_page(1)
 
-    def on_seekbutton_clicked(self, widget, seek_amount, long_seek):
-        time_delta = time.time() - self.last_seekbutton_pressed_time
-        self.__log.debug('Seekbutton %s released, delta t = %f',
-            hash(widget), time_delta )
-
-        if ( long_seek and not settings.disable_delayed_skip and
-            widget == self.last_seekbutton_pressed and
-            time_delta > settings.skip_delay ):
-
-            if seek_amount > 0:
-                player.playlist.next()
-            else:
-                player.playlist.prev()
-        else:
-            resp = player.do_seek(from_current=seek_amount*10**9)
-            if resp:
-                # Preemptively update the progressbar to make seeking smoother
-                self.set_progress_callback( *resp )
+    def do_seek(self, seek_amount):
+        resp = player.do_seek(from_current=seek_amount*10**9)
+        if resp:
+            # Preemptively update the progressbar to make seeking smoother
+            self.set_progress_callback( *resp )
 
     def pickle_file_conversion(self):
         pickle_file = os.path.expanduser('~/.rmp-bookmarks')

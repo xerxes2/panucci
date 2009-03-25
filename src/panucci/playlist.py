@@ -477,6 +477,9 @@ class Playlist(ObservableService):
 
         return True
 
+    def get_current_item(self):
+        return self.__queue.current_item
+
     def next(self):
         """ Move the playlist to the next track.
             False indicates end of playlist. """
