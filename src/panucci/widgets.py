@@ -72,6 +72,7 @@ class DualActionButton(gtk.Button):
         self.connect('released', self.__released)
         self.connect('enter', self.__enter)
         self.connect('leave', self.__leave)
+        self.connect_after('expose-event', self.__expose_event)
 
         self.set_state(self.DEFAULT)
 
@@ -120,11 +121,13 @@ class DualActionButton(gtk.Button):
     def __pressed(self, widget):
         self.__pressed_state = True
         self.add_timeout()
+        self.__force_redraw()
 
     def __released(self, widget):
         self.__pressed_state = False
         self.remove_timeout()
         state = self.get_state()
+        self.__force_redraw()
 
         if self.__inside:
             if state == self.DEFAULT:
@@ -136,12 +139,46 @@ class DualActionButton(gtk.Button):
 
     def __enter(self, widget):
         self.__inside = True
+        self.__force_redraw()
         if self.__pressed_state:
             self.add_timeout()
 
     def __leave(self, widget):
         self.__inside = False
+        self.__force_redraw()
         if self.__pressed_state:
             self.set_state(self.DEFAULT)
             self.remove_timeout()
+
+    def __force_redraw(self):
+        self.window.invalidate_rect(self.__get_draw_rect(True), False)
+
+    def __get_draw_rect(self, for_invalidation=False):
+        rect = self.get_allocation()
+        width, height, BORDER = 10, 5, 6
+        brx, bry = (rect.x+rect.width-BORDER-width,
+                    rect.y+rect.height-BORDER-height)
+
+        displacement_x = self.style_get_property('child_displacement-x')
+        displacement_y = self.style_get_property('child_displacement-y')
+
+        if for_invalidation:
+            # For redraw (rect invalidate), update both the "normal"
+            # and the "pressed" area by simply adding the displacement
+            # to the size (to remove the "other" drawing, too
+            return gtk.gdk.Rectangle(brx, bry, width+displacement_x,
+                    height+displacement_y)
+        else:
+            if self.__pressed_state and self.__inside:
+                brx += displacement_x
+                bry += displacement_y
+            return gtk.gdk.Rectangle(brx, bry, width, height)
+
+    def __expose_event(self, widget, event):
+        style = self.get_style()
+        rect = self.__get_draw_rect()
+        if self.__longpress_enabled:
+            style.paint_handle(self.window, gtk.STATE_NORMAL, gtk.SHADOW_NONE,
+                    rect, self, 'Detail', rect.x, rect.y, rect.width,
+                    rect.height, gtk.ORIENTATION_HORIZONTAL)
 
