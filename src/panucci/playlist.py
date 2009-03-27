@@ -87,7 +87,7 @@ class Playlist(ObservableService):
     def print_queue_layout(self):
         """ This helps with debugging ;) """
         for item in self.__queue:
-            print str(item), item.reported_filepath
+            print str(item), item.playlist_reported_filepath
             for bookmark in item.bookmarks:
                 print '\t', str(bookmark), bookmark.bookmark_filepath
 
@@ -665,25 +665,37 @@ class PlaylistItem(object):
     def __init__(self):
         self.__log = logging.getLogger('panucci.playlist.PlaylistItem')
 
-        # metadata that's pulled from the playlist file (pls/extm3u)
-        self.reported_filepath = None
-        self.title = None
-        self.length = None
-
+        self.__filepath = None
+        self.__metadata = None
         self.playlist_id = None
-        self.filepath = None
         self.duplicate_id = 0
         self.seek_to = 0
+
+        # metadata that's pulled from the playlist file (pls/extm3u)
+        self.playlist_reported_filepath = None
+        self.playlist_title = None
+        self.playlist_length = None
 
         # a flag to determine whether the item's bookmarks need updating
         # ( used for example, if the duplicate_id is changed )
         self.is_modified = False
         self.bookmarks = []
 
+    def __set_filepath(self, fp):
+        if fp != self.__filepath:
+            self.__filepath = fp
+            self.__metadata = FileMetadata(self.filepath)
+            self.__metadata.extract_metadata()
+
+    def __get_filepath(self):
+        return self.__filepath
+
+    filepath = property( __get_filepath, __set_filepath )
+
     @staticmethod
     def create_by_filepath(reported_filepath, filepath):
         item = PlaylistItem()
-        item.reported_filepath = reported_filepath
+        item.playlist_reported_filepath = reported_filepath
         item.filepath = filepath
         return item
 
@@ -703,26 +715,43 @@ class PlaylistItem(object):
 
     @property
     def metadata(self):
-        """ Metadata is only needed once, so fetch it on-the-fly
-            If needed this could easily be cached at the cost of wasting a 
-            bunch of memory """
+        """ Returns a dict of metadata, wooo. """
 
-        m = FileMetadata(self.filepath)
-        metadata = m.get_metadata()
-        if m.title_is_generated and self.title is not None:
-            # If our title in the metadata is generated (e.g. from
-            # the filename, NOT from the tag) and we have a title
-            # set for this specific item, use that (user-selected)
-            # title in our metadata to allow users to give pretty
-            # names to untagged files by editing the playlist.
-            metadata['title'] = self.title
-
-        del m   # *hopefully* save some memory
+        metadata = self.__metadata.get_metadata()
+        metadata['title'] = self.title
         return metadata
 
     @property
     def filetype(self):
         return util.detect_filetype(self.filepath)
+
+    @property
+    def title(self):
+        """ Get the title of item, priority is (most important first):
+            1. the title given in playlist metadata
+            2. the title in the file's metadata (ex. ID3)
+            3. a "pretty" version of the filename """
+
+        if self.playlist_title is not None:
+            return self.playlist_title
+        elif self.__metadata.title:
+            return self.__metadata.title
+        else:
+            return util.pretty_filename(self.filepath)
+
+    @property
+    def length(self):
+        """ Get the lenght of the item priority is (most important first):
+            1. length as reported by mutagen
+            2. length found in playlist metadata
+            3. otherwise -1 when unknown """
+        
+        if self.__metadata.length:
+            return self.__metadata.length
+        elif self.playlist_length:
+            return self.playlist_length
+        else:
+            return -1
 
     def load_bookmarks(self):
         self.bookmarks = db.load_bookmarks(
@@ -747,8 +776,9 @@ class PlaylistItem(object):
     def delete_bookmark(self, bookmark_id):
         """ WARNING: if bookmark_id is None, ALL bookmarks will be deleted """
         if bookmark_id is None:
-            self.__log.debug(
-                'Deleting all bookmarks for %s', self.reported_filepath )
+            self.__log.debug( 'Deleting all bookmarks for %s',
+                              self.playlist_reported_filepath )
+
             for bkmk in self.bookmarks:
                 bkmk.delete()
         else:
@@ -859,18 +889,10 @@ class FileMetadata(object):
         self.length = 0
         self.coverart = None
 
-        self.__title_is_generated = False
         self.__metadata_extracted = False
 
-    @property
-    def title_is_generated(self):
-        """Returns True if the title for the returned metadata
-        object has been auto-generated from the filename.
-
-        If the title has been read from a tag, returns False."""
-        return self.__title_is_generated
-
     def extract_metadata(self):
+        self.__log.debug('Extracting metadata for %s', self.__filepath)
         filetype = util.detect_filetype(self.__filepath)
 
         if filetype == 'mp3':
@@ -888,9 +910,11 @@ class FileMetadata(object):
 
         try:
             metadata = meta_parser.Open(self.__filepath)
+            self.__metadata_extracted = True
         except Exception, e:
             self.title = util.pretty_filename(self.__filepath)
             self.__log.exception('Error running metadata parser...')
+            self.__metadata_extracted = False
             return False
 
         self.length = metadata.info.length * 10**9
@@ -910,7 +934,7 @@ class FileMetadata(object):
 
                 if self.tag_mappings[filetype][tag] != 'coverart':
                     try:
-                        value = escape(str(value))
+                        value = escape(str(value).strip())
                     except Exception, e:
                         self.__log.exception(
                           'Could not convert tag (%s) to escaped string', tag )
@@ -921,10 +945,6 @@ class FileMetadata(object):
                         value = value.data
 
                 setattr( self, self.tag_mappings[filetype][tag], value )
-
-        if not str(self.title).strip():
-            self.title = util.pretty_filename(self.__filepath)
-            self.__title_is_generated = True
 
         if self.coverart is None:
             self.coverart = self.__find_coverart()
@@ -948,9 +968,7 @@ class FileMetadata(object):
         """ Returns a dict of metadata """
 
         if not self.__metadata_extracted:
-            self.__log.debug('Extracting metadata for %s', self.__filepath)
             self.extract_metadata()
-            self.__metadata_extracted = True
 
         metadata = { 
             'title':    self.title,
@@ -1063,7 +1081,7 @@ class PlaylistFile(object):
         pass
 
     def _add_playlist_item(self, item):
-        path = self.get_absolute_filepath(item.reported_filepath)
+        path = self.get_absolute_filepath(item.playlist_reported_filepath)
         if path is not None and os.path.isfile(path):
             item.filepath = path
             self._items.append(item)
@@ -1085,23 +1103,23 @@ class M3U_Playlist(PlaylistFile):
             if match is not None:
                 length, title = match.groups()
                 try: length = int(length)
-                except: pass
-                self.current_item.length = length
-                self.current_item.title = title
+                except: length = -1
+                self.current_item.playlist_length = length
+                self.current_item.playlist_title = title
         elif line.startswith('#'):
             pass # skip comments
         elif line:
             path = self.get_absolute_filepath( line )
             if path is not None:
                 if os.path.isfile( path ):
-                    self.current_item.reported_filepath = line
+                    self.current_item.playlist_reported_filepath = line
                     self._add_playlist_item(self.current_item)
                     self.current_item = PlaylistItem()
                 elif os.path.isdir( path ):
                     files = os.listdir( path )
                     for file in files:
                         item = PlaylistItem()
-                        item.reported_filepath = os.path.join(line, file)
+                        item.playlist_reported_filepath=os.path.join(line,file)
                         self._add_playlist_item(item)
 
     def export_hook(self, playlist_items):
@@ -1150,14 +1168,15 @@ class PLS_Playlist(PlaylistFile):
         elif not self.in_playlist_section:
             pass # don't do anything if we're not in [playlist]
         elif line.lower().startswith('file'):
-            self.current_item.reported_filepath = re.search(
+            self.current_item.playlist_reported_filepath = re.search(
                 item_regex, line).group(2)
         elif line.lower().startswith('title'):
-            self.current_item.title = re.search(item_regex, line).group(2)
+            self.current_item.playlist_title = re.search(
+                                                    item_regex, line).group(2)
         elif line.lower().startswith('length'):
             try: length = int(re.search(item_regex, line).group(2))
-            except: pass
-            self.current_item.length = length
+            except: length = -1
+            self.current_item.playlist_length = length
 
     def parse_eof_hook(self):
         self.__add_current_item()
