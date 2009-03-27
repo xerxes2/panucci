@@ -266,8 +266,13 @@ class PlaylistTab(gtk.VBox):
         self.__log = logging.getLogger('panucci.panucci.BookmarksWindow')
         self.main = main_window
 
+        self.__model = gtk.TreeStore(
+            # uid, name, position
+            gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING )
+
         self.set_spacing(5)
         self.treeview = gtk.TreeView()
+        self.treeview.set_model(self.__model)
         self.treeview.set_headers_visible(True)
         tree_selection = self.treeview.get_selection()
         tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
@@ -337,7 +342,8 @@ class PlaylistTab(gtk.VBox):
         self.hbox.pack_start(self.jump_button, True, True)
 
         self.info_button = gtk.Button()
-        self.info_button.add(gtk.image_new_from_stock(gtk.STOCK_INFO, gtk.ICON_SIZE_BUTTON))
+        self.info_button.add(
+                gtk.image_new_from_stock(gtk.STOCK_INFO, gtk.ICON_SIZE_BUTTON))
         self.info_button.connect('clicked', self.show_playlist_item_details)
         self.hbox.pack_start(self.info_button, True, True)
 
@@ -408,11 +414,20 @@ class PlaylistTab(gtk.VBox):
             self.__log.debug('No drop_data or selection.data available')
 
     def update_model(self):
+        plist = player.playlist
         path_info = self.treeview.get_path_at_pos(0,0)
         path = path_info[0] if path_info is not None else None
 
-        self.model = player.playlist.get_bookmark_model()
-        self.treeview.set_model(self.model)
+        self.__model.clear()
+
+        # build the tree
+        for item, data in plist.get_playlist_item_ids():
+            parent = self.__model.append(None, (item, data.get('title'), None))
+            
+            for bid, bname, bpos in plist.get_bookmarks_from_item_id( item ):
+                nice_bpos = util.convert_ns(bpos)
+                self.__model.append( parent, (bid, bname, nice_bpos) )
+
         self.treeview.expand_all()
 
         if path is not None:

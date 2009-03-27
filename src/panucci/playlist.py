@@ -54,8 +54,6 @@ class Playlist(ObservableService):
         self.filepath = None
         self._id = None
         self.__queue.clear()
-        self.__bookmarks_model = None
-        self.__bookmarks_model_changed = True
 
     @property
     def id(self):
@@ -150,13 +148,6 @@ class Playlist(ObservableService):
 
         return True
 
-    def get_item_by_id(self, item_id):
-        item, bookmark = self.__queue.get_bookmark(item_id, None)
-        if item is None:
-            self.__log.warning('Cannot get item for id: %s', item_id)
-
-        return item
-
     def load_from_bookmark_id( self, item_id=None, bookmark_id=None ):
         item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)
 
@@ -188,7 +179,6 @@ class Playlist(ObservableService):
         self.notify( 'bookmark_added', caller=self.save_bookmark )
         self.__queue.current_item.save_bookmark(
             bookmark_name, position, resume_pos=False )
-        self.__bookmarks_model_changed = True
 
     def update_bookmark(self, item_id, bookmark_id, name=None, seek_pos=None):
         item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)
@@ -254,39 +244,42 @@ class Playlist(ObservableService):
             return False
         else:
             return self.remove_bookmark( item_id, bookmark_id )
-                    
-
-    def generate_bookmark_model(self, include_resume_marks=False):
-        self.__bookmarks_model = gtk.TreeStore(
-            # uid, name, position
-            gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING )
-
-        for item in self.__queue:
-            title = util.pretty_filename(
-                item.filepath ) if item.title is None else item.title
-            row = [ str(item), title, None ]
-            parent = self.__bookmarks_model.append( None, row )
-
-            for bkmk in item.bookmarks:
-                if not bkmk.is_resume_position or include_resume_marks:
-                    row = [ str(bkmk), bkmk.bookmark_name,
-                        util.convert_ns(bkmk.seek_position) ]
-                    self.__bookmarks_model.append( parent, row )
-
-    def get_bookmark_model(self, include_resume_marks=False):
-        if self.__bookmarks_model is None or self.__bookmarks_model_changed:
-            self.__log.debug('Generating new bookmarks model')
-            self.generate_bookmark_model(include_resume_marks)
-            self.__bookmarks_model_changed = False
-        else:
-            self.__log.debug('Using cached bookmarks model')
-
-        return self.__bookmarks_model
 
     def move_item( self, from_row, to_row ):
         self.__log.info('Moving item from position %d to %d', from_row, to_row)
         assert isinstance(from_row, int) and isinstance(to_row, int)
         self.__queue.move_item(from_row, to_row)
+
+    #####################################
+    # Model-builder functions
+    #####################################
+
+    def get_item_by_id(self, item_id):
+        """ Gets a PlaylistItem from it's unique id """
+
+        item, bookmark = self.__queue.get_bookmark(item_id, None)
+        if item is None:
+            self.__log.warning('Cannot get item for id: %s', item_id)
+
+        return item
+
+    def get_playlist_item_ids(self):
+        """ Returns an iterator which yields a tuple which contains the 
+            item's unique ID and a dict of interesting data (currently
+            just the title). """
+
+        for item in self.__queue:
+            yield str(item), { 'title' : item.title }
+
+    def get_bookmarks_from_item_id(self, item_id, include_resume_marks=False):
+        """ Returns an iterator which yields the following data regarding a
+            bookmark: ( bookmark id, a custom name, the seek position ) """
+
+        item = self.get_item_by_id( item_id )
+        if item is not None:
+            for bkmk in item.bookmarks:
+                if not bkmk.is_resume_position or include_resume_marks:
+                    yield str(bkmk), bkmk.bookmark_name, bkmk.seek_position
 
     ######################################
     # File-related convenience functions
@@ -374,7 +367,6 @@ class Playlist(ObservableService):
 
     def __file_queued(self, filepath, successfull, notify):
         if successfull:
-            self.__bookmarks_model_changed = True
             self.notify( 'file_queued', filepath, successfull, notify,
                 caller=self.__file_queued )
 
