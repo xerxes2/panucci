@@ -25,12 +25,9 @@ import traceback
 import webbrowser
 import logging
 
-from services import ObservableService
-
 __log = logging.getLogger('panucci.util')
 
 supported_extensions = [ '.mp2', '.mp3', '.mp4', '.ogg', '.m4a', '.wav' ]
-HEADPHONE_SYS = "/sys/devices/platform/gpio-switch/headphone/state"
 
 
 def string_in_file( filepath, string ):
@@ -157,46 +154,4 @@ def poke_backlight():
         return False
 
     return True
-
-class __headphone_watcher(ObservableService):
-    """ A small service with one singnal that reports whether or not the
-        headphones are connected. Returns True if the headphones are connected,
-        False if they're not and None if it's not possible to determine the
-        headphone status. """
-
-    signals = [ 'headphone-status-changed', ]
-
-    def __init__(self, sys_file):
-        self.__log = logging.getLogger('panucci.util.__headphone_watcher')
-        ObservableService.__init__(self, self.signals, self.__log)
-
-        self.__is_connected = None
-
-        if platform == MAEMO:
-            try:
-                self.__sys_file = open( sys_file, 'r' )
-                self.__is_connected = self.__get_state_from_fd(self.__sys_file)
-                gobject.io_add_watch( self.__sys_file, gobject.IO_PRI,
-                                      self.__on_status_changed )
-            except IOError:
-                self.__log.warning("Can't open headphone status file.")
-
-    @property
-    def is_connected(self):
-        return self.__is_connected
-
-    def __get_state_from_fd(self, fd):
-        fd.seek(0)
-        state = fd.read().strip()
-        return state == 'connected'
-
-    def __on_status_changed(self, src, cond):
-        self.__is_connected = self.__get_state_from_fd( src )
-        self.__log.debug(
-            'Headphone state changed (is_connected=%s).', self.__is_connected )
-        self.notify( 'headphone-status-changed', self.__is_connected,
-                     caller=self.__on_status_changed )
-        return True
-
-headphone_status = __headphone_watcher(HEADPHONE_SYS)
 

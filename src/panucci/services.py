@@ -23,6 +23,7 @@
 #
 
 from logging import getLogger
+import util
 
 class ObservableService(object):
     def __init__(self, signal_names=[], log=None):
@@ -82,3 +83,49 @@ class ObservableService(object):
                 'for notification', signal_name, caller )
 
         return rtn_value
+
+
+HEADPHONE_SYS = "/sys/devices/platform/gpio-switch/headphone/state"
+
+class __headphone_watcher(ObservableService):
+    """ A small service with one singnal that reports whether or not the
+        headphones are connected. Returns True if the headphones are connected,
+        False if they're not and None if it's not possible to determine the
+        headphone status. """
+
+    signals = [ 'headphone-status-changed', ]
+
+    def __init__(self, sys_file):
+        self.__log = getLogger('panucci.serivces.__headphone_watcher')
+        ObservableService.__init__(self, self.signals, self.__log)
+
+        self.__is_connected = None
+
+        if util.platform == util.MAEMO:
+            try:
+                self.__sys_file = open( sys_file, 'r' )
+                self.__is_connected = self.__get_state_from_fd(self.__sys_file)
+                gobject.io_add_watch( self.__sys_file, gobject.IO_PRI,
+                                      self.__on_status_changed )
+            except IOError:
+                self.__log.exception("Can't open headphone status file.")
+
+    @property
+    def is_connected(self):
+        return self.__is_connected
+
+    def __get_state_from_fd(self, fd):
+        fd.seek(0)
+        state = fd.read().strip()
+        return state == 'connected'
+
+    def __on_status_changed(self, src, cond):
+        self.__is_connected = self.__get_state_from_fd( src )
+        self.__log.debug(
+            'Headphone state changed (is_connected=%s).', self.__is_connected )
+        self.notify( 'headphone-status-changed', self.__is_connected,
+                     caller=self.__on_status_changed )
+        return True
+
+headphone_service = __headphone_watcher(HEADPHONE_SYS)
+
