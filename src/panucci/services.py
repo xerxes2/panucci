@@ -67,15 +67,18 @@ class ObservableService(object):
     def notify(self, signal_name, *args, **kwargs):
         caller = kwargs.get('caller')
         caller = 'UnknownCaller' if caller is None else caller.__name__
+        rtn_value = False
 
         if signal_name in self.observers:
             self.__log.debug(
                 'Sending signal "%s" for caller "%s"', signal_name, caller )
 
+            rtn_value = True
             for observer in self.observers[signal_name]:
-                observer( *args )
+                rtn_value &= bool(observer( *args ))
         else:
             self.__log.warning(
                 'Signal "%s" (from caller "%s") is not available '
                 'for notification', signal_name, caller )
 
+        return rtn_value
