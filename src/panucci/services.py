@@ -23,7 +23,10 @@
 #
 
 from logging import getLogger
+
+# the following are only needed for __headphone_watcher
 import util
+import gobject
 
 class ObservableService(object):
     def __init__(self, signal_names=[], log=None):

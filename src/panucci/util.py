@@ -18,7 +18,6 @@
 #
 
 import gtk
-import gobject
 import os.path
 import sys
 import traceback
