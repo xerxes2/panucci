@@ -1,0 +1,64 @@
+Player Signal API
+
+    "playing"                    : ( position, duration )
+    	This is called when the player starts playing.
+
+    "paused"                     : ( position, duration )
+    	This is called when the player pauses.
+
+    "stopped"                    : ( )
+    	This is called when a track stops playing.
+
+
+Playlist Signal API
+
+    "bookmark-added"             : ( parent, position, data )
+        Called when a bookmark is added.
+        - parent: the id of the bookmark's parent item
+        - position: the position of the bookmark in relation to all the other
+          bookmarks associated with the parent item.
+        - data: a tuple of data that represents a row in the treemodel
+
+    "bookmark-removed"           : ( parent, position )
+        Called when a bookmark is removed.
+        - parent: the id of the bookmark's parent item
+        - position: the position of the bookmark in relation to all the other
+          bookmarks associated with the parent item.
+
+    "end-of-playlist"            : ( )
+    	Called when the end of the playlist is reached.
+
+    "item-moved"                 : ( item, old_position, new_position )
+    	Called when an item in the playlist is moved.
+    	- item: the item id in question
+    	- old_position: the old position of said item
+	    - new_position: the new position of said item
+
+    "file-queued"                : ( item, position, bulk_add )
+    	Called when a new file is queued.
+    	- item_data: the id of item in question
+    	- position: the position of the item
+    	- bulk_add: whether or not this item is being added as part of a 
+    	  large set of files.
+
+    "file-removed"               : ( item, position )
+    	Called when a file is removed from the playlist.
+    	- item: the id of item in question
+	    - position: the position of said item
+
+    "new-metadata-available"     : ( metadata )
+    	Called when new metadata is available.
+	    - metadata: a dict of metadata for the currently playing track
+
+    "new-track-playing"          : ( )
+    	Called when a new track begins playing.
+
+    "playlist-to-be-overwritten" : ( )
+    	Called when a playlist is about to be over-written. If the function
+	    returns True the playlist will be over-written. Otherwise the
+	    over-write will be aborted.
+
+    "seek-requested"             : ( position )
+        Called when a seek is requested in the current track
+        - position: the position in nanoseconds from the beginning of the track
+
