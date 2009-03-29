@@ -1120,7 +1120,7 @@ class M3U_Playlist(PlaylistFile):
         for item in playlist_items:
             string = ''
             if not ( item.length is None and item.title is None ):
-                length = -1 if item.length is None else item.length
+                length = -1 if item.length is None else int(item.length)
                 title = '' if item.title is None else item.title
                 string += '#EXTINF:%d,%s\n' % ( length, title )
                 
