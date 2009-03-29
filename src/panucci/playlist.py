@@ -677,7 +677,11 @@ class PlaylistItem(object):
         if fp != self.__filepath:
             self.__filepath = fp
             self.__metadata = FileMetadata(self.filepath)
-            self.__metadata.extract_metadata()
+            # Don't extract Metadata right away, this makes opening large
+            #   playlists _very_ slow. TODO: do this intelligently AND
+            #   perhaps del the Metadata object if the file is no longer
+            #   being used.
+            #self.__metadata.extract_metadata()
 
     def __get_filepath(self):
         return self.__filepath
