@@ -549,9 +549,12 @@ class GTK_Main(object):
         player.register( 'stopped', self.on_player_stopped )
         player.register( 'playing', self.on_player_playing )
         player.register( 'paused', self.on_player_paused )
-        player.register( 'end_of_playlist', self.on_player_end_of_playlist )
-        player.playlist.register('new_track_metadata',self.on_player_new_track)
         player.playlist.register( 'file_queued', self.on_file_queued )
+        player.playlist.register( 'end-of-playlist',
+                                  self.on_player_end_of_playlist )
+        player.playlist.register( 'new_track_metadata', 
+                                  self.on_player_new_track )
+
         player.init(filepath=filename)
 
     def make_main_window(self):
@@ -1028,15 +1031,17 @@ class GTK_Main(object):
         estimated_length = metadata.get('length', 0)
         self.set_progress_callback( position, estimated_length )
 
-    def on_player_paused(self):
+    def on_player_paused( self, position, duration ):
         self.stop_progress_timer() # This should save some power
+        self.set_progress_callback( position, duration )
         image(self.play_pause_button, 'media-playback-start.png')
 
-    def on_player_end_of_playlist(self):
-        self.play_pause_button.disconnect(self.button_handler_id)
-        self.button_handler_id = self.play_pause_button.connect(
-            'clicked', self.open_file_callback )
-        image(self.play_pause_button, gtk.STOCK_OPEN, True)
+    def on_player_end_of_playlist(self, loop):
+        if not loop:
+            self.play_pause_button.disconnect(self.button_handler_id)
+            self.button_handler_id = self.play_pause_button.connect(
+                'clicked', self.open_file_callback )
+            image(self.play_pause_button, gtk.STOCK_OPEN, True)
 
     def on_file_queued(self, filepath, success, notify):
         if notify:

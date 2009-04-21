@@ -36,7 +36,7 @@ _ = lambda x: x
 
 class Playlist(ObservableService):
     signals = [ 'new_track', 'new_track_metadata', 'file_queued',
-        'bookmark_added', 'seek-requested' ]
+        'bookmark_added', 'seek-requested', 'end-of-playlist' ]
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
@@ -439,8 +439,8 @@ class Playlist(ObservableService):
             Use either skip_by or skip_to, skip_by has precedence.
                 skip_to: skip to a known playlist position
                 skip_by: skip by n number of episodes (positive or negative)
-                dont_loop: applies only to skip_by, if we're skipping past
-                    the last track loop back to the begining.
+                dont_loop: prevents looping if the track requested lays out of
+                    the 0 to queue_length-1 boundary.
         """
         if not self.__queue:
             return False
@@ -448,24 +448,36 @@ class Playlist(ObservableService):
         current_item = self.__queue.current_item_position
 
         if skip_by is not None:
-            if dont_loop:
-                skip = current_item + skip_by
-            else:
-                skip = ( current_item + skip_by ) % self.queue_length
+            skip = current_item + skip_by
         elif skip_to is not None:
             skip = skip_to
         else:
+            skip = 0
             self.__log.warning('No skip method provided...')
 
-        if not ( 0 <= skip < self.queue_length ):
-            self.__log.warning(
-                'Can\'t skip to non-existant file. (requested=%d, total=%d)',
-                skip, self.queue_length )
-            return False
+        if not 0 <= skip < self.queue_length:
+            self.notify( 'end-of-playlist', not dont_loop, caller=self.skip )
+
+            if dont_loop:
+                self.__log.warning( "Can't skip to non-existant file w/o loop."
+                                    " (requested=%d, total=%d)", skip,
+                                    self.queue_length )
+                return False
+            else:
+                # If skip_by is given as an argument, we assume the user knows
+                # what they're doing. Ie. if the queue length is 5, current
+                # track is 3 and they pass skip_by=-9, then they'll end up
+                # at 4. On the other hand, if skip_to is passed then we skip
+                # back to 0 because in that case the user must enter a number
+                # from 0 to queue_length-1, anything else is an error.
+                if skip_by is not None:
+                    skip %= self.queue_length
+                else:
+                    skip = 0
 
         self.__queue.current_item_position = skip
-        self.__log.debug('Skipping to file %d (%s)', skip,
-            self.__queue.current_item.filepath )
+        self.__log.debug( 'Skipping to file %d (%s)', skip,
+                          self.__queue.current_item.filepath )
 
         return True
 

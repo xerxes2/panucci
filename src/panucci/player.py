@@ -34,7 +34,7 @@ PLAYING, PAUSED, STOPPED, NULL = range(4)
 
 class panucciPlayer(ObservableService):
     """ """
-    signals = ['playing', 'paused', 'stopped', 'end_of_playlist']
+    signals = [ 'playing', 'paused', 'stopped' ]
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.player.panucciPlayer')
@@ -74,8 +74,8 @@ class panucciPlayer(ObservableService):
             return False
 
     def pause(self):
-        self.notify('paused', caller=self.pause)
         pos, dur = self.get_position_duration()
+        self.notify('paused', pos, dur, caller=self.pause)
         self.__player.set_state(gst.STATE_PAUSED)
         self.playlist.pause(pos)
 
@@ -246,7 +246,6 @@ class panucciPlayer(ObservableService):
 
         if t == gst.MESSAGE_EOS and not self.playlist.next():
             self.stop(save_resume_point=False)
-            self.notify( 'end_of_playlist', caller=self.__on_message )
 
         elif t == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
