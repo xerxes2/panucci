@@ -20,6 +20,7 @@
 
 import gtk
 import gobject
+import pango
 
 class DualActionButton(gtk.Button):
     """
@@ -181,4 +182,89 @@ class DualActionButton(gtk.Button):
             style.paint_handle(self.window, gtk.STATE_NORMAL, gtk.SHADOW_NONE,
                     rect, self, 'Detail', rect.x, rect.y, rect.width,
                     rect.height, gtk.ORIENTATION_HORIZONTAL)
+
+
+class ScrollingLabel(gtk.DrawingArea):
+    """ A simple scrolling label widget - if the text doesn't fit in the
+        container, it will scroll back and forth at a pre-determined interval.
+    """
+
+    def __init__(self, pango_markup, update_interval=100, pixel_jump=1):
+        """ Creates a new ScrollingLabel widget.
+              pango_markup: the markup that is displayed
+              update_interval: the amount of time (in milliseconds) between
+                scrolling updates
+              pixel_jump: the amount of pixels the text moves in one update
+        """
+
+        gtk.DrawingArea.__init__(self)
+        self.__x_offset = 0
+        self.__x_direction = -1 # left=-1, right=1
+        self.__scrolling_timer = None
+        self.update_interval = update_interval
+        self.pixel_jump = pixel_jump
+
+        self.__graphics_context = None
+        self.__pango_layout = self.create_pango_layout('')
+        self.set_markup( pango_markup )
+        
+        self.connect('expose-event', self.__on_expose_event)
+        self.connect('size-allocate', self.__on_size_allocate_event)
+
+    def __on_expose_event( self, widget, event ):
+        if self.__graphics_context is None:
+            self.__graphics_context = self.window.new_gc()
+        
+        self.window.draw_layout( self.__graphics_context,
+                                 self.__x_offset, 0, self.__pango_layout )
+    
+    def __on_size_allocate_event( self, widget, allocation ):
+        # if the window is resized, we reset the offset otherwise the text
+        # might get stuck at a no longer valid offset.
+        self.__x_offset = 0
+    
+    def set_markup( self, pango_markup ):
+        """ Set the displayed markup """
+        self.__pango_layout.set_markup(pango_markup)
+    
+    def __scroll(self):
+        """ Moves the text by 'pixel_jump' in the proper direction """
+        win_x, win_y = self.window.get_size()
+        lbl_x, lbl_y = self.__pango_layout.get_pixel_size()
+        
+        # in this case the text is smaller than the container, so don't scroll
+        if win_x - lbl_x >= 0:
+            return True
+        
+        # the offset will only be negative, at 0 the first letter is visible
+        # at the containter width minus the text length (a negative number)
+        # the last letter will be visible.
+        if self.__x_offset > 0 or self.__x_offset < win_x - lbl_x:
+            self.__x_direction = -1 if self.__x_direction == 1 else 1
+        
+        self.__x_offset += self.pixel_jump * self.__x_direction
+        self.queue_draw()
+        
+        return True # we must return True to keep the timer running
+    
+    def start_scrolling(self):
+        """ Make the text start scrolling """
+        if self.__scrolling_timer is None:
+            self.__scrolling_timer = gobject.timeout_add( self.update_interval,
+                                                          self.__scroll )
+    
+    def stop_scrolling(self):
+        """ Make the text stop scrolling """
+        if self.__scrolling_timer is not None:
+            gobject.source_remove( self.__scrolling_timer )
+            self.__scrolling_timer = None
+
+    def __set_scrolling( self, scrolling ):
+        if scrolling:
+            self.start_scrolling()
+        else:
+            self.stop_scrolling()
+
+    # allow querying/setting whether or not the text is scrolling
+    scrolling = property( lambda : __scrolling_timer != None, __set_scrolling )
 
