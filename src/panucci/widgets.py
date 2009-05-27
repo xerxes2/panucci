@@ -226,17 +226,20 @@ class ScrollingLabel(gtk.DrawingArea):
         self.markup = pango_markup
         
         self.connect('expose-event', self.__on_expose_event)
-        self.connect('size-allocate', self.__on_size_allocate_event)
+        self.connect('size-allocate', lambda w,a: self.__reset_widget() )
 
     def __set_scrolling(self, value):
         if value:
             self.__start_scrolling()
         else:
             self.__stop_scrolling()
-
-    scrolling = property( lambda s:   s.__scrolling, __set_scrolling )
-    markup =    property( lambda s:   s.__pango_layout.get_markup,
-                          lambda s,t: s.__pango_layout.set_markup(t) )
+    
+    def __set_markup(self, markup):
+        self.__pango_layout.set_markup(markup)
+        self.__reset_widget()
+    
+    scrolling = property( lambda s: s.__scrolling, __set_scrolling )
+    markup =    property( lambda s: s.__pango_layout.get_text(), __set_markup )
     
     def __on_expose_event( self, widget, event ):
         """ Draws the text on the widget. This should be called indirectly by
@@ -248,13 +251,20 @@ class ScrollingLabel(gtk.DrawingArea):
         self.window.draw_layout( self.__graphics_context,
                                  self.__x_offset, 0, self.__pango_layout )
     
-    def __on_size_allocate_event( self, widget, allocation ):
-        # if the window is resized, we reset the offset otherwise the text
-        # might get stuck at a no longer valid offset.
-        self.__x_offset = 0
+    def __reset_widget( self ):
+        """ Reset the offset and find out whether or not it's even possible
+            to scroll the current text. Useful for when the window gets resized
+            or when new markup is set. """
         
+        # if there's no window, we can ignore this reset request because
+        # when the window is created this will be called again.
+        if self.window is None:
+            return
+        
+        win_x, win_y = self.window.get_size()
         lbl_x, lbl_y = self.__pango_layout.get_pixel_size()
-        self.__scrolling_possible = lbl_x > allocation.x
+        self.__scrolling_possible = lbl_x > win_x
+        self.__x_offset = 0
         
         if self.__scrolling:
             self.__start_scrolling()
@@ -277,11 +287,10 @@ class ScrollingLabel(gtk.DrawingArea):
         # the last letter will be visible.
         rtn = not ( self.__x_offset > 0 or self.__x_offset < win_x - lbl_x )
 
-        if rtn:
-            self.queue_draw()
-        else:
+        if not rtn:
             if self.__x_direction == self.LEFT: # can we change direction?
                 self.__x_direction = self.RIGHT
+                self.__x_offset = win_x - lbl_x
                 rtn = True # we're only halfway done, so don't quit just yet
             else:
                 self.__x_direction = self.LEFT
@@ -289,6 +298,7 @@ class ScrollingLabel(gtk.DrawingArea):
                 if finished_callback is not None:
                     finished_callback()
         
+        self.queue_draw()
         return rtn
     
     def __scroll_wait_callback(self):
