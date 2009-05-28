@@ -277,26 +277,28 @@ class ScrollingLabel(gtk.DrawingArea):
             'finished_callback' is run.
         """
         
+        rtn = True
         win_x, win_y = self.window.get_size()
         lbl_x, lbl_y = self.__pango_layout.get_pixel_size()
         
         self.__x_offset += self.pixel_jump * self.__x_direction
-        
-        # the offset will only be negative, at 0 the first letter is visible
-        # at the containter width minus the text length (a negative number)
-        # the last letter will be visible.
-        rtn = not ( self.__x_offset > 0 or self.__x_offset < win_x - lbl_x )
 
-        if not rtn:
-            if self.__x_direction == self.LEFT: # can we change direction?
-                self.__x_direction = self.RIGHT
-                self.__x_offset = win_x - lbl_x
-                rtn = True # we're only halfway done, so don't quit just yet
-            else:
-                self.__x_direction = self.LEFT
-                
-                if finished_callback is not None:
-                    finished_callback()
+        if self.__x_direction == self.LEFT and self.__x_offset < win_x - lbl_x:
+            self.__x_direction = self.RIGHT
+            # set the offset to the maximum left bound otherwise some
+            # characters might get chopped off if using large pixel_jump's
+            self.__x_offset = win_x - lbl_x
+        
+        elif self.__x_direction == self.RIGHT and self.__x_offset > 0:
+            # end of scroll period; reset direction
+            self.__x_direction = self.LEFT
+            
+            if finished_callback is not None:
+                finished_callback()
+            
+            # return False because at this point we've completed one scroll
+            # period; this kills off any timers running this function
+            rtn = False
         
         self.queue_draw()
         return rtn
