@@ -301,7 +301,8 @@ class ScrollingLabel(gtk.DrawingArea):
         elif self.__x_direction == self.RIGHT and self.__x_offset > 0:
             # end of scroll period; reset direction
             self.__x_direction = self.LEFT
-            
+            # don't allow the offset to be greater than 0
+            self.__x_offset = 0
             if finished_callback is not None:
                 finished_callback()
             
