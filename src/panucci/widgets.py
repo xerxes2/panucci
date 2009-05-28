@@ -191,16 +191,18 @@ class ScrollingLabel(gtk.DrawingArea):
     
     LEFT, NO_CHANGE, RIGHT = [ -1, 0, 1 ]
     
-    def __init__( self, pango_markup, update_interval=100,
-                  delay_btwn_scrolls=0, pixel_jump=1 ):
+    def __init__( self, pango_markup, update_interval=100, pixel_jump=1,
+                  delay_btwn_scrolls=0, delay_halfway=0 ):
         """ Creates a new ScrollingLabel widget.
-        
+              
+              pixel_jump: the amount of pixels the text moves in one update
               pango_markup: the markup that is displayed
               update_interval: the amount of time (in milliseconds) between
                 scrolling updates
               delay_btwn_scrolls: The amount of time (in milliseconds) to
                 wait after a scroll has completed and the next one begins
-              pixel_jump: the amount of pixels the text moves in one update
+              delay_halfway: The amount of time (in milliseconds) to wait
+                when the text reaches the far right.
               
             Scrolling is controlled by the 'scrolling' property, it must be
             set to True for the text to start moving. Updating of the pango
@@ -219,6 +221,7 @@ class ScrollingLabel(gtk.DrawingArea):
         # user-defined parameters (can be changed on-the-fly)
         self.update_interval = update_interval
         self.delay_btwn_scrolls = delay_btwn_scrolls
+        self.delay_halfway = delay_halfway
         self.pixel_jump = pixel_jump
 
         self.__graphics_context = None
@@ -271,10 +274,12 @@ class ScrollingLabel(gtk.DrawingArea):
         
         self.queue_draw()
     
-    def __scroll_once(self, finished_callback=None):
+    def __scroll_once(self, halfway_callback=None, finished_callback=None):
         """ Moves the text by 'self.pixel_jump' every time this is called.
             Returns False when the text has completed one scrolling period and
             'finished_callback' is run.
+            Returns False halfway through (when the text is all the way to the
+            right) if 'halfway_callback' is set after running the callback.
         """
         
         rtn = True
@@ -288,6 +293,10 @@ class ScrollingLabel(gtk.DrawingArea):
             # set the offset to the maximum left bound otherwise some
             # characters might get chopped off if using large pixel_jump's
             self.__x_offset = win_x - lbl_x
+            
+            if halfway_callback is not None:
+                halfway_callback()
+                rtn = False
         
         elif self.__x_direction == self.RIGHT and self.__x_offset > 0:
             # end of scroll period; reset direction
@@ -303,10 +312,9 @@ class ScrollingLabel(gtk.DrawingArea):
         self.queue_draw()
         return rtn
     
-    def __scroll_wait_callback(self):
-        # Waits self.delay_btwn_scrolls and then calls the scroll function
-        self.__scrolling_timer = gobject.timeout_add( self.delay_btwn_scrolls,
-                                                      self.__scroll )
+    def __scroll_wait_callback(self, delay):
+        # Waits 'delay', then calls the scroll function
+        self.__scrolling_timer = gobject.timeout_add( delay, self.__scroll )
     
     def __scroll(self):
         """ When called, scrolls the text back and forth indefinitely while
@@ -315,7 +323,8 @@ class ScrollingLabel(gtk.DrawingArea):
         if self.__scrolling_possible:
             self.__scrolling_timer = gobject.timeout_add( 
                 self.update_interval, self.__scroll_once,
-                self.__scroll_wait_callback )
+                lambda: self.__scroll_wait_callback(self.delay_halfway),
+                lambda: self.__scroll_wait_callback(self.delay_btwn_scrolls) )
         else:
             self.__scrolling_timer = None
     
