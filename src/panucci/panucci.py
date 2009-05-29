@@ -535,6 +535,7 @@ class GTK_Main(object):
         self.make_main_window()
         self.has_coverart = False
         self.set_volume(settings.volume)
+        self.__ignore_queue_check = False
         self.__window_fullscreen = False
 
         if util.platform==util.MAEMO and interface.headset_device is not None:
@@ -554,6 +555,8 @@ class GTK_Main(object):
                                   self.on_player_end_of_playlist )
         player.playlist.register( 'new_track_metadata', 
                                   self.on_player_new_track )
+        player.playlist.register( 'playlist-to-be-overwritten',
+                                  self.check_queue )
 
         player.init(filepath=filename)
 
@@ -843,7 +846,7 @@ class GTK_Main(object):
                 True means a new file can be opened
                 False means the user does not want to continue """
 
-        if player.playlist.queue_modified:
+        if not self.__ignore_queue_check and player.playlist.queue_modified:
             response = dialog(
                 self.main_window, _('Save current playlist'),
                 _('Current playlist has been modified'),
@@ -867,9 +870,13 @@ class GTK_Main(object):
 
     def open_file_callback(self, widget=None):
         if self.check_queue():
+            # set __ingnore__queue_check because we already did the check
+            self.__ignore_queue_check = True
             filename = get_file_from_filechooser(self.main_window)
             if filename is not None:
                 self._play_file(filename)
+            
+            self.__ignore_queue_check = False
 
     def save_to_playlist_callback(self, widget=None):
         filename = get_file_from_filechooser(

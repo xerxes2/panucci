@@ -36,7 +36,8 @@ _ = lambda x: x
 
 class Playlist(ObservableService):
     signals = [ 'new_track', 'new_track_metadata', 'file_queued',
-        'bookmark_added', 'seek-requested', 'end-of-playlist' ]
+        'bookmark_added', 'seek-requested', 'end-of-playlist',
+        'playlist-to-be-overwritten' ]
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
@@ -327,6 +328,12 @@ class Playlist(ObservableService):
         """ Detects filepath's filetype then loads it using
             the appropriate loader function """
         self.__log.debug('Attempting to load %s', filepath)
+
+        if ( self.queue_modified and
+            not self.notify( 'playlist-to-be-overwritten', caller=self.load )):
+
+            self.__log.info('Loading file aborted by user.')
+            return False
 
         error = False
         self.reset_playlist()

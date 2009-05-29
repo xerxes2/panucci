@@ -59,7 +59,7 @@ Playlist Signal API
 *   "new-track-playing"          : ( )
     	Called when a new track begins playing.
 
-*   "playlist-to-be-overwritten" : ( )
+    "playlist-to-be-overwritten" : ( )
     	Called when a playlist is about to be over-written. If the function
 	    returns True the playlist will be over-written. Otherwise the
 	    over-write will be aborted.
