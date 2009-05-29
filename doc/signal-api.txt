@@ -56,7 +56,7 @@ Playlist Signal API
     	Called when new metadata is available.
 	    - metadata: a dict of metadata for the currently playing track
 
-*   "new-track-playing"          : ( )
+    "new-track-playing"          : ( )
     	Called when a new track begins playing.
 
     "playlist-to-be-overwritten" : ( )
@@ -64,7 +64,11 @@ Playlist Signal API
 	    returns True the playlist will be over-written. Otherwise the
 	    over-write will be aborted.
 
-*   "seek-requested"             : ( position )
+    "seek-requested"             : ( position )
         Called when a seek is requested in the current track
         - position: the position in nanoseconds from the beginning of the track
 
+    "stop-requested"             : ( )
+        Called when the playlist needs to change track. This call should be
+        handled by a function that takes care of stopping the player which
+        in turn calls the playlist's stop() function.

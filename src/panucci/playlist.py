@@ -35,9 +35,9 @@ from services import ObservableService
 _ = lambda x: x
 
 class Playlist(ObservableService):
-    signals = [ 'new_track', 'new_track_metadata', 'file_queued',
+    signals = [ 'new-track-playing', 'new_track_metadata', 'file_queued',
         'bookmark_added', 'seek-requested', 'end-of-playlist',
-        'playlist-to-be-overwritten' ]
+        'playlist-to-be-overwritten', 'stop-requested' ]
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
@@ -116,7 +116,8 @@ class Playlist(ObservableService):
 
     def on_queue_current_item_changed(self):
         self.send_new_metadata( self.on_queue_current_item_changed )
-        self.notify( 'new_track', caller=self.on_queue_current_item_changed )
+        self.notify( 'new-track-playing',
+                     caller=self.on_queue_current_item_changed )
 
     def send_new_metadata(self, caller=None):
         self.notify( 'new_track_metadata', self.get_file_metadata(),
@@ -335,6 +336,8 @@ class Playlist(ObservableService):
             self.__log.info('Loading file aborted by user.')
             return False
 
+        self.notify( 'stop-requested', caller=self.load )
+
         error = False
         self.reset_playlist()
         self.filepath = filepath
@@ -354,6 +357,9 @@ class Playlist(ObservableService):
         else:                          # importing a single file
             error = not self.append(filepath, notify=False)
 
+        # if we let the queue emit a current_item_changed signal (which will
+        # happen if load_from_bookmark changes the current track), the player
+        # will start playing and ingore the resume point
         self.__queue.disable_notifications = True
         self.load_from_resume_bookmark()
         self.__queue.disable_notifications = False

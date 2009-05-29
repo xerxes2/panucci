@@ -1001,8 +1001,6 @@ class GTK_Main(object):
             self._play_file(filename)
 
     def _play_file(self, filename, pause_on_load=False):
-        player.stop()
-
         player.playlist.load( os.path.abspath(filename) )
         if player.playlist.is_empty:
             return False

@@ -42,8 +42,9 @@ class panucciPlayer(ObservableService):
         interface.register_player(self)
 
         self.playlist = Playlist()
-        self.playlist.register( 'new_track', self.on_new_track )
+        self.playlist.register( 'new-track-playing', self.on_new_track )
         self.playlist.register( 'seek-requested', self.do_seek )
+        self.playlist.register( 'stop-requested', self.stop )
         settings.register( 'volume_changed', self.__set_volume_level )
 
         self.__initial_seek = False # have we preformed the initial seek?
@@ -103,11 +104,6 @@ class panucciPlayer(ObservableService):
             return { gst.STATE_NULL    : STOPPED,
                      gst.STATE_PAUSED  : PAUSED,
                      gst.STATE_PLAYING : PLAYING }.get( state, NULL )
-
-    def play_file(self, filepath):
-        self.stop()
-        self.playlist.load(filepath)
-        self.play()
 
     def __setup_player(self):
         filetype = self.playlist.get_current_filetype()
@@ -216,8 +212,11 @@ class panucciPlayer(ObservableService):
                 error = True
 
         if not error:
+            self.__log.debug('do_seek: Seeking to: %d', position)
             self.__seek(position)
             return position, duration
+        else:
+            self.__log.debug('do_seek: Could not seek.')
 
         return False
 

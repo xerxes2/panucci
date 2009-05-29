@@ -82,7 +82,9 @@ class panucciInterface(dbus.service.Object):
     @dbus.service.method('org.panucci.panucciInterface', in_signature='s')
     def play_file(self, filepath):
         self.__log.debug('play_file() called')
-        if self.player is not None: self.player.play_file(filepath)
+        if self.player is not None:
+            self.player.playlist.load(filepath)
+            self.player.play()
 
     @dbus.service.method('org.panucci.panucciInterface', in_signature='s')
     def queue_file(self, filepath):
