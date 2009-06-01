@@ -252,6 +252,9 @@ class ScrollingLabel(gtk.DrawingArea):
         """ Set the text's alignment on the x axis when it's not possible to
             scroll. The y axis setting does nothing atm. """
         
+        for i in x,y:
+            assert isinstance( i, (float, int) ) and 0 <= i <= 1
+        
         self.__x_alignment = x
         self.__y_alignment = y
     
@@ -261,7 +264,7 @@ class ScrollingLabel(gtk.DrawingArea):
     
     scrolling = property( lambda s: s.__scrolling, __set_scrolling )
     markup    = property( get_markup, set_markup )
-    alignment = property( set_alignment, get_alignment )
+    alignment = property( get_alignment, lambda s,i: s.set_alignment(*i) )
     
     def __on_expose_event( self, widget, event ):
         """ Draws the text on the widget. This should be called indirectly by
