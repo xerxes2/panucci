@@ -552,8 +552,12 @@ class PlayerTab(gtk.HBox):
         self.album_label = gtk.Label('')
         self.album_label.set_ellipsize(pango.ELLIPSIZE_END)
         metadata_vbox.pack_start(self.album_label, False, False)
-        self.title_label = gtk.Label('')
-        self.title_label.set_line_wrap(True)
+        self.title_label = widgets.ScrollingLabel( '', 
+                                                   update_interval=200,
+                                                   pixel_jump=5,
+                                                   delay_btwn_scrolls=5000,
+                                                   delay_halfway=3000 )
+        self.title_label.scrolling = True
         metadata_vbox.pack_start(self.title_label, False, False)
         empty_label = gtk.Label()
         metadata_vbox.pack_start(empty_label, True, True)
@@ -739,7 +743,7 @@ class PlayerTab(gtk.HBox):
             'clicked', self.on_btn_play_pause_clicked )
 
         for widget in [self.title_label,self.artist_label,self.album_label]:
-            widget.set_text('')
+            widget.set_markup('')
             widget.hide()
 
         self.cover_art.hide()
@@ -814,7 +818,8 @@ class PlayerTab(gtk.HBox):
     def set_metadata( self, tag_message ):
         tags = { 'title': self.title_label, 'artist': self.artist_label,
                  'album': self.album_label }
-
+        
+        # set the coverart
         if tag_message.has_key('image') and tag_message['image'] is not None:
             value = tag_message['image']
 
@@ -828,24 +833,21 @@ class PlayerTab(gtk.HBox):
             except Exception, e:
                 self.__log.exception('Error setting coverart...')
 
-        tag_vals = dict([ (i,'') for i in tags.keys()])
+        # set the text metadata
         for tag,value in tag_message.iteritems():
             if tags.has_key(tag) and value is not None and value.strip():
                 tags[tag].set_markup('<big>'+value+'</big>')
-                tag_vals[tag] = value
                 tags[tag].set_alignment( 0.5*int(not self.has_coverart), 0.5)
                 tags[tag].show()
+            
             if tag == 'title':
-                if util.platform == util.MAEMO:
-                    self.main_window.set_title(value)
-                    # oh man this is hacky :(
-                    if self.has_coverart:
-                        tags[tag].set_size_request(420,-1)
-                        if len(value) >= 80: value = value[:80] + '...'
-                else:
-                    self.__gui_root.main_window.set_title(value + ' - Panucci')
-
+                # make the title bold
                 tags[tag].set_markup('<b><big>'+value+'</big></b>')
+                
+                if util.platform != util.MAEMO:
+                    value += ' - Panucci'
+
+                self.__gui_root.main_window.set_title( value )
 
     # FIXME: this doesn't work
     def go_to_current_track_in_playlist(self):
