@@ -214,6 +214,8 @@ class ScrollingLabel(gtk.DrawingArea):
         gtk.DrawingArea.__init__(self)
         self.__x_offset = 0
         self.__x_direction = self.LEFT
+        self.__x_alignment = 0
+        self.__y_alignment = 0.5
         self.__scrolling_timer = None
         self.__scrolling_possible = True
         self.__scrolling = False
@@ -237,12 +239,29 @@ class ScrollingLabel(gtk.DrawingArea):
         else:
             self.__stop_scrolling()
     
-    def __set_markup(self, markup):
+    def set_markup(self, markup):
+        """ Set the pango markup to be displayed by the widget """
         self.__pango_layout.set_markup(markup)
         self.__reset_widget()
     
+    def get_markup( self ):
+        """ Returns the current markup contained in the widget """
+        return self.__pango_layout.get_text()
+    
+    def set_alignment(self, x, y):
+        """ Set the text's alignment on the x axis when it's not possible to
+            scroll. The y axis setting does nothing atm. """
+        
+        self.__x_alignment = x
+        self.__y_alignment = y
+    
+    def get_alignment( self ):
+        """ Returns the current alignment settings (x, y). """
+        return self.__x_alignment, self.__y_alignment
+    
     scrolling = property( lambda s: s.__scrolling, __set_scrolling )
-    markup =    property( lambda s: s.__pango_layout.get_text(), __set_markup )
+    markup    = property( get_markup, set_markup )
+    alignment = property( set_alignment, get_alignment )
     
     def __on_expose_event( self, widget, event ):
         """ Draws the text on the widget. This should be called indirectly by
@@ -252,7 +271,7 @@ class ScrollingLabel(gtk.DrawingArea):
             self.__graphics_context = self.window.new_gc()
         
         self.window.draw_layout( self.__graphics_context,
-                                 self.__x_offset, 0, self.__pango_layout )
+                                 int(self.__x_offset), 0, self.__pango_layout )
     
     def __reset_widget( self ):
         """ Reset the offset and find out whether or not it's even possible
@@ -266,11 +285,21 @@ class ScrollingLabel(gtk.DrawingArea):
         
         win_x, win_y = self.window.get_size()
         lbl_x, lbl_y = self.__pango_layout.get_pixel_size()
+        
+        # If we don't request the proper height, the label might get squashed
+        # down to 0px. (this could still happen on the horizontal axis but we
+        # aren't affected by this problem in Panucci *yet*)
+        self.set_size_request( -1, lbl_y )
+        
         self.__scrolling_possible = lbl_x > win_x
-        self.__x_offset = 0
         
         if self.__scrolling:
             self.__start_scrolling()
+        
+        if self.__scrolling_possible:
+            self.__x_offset = 0
+        else:
+            self.__x_offset = (win_x - lbl_x) * self.__x_alignment
         
         self.queue_draw()
     
