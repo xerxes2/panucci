@@ -59,8 +59,6 @@ about_text = _('Resuming audiobook and podcast player')
 about_authors = ['Thomas Perl', 'Nick (nikosapi)', 'Matthew Taylor']
 about_website = 'http://panucci.garage.maemo.org/'
 app_version = ''
-donate_wishlist_url = 'http://www.amazon.de/gp/registry/2PD2MYGHE6857'
-donate_device_url = 'http://maemo.gpodder.org/donate.html'
 
 coverart_names = [ 'cover', 'cover.jpg', 'cover.png' ]
 coverart_size = [200, 200] if util.platform == util.MAEMO else [110, 110]
@@ -192,8 +190,9 @@ def set_stock_button_text( button, text ):
 class PanucciGUI(object):
     """ The object that holds the entire panucci gui """
     
-    def __init__(self):
-        self.__log = logging.getLogger('panucci.panucci.PanucciGUI')        
+    def __init__(self, filename=None):
+        self.__log = logging.getLogger('panucci.panucci.PanucciGUI')  
+        interface.register_gui(self)      
         
         # Build the base ui (window and menubar)
         if util.platform == util.MAEMO:
@@ -228,20 +227,20 @@ class PanucciGUI(object):
             menu_bar.show()
             menu_vbox.pack_end(self.notebook, True, True, 6)
         
-        # Add the tabs
-        self.player_tab = PlayerTab(self)
-        self.playlist_tab = PlaylistTab(self)
+        # Add the tabs (they are private to prevent us from trying to do
+        # something like gui_root.player_tab.some_function() from inside 
+        # playlist_tab or vice-versa)
+        self.__player_tab = PlayerTab(self)
+        self.__playlist_tab = PlaylistTab(self)
         
-        self.notebook.append_page(self.player_tab, gtk.Label(_('Player')))
-        self.notebook.set_tab_label_packing( self.player_tab, True, True, 
+        self.notebook.append_page(self.__player_tab, gtk.Label(_('Player')))
+        self.notebook.set_tab_label_packing( self.__player_tab, True, True, 
                                              gtk.PACK_START)
         
-        self.notebook.append_page(self.playlist_tab, gtk.Label(_('Playlist')))
-        self.notebook.set_tab_label_packing( self.playlist_tab, True, True,
+        self.notebook.append_page(self.__playlist_tab, gtk.Label(_('Playlist')))
+        self.notebook.set_tab_label_packing( self.__playlist_tab, True, True,
                                              gtk.PACK_START )
 
-        self.notebook.set_current_page(0)
-        
         # Tie it all together!
         self.__ignore_queue_check = False
         self.__window_fullscreen = False
@@ -251,6 +250,7 @@ class PanucciGUI(object):
             interface.headset_device.connect_to_signal(
                 'Condition', self.handle_headset_button )
         
+        player.playlist.register( 'file_queued', self.on_file_queued )
         settings.register('allow_blanking_changed',self.__set_anti_blank_timer)
         self.__set_anti_blank_timer( settings.allow_blanking )
         
@@ -260,8 +260,9 @@ class PanucciGUI(object):
         self.main_window.show_all()
         
         # this should be done when the gui is ready
+        self.notebook.set_current_page(0)
         self.pickle_file_conversion()
-        
+        player.init(filepath=filename)
         
     def create_menu(self):
         # the main menu
@@ -343,6 +344,9 @@ class PanucciGUI(object):
     def destroy(self, widget):
         player.quit()
         gtk.main_quit()
+
+    def show_main_window(self):
+        self.main_window.present()
 
     def check_queue(self):
         """ Makes sure the queue is saved if it has been modified
@@ -427,6 +431,16 @@ class PanucciGUI(object):
     def on_recent_file_activate(self, widget, filepath):
         self.play_file(filepath)
 
+    def on_file_queued(self, filepath, success, notify):
+        if notify:
+            filename = os.path.basename(filepath)
+            if success:
+                self.__log.info(
+                    util.notify( '%s added successfully.' % filename ))
+            else:
+                self.__log.error(
+                    util.notify( 'Error adding %s to the queue.' % filename))
+
     def show_about(self, w, win):
         dialog = gtk.AboutDialog()
         dialog.set_website(about_website)
@@ -488,11 +502,10 @@ class PanucciGUI(object):
 class PlayerTab(gtk.HBox):
     """ The tab that holds the player elements """
 
-    def __init__(self, gui_root, filename=None):
+    def __init__(self, gui_root):
         gtk.HBox.__init__(self)
         self.__log = logging.getLogger('panucci.panucci.PlayerTab')
         self.__gui_root = gui_root
-        #interface.register_gui(self)
 
         # Timers
         self.progress_timer_id = None
@@ -503,21 +516,16 @@ class PlayerTab(gtk.HBox):
         self.make_player_tab()
         self.has_coverart = False
         self.set_volume(settings.volume)
-       
-
+        
         settings.register( 'volume_changed', self.set_volume )
         
-
         player.register( 'stopped', self.on_player_stopped )
         player.register( 'playing', self.on_player_playing )
         player.register( 'paused', self.on_player_paused )
-        player.playlist.register( 'file_queued', self.on_file_queued )
         player.playlist.register( 'end-of-playlist',
                                   self.on_player_end_of_playlist )
         player.playlist.register( 'new_track_metadata', 
                                   self.on_player_new_track )
-
-        player.init(filepath=filename)
 
     def make_player_tab(self):
         main_vbox = gtk.VBox()
@@ -640,13 +648,7 @@ class PlayerTab(gtk.HBox):
             self.volume.show()
 
         self.set_volume(settings.volume)
-
     
-
-    
-
-
-
     def set_controls_sensitivity(self, sensitive):
         self.forward_button.set_sensitive(sensitive)
         self.rewind_button.set_sensitive(sensitive)
@@ -699,9 +701,7 @@ class PlayerTab(gtk.HBox):
         self.volume_timer_id = None
         self.volume.hide()
         return False
-
     
-
     def toggle_volumebar(self, widget=None):
         if self.volume_timer_id is None:
             self.__set_volume_hide_timer(5)
@@ -720,12 +720,7 @@ class PlayerTab(gtk.HBox):
             settings.volume = 0
         else:
             settings.volume = widget.get_level()/100.0
-
-    def show_main_window(self):
-        self.main_window.present()
-
     
-
     def on_player_stopped(self):
         self.stop_progress_timer()
         self.title_label.set_size_request(-1,-1)
@@ -766,17 +761,7 @@ class PlayerTab(gtk.HBox):
             self.button_handler_id = self.play_pause_button.connect(
                 'clicked', self.open_file_callback )
             image(self.play_pause_button, gtk.STOCK_OPEN, True)
-
-    def on_file_queued(self, filepath, success, notify):
-        if notify:
-            filename = os.path.basename(filepath)
-            if success:
-                self.__log.info(
-                    util.notify( '%s added successfully.' % filename ))
-            else:
-                self.__log.error(
-                    util.notify( 'Error adding %s to the queue.' % filename))
-
+    
     def reset_progress(self):
         self.progress.set_fraction(0)
         self.set_progress_callback(0,0)
@@ -862,10 +847,11 @@ class PlayerTab(gtk.HBox):
 
                 tags[tag].set_markup('<b><big>'+value+'</big></b>')
 
+    # FIXME: this doesn't work
     def go_to_current_track_in_playlist(self):
         # Select the currently playing track in the playlist tab
         # and switch to it (so we can edit bookmarks, etc.. there)
-        treeview = self.playlist_tab.treeview
+        treeview = self.__playlist_tab.treeview
         model = treeview.get_model()
         selection = treeview.get_selection()
         for row in iter(model):
@@ -1231,12 +1217,11 @@ class PlaylistItemDetails(gtk.Dialog):
 
 
 def run(filename=None):
-    PanucciGUI()
-    #GTK_Main( filename )
+    PanucciGUI( filename )
     gtk.main()
 
 if __name__ == '__main__':
-    log.error( 'WARNING: Use the "panucci" executable to run this program.' )
+    log.error( 'Use the "panucci" executable to run this program.' )
     log.error( 'Exiting...' )
     sys.exit(1)
 
