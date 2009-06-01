@@ -518,6 +518,8 @@ class PlayerTab(gtk.HBox):
         self.set_volume(settings.volume)
         
         settings.register( 'volume_changed', self.set_volume )
+        settings.register( 'scrolling_labels_changed', lambda v:
+                           setattr( self.title_label, 'scrolling', v ) )
         
         player.register( 'stopped', self.on_player_stopped )
         player.register( 'playing', self.on_player_playing )
@@ -557,7 +559,7 @@ class PlayerTab(gtk.HBox):
                                                    pixel_jump=5,
                                                    delay_btwn_scrolls=5000,
                                                    delay_halfway=3000 )
-        self.title_label.scrolling = True
+        self.title_label.scrolling = settings.scrolling_labels
         metadata_vbox.pack_start(self.title_label, False, False)
         empty_label = gtk.Label()
         metadata_vbox.pack_start(empty_label, True, True)

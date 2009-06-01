@@ -34,6 +34,7 @@ default_settings = {
     'last_folder'          : '~',
     'max_recent_files'     : 10,
     'progress_locked'      : False,
+    'scrolling_labels'     : True,
     'seek_long'            : 60,
     'seek_short'           : 10,
     'skip_delay'           : 0.5,

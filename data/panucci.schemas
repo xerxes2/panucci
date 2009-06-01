@@ -133,5 +133,17 @@
         </locale>
       </schema>
 
+      <schema>
+        <key>/schemas/apps/panucci/scrolling_labels</key>
+        <applyto>/apps/panucci/scrolling_labels</applyto>
+        <owner>panucci</owner>
+        <type>bool</type>
+        <default>TRUE</default>
+        <locale name="C">
+          <short>Allow labels to scroll if they are too large</short>
+          <long>If this is disabled the labels will simply stop scrolling.</long>
+        </locale>
+      </schema>
+
   </schemalist>
 </gconfschemafile>
