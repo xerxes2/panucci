@@ -883,7 +883,8 @@ class FileMetadata(object):
     """ A class to hold all information about the file that's currently being
         played. Basically it takes care of metadata extraction... """
 
-    coverart_names = ['cover', 'cover.jpg', 'cover.png']
+    coverart_names = ['cover', 'front', 'albumart', 'back']
+    coverart_extensions = ['.png', '.jpg', '.jpeg']
     tag_mappings = {
         'mp4': { '\xa9nam': 'title',
                  '\xa9ART': 'artist',
@@ -972,19 +973,72 @@ class FileMetadata(object):
 
     def __find_coverart(self):
         """ Find coverart in the same directory as the filepath """
+        
         directory = os.path.dirname(self.__filepath)
-        for cover in self.coverart_names:
-            c = os.path.join( directory, cover )
-            if os.path.isfile(c):
-                try:
-                    f.open(c,'r')
-                    binary_coverart = f.read()
-                    f.close()
-                    return binary_coverart
-                except:
-                    pass
+        for cover in self.__find_coverart_filepath(directory):
+            self.__log.debug('Trying to load coverart from %s', cover)
+            try:
+                f = open(cover,'r')
+            except:
+                self.__log.exception('Could not open coverart file %s', cover )
+                continue
+            
+            binary_coverart = f.read()
+            f.close()
+            
+            if self.__test_coverart(binary_coverart):
+                return binary_coverart
+                
         return None
-
+    
+    def __test_coverart(self, data):
+        """ tests to see if the file is a proper image file that can be loaded
+            into a gtk.gdk.Pixbuf """
+        
+        import gtk.gdk
+        l = gtk.gdk.PixbufLoader()
+        try:
+            l.write(data)
+            l.close()
+            rtn = True
+        except:
+            rtn = False
+        
+        return rtn
+    
+    def __find_coverart_filepath(self, directory):
+        """ finds the path of potential coverart files """
+        dir_filelist = []
+        possible_matches = []
+        
+        # build the filelist
+        for f in os.listdir(directory):
+            if os.path.isfile(os.path.join(directory,f)):
+                dir_filelist.append(os.path.splitext(f))
+        
+        # first pass, check for known filenames
+        for f,ext in dir_filelist[:]:
+            if f.lower() in self.coverart_names and \
+                ext.lower() in self.coverart_extensions:
+                possible_matches.append((f,ext))
+                dir_filelist.remove((f,ext))
+        
+        # second pass, check for known filenames without extensions
+        for f,ext in dir_filelist[:]:
+            if f.lower() in self.coverart_names and ext == '':
+                possible_matches.append((f,ext))
+                dir_filelist.remove((f,ext))
+        
+        # third pass, check for any image file
+        for f,ext in dir_filelist[:]:
+            if ext.lower() in self.coverart_extensions:
+                possible_matches.append((f,ext))
+                dir_filelist.remove((f,ext))
+        
+        # yield the results
+        for f,ext in possible_matches:
+            yield os.path.join( directory, f+ext )
+    
     def get_metadata(self):
         """ Returns a dict of metadata """
 
