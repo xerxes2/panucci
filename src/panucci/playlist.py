@@ -746,8 +746,7 @@ class PlaylistItem(object):
     def filetype(self):
         return util.detect_filetype(self.filepath)
 
-    @property
-    def title(self):
+    def __get_title(self):
         """ Get the title of item, priority is (most important first):
             1. the title given in playlist metadata
             2. the title in the file's metadata (ex. ID3)
@@ -759,7 +758,12 @@ class PlaylistItem(object):
             return self.__metadata.title
         else:
             return util.pretty_filename(self.filepath)
-
+    
+    # For now set the "playlist_title" because it has highest priority in the
+    # __get_title method. We might evenually want to create a separate
+    # __custom_title to preserve the playlist_title.
+    title = property(__get_title, lambda s,v: setattr(s, 'playlist_title', v))
+    
     @property
     def length(self):
         """ Get the lenght of the item priority is (most important first):

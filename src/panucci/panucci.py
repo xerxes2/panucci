@@ -1051,20 +1051,18 @@ class PlaylistTab(gtk.VBox):
             self.treeview.scroll_to_cell(path)
 
     def label_edited(self, cellrenderer, path, new_text):
-        iter = self.model.get_iter(path)
-        old_text = self.model.get_value(iter, 1)
+        iter = self.__model.get_iter(path)
+        old_text = self.__model.get_value(iter, 1)
 
-        if new_text.strip():
-            if old_text != new_text:
-                for m, bkmk_id, biter, item_id, iiter in self.__cur_selection():
-                    if iiter is not None:
-                        self.model.set_value(iter, 1, new_text)
-                    else:
-                        self.model.set_value(iter, 1, new_text)
-                    player.playlist.update_bookmark(
-                        item_id, bkmk_id, name=new_text )
+        if new_text.strip() and old_text != new_text:
+            # this loop will only run once, because only one cell can be
+            # edited at a time, we use it to get the item and bookmark ids
+            for m, bkmk_id, biter, item_id, iiter in self.__cur_selection():
+                self.__model.set_value(iter, 1, new_text)
+                player.playlist.update_bookmark(
+                    item_id, bkmk_id, name=new_text )
         else:
-            self.model.set_value(iter, 1, old_text)
+            self.__model.set_value(iter, 1, old_text)
 
     def add_bookmark(self, w=None, lbl=None, pos=None):
         (label, position) = player.get_formatted_position(pos)
