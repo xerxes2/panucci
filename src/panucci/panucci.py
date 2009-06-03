@@ -200,8 +200,9 @@ class PanucciGUI(object):
             window = hildon.Window()
             self.app.add_window(window)
         else:
-            self.main_window = window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 
+        self.main_window = window
         window.set_title('Panucci')
         self.window_icon = util.find_image('panucci.png')
         if self.window_icon is not None:
@@ -211,6 +212,7 @@ class PanucciGUI(object):
         window.connect("destroy", self.destroy)
         
         self.notebook = gtk.Notebook()
+        self.notebook.unset_flags(gtk.CAN_FOCUS)
         
         if util.platform == util.MAEMO:
             window.set_menu(self.create_menu())
@@ -250,7 +252,10 @@ class PanucciGUI(object):
             interface.headset_device.connect_to_signal(
                 'Condition', self.handle_headset_button )
         
+        self.main_window.connect('key-press-event', self.on_key_press)
         player.playlist.register( 'file_queued', self.on_file_queued )
+        
+        self.__anti_blank_timer = None
         settings.register('allow_blanking_changed',self.__set_anti_blank_timer)
         self.__set_anti_blank_timer( settings.allow_blanking )
         
@@ -427,7 +432,12 @@ class PanucciGUI(object):
         self.__window_fullscreen = value
 
     fullscreen = property( __get_fullscreen, __set_fullscreen )
-
+    
+    def on_key_press(self, widget, event):
+        if util.platform == util.MAEMO:
+            if event.keyval == gtk.keysyms.F6:
+                self.fullscreen = not self.fullscreen
+    
     def on_recent_file_activate(self, widget, filepath):
         self.play_file(filepath)
 
@@ -469,13 +479,13 @@ class PanucciGUI(object):
     
     def __set_anti_blank_timer(self, allow_blanking):
         if util.platform == util.MAEMO:
-            if allow_blanking and self.anti_blank_timer is not None:
+            if allow_blanking and self.__anti_blank_timer is not None:
                 self.__log.info('Screen blanking enabled.')
-                gobject.source_remove(self.anti_blank_timer)
-                self.anti_blank_timer = None
-            elif not allow_blanking and self.anti_blank_timer is None:
+                gobject.source_remove(self.__anti_blank_timer)
+                self.__anti_blank_timer = None
+            elif not allow_blanking and self.__anti_blank_timer is None:
                 self.__log.info('Attempting to disable screen blanking.')
-                self.anti_blank_timer = gobject.timeout_add( 
+                self.__anti_blank_timer = gobject.timeout_add( 
                     1000 * 59, util.poke_backlight )
         else:
             self.__log.info('Blanking controls are for Maemo only.')
@@ -510,7 +520,6 @@ class PlayerTab(gtk.HBox):
         # Timers
         self.progress_timer_id = None
         self.volume_timer_id = None
-        self.anti_blank_timer = None
 
         self.recent_files = []
         self.make_player_tab()
@@ -624,7 +633,8 @@ class PlayerTab(gtk.HBox):
             self.volume.set_property('can-focus', False)
             self.volume.connect('level_changed', self.volume_changed_hildon)
             self.volume.connect('mute_toggled', self.mute_toggled)
-            window.connect('key-press-event', self.on_key_press)
+            self.__gui_root.main_window.connect( 'key-press-event',
+                                                 self.on_key_press )
             self.pack_start(self.volume, False, True)
 
             # Add a button to pop out the volume bar
@@ -662,16 +672,15 @@ class PlayerTab(gtk.HBox):
         self.rrewind_button.set_sensitive(sensitive)
 
     def on_key_press(self, widget, event):
-        # this stuff is only maemo-related
         if util.platform == util.MAEMO:
             if event.keyval == gtk.keysyms.F7: #plus
                 self.set_volume( min( 1, self.get_volume() + 0.10 ))
             elif event.keyval == gtk.keysyms.F8: #minus
                 self.set_volume( max( 0, self.get_volume() - 0.10 ))
             elif event.keyval == gtk.keysyms.Left: # seek back
-                self.rewind_callback(self.rewind_button)
+                self.do_seek( -1 * settings.seek_long )
             elif event.keyval == gtk.keysyms.Right: # seek forward
-                self.forward_callback(self.forward_button)
+                self.do_seek( settings.seek_long )
             elif event.keyval == gtk.keysyms.Return: # play/pause
                 self.on_btn_play_pause_clicked()
             elif event.keyval == gtk.keysyms.F6:
