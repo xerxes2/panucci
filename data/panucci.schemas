@@ -145,5 +145,17 @@
         </locale>
       </schema>
 
+      <schema>
+        <key>/schemas/apps/panucci/supported_extensions</key>
+        <applyto>/apps/panucci/supported_extensions</applyto>
+        <owner>panucci</owner>
+        <type>string</type>
+        <default>mp2,mp3,mp4,ogg,m4a,wav</default>
+        <locale name="C">
+          <short>A comma-separated list of allowed file extensions.</short>
+          <long>A list of file extensions that are playable by Panucci.</long>
+        </locale>
+      </schema>
+
   </schemalist>
 </gconfschemafile>

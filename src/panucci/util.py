@@ -26,8 +26,6 @@ import logging
 
 __log = logging.getLogger('panucci.util')
 
-supported_extensions = [ '.mp2', '.mp3', '.mp4', '.ogg', '.m4a', '.wav' ]
-
 
 def string_in_file( filepath, string ):
     try:
@@ -68,10 +66,6 @@ try:
 except:
     have_osso = False
 
-
-def is_supported( filepath ):
-    filepath, extension = os.path.splitext(filepath)
-    return extension.lower() in supported_extensions
 
 def convert_ns(time_int):
     time_int = max( 0, int(time_int) )

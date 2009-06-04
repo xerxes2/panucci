@@ -34,6 +34,15 @@ from services import ObservableService
 
 _ = lambda x: x
 
+
+def is_supported( filename ):
+    if settings.supported_extensions:
+        supported = settings.supported_extensions.lower().split(',')
+        filepath, extension = os.path.splitext(filename)
+        return extension.lower().replace('.','') in supported
+    else:
+        return True # if the string is empty, allow anything
+
 class Playlist(ObservableService):
     signals = [ 'new-track-playing', 'new_track_metadata', 'file_queued',
         'bookmark_added', 'seek-requested', 'end-of-playlist',
@@ -320,7 +329,7 @@ class Playlist(ObservableService):
             return files[:max_files]
         else:
             return files
-
+    
     ##################################
     # File importing functions
     ##################################
@@ -411,7 +420,7 @@ class Playlist(ObservableService):
 
             for item in os.listdir(directory):
                 filepath = os.path.join( directory, item )
-                if os.path.isfile(filepath) and util.is_supported(filepath):
+                if os.path.isfile(filepath) and is_supported(filepath):
                     items.append(filepath)
 
             items.sort()
@@ -556,7 +565,7 @@ class Queue(list, ObservableService):
         assert isinstance( item, PlaylistItem )
         item.playlist_id = self.playlist_id
 
-        if os.path.isfile(item.filepath) and util.is_supported(item.filepath):
+        if os.path.isfile(item.filepath) and is_supported(item.filepath):
             self.modified = True
             return True
         else:

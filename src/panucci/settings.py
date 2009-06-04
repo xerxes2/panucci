@@ -38,6 +38,7 @@ default_settings = {
     'seek_long'            : 60,
     'seek_short'           : 10,
     'skip_delay'           : 0.5,
+    'supported_extensions' : 'mp2,mp3,mp4,ogg,m4a,wav',
     'temp_playlist'        : '~/.panucci.m3u',
     'volume'               : 0.3,
 }
