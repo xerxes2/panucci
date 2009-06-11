@@ -112,40 +112,47 @@ class panucciPlayer(ObservableService):
         if None in [ filetype, filepath ]:
             self.__player = None
             return False
-
-        if filetype.startswith('ogg') and util.platform == util.MAEMO:
-            self.__log.info( 'Using OGG workaround, I hope this works...' )
-
+        
+        # On maemo use software decoding to workaround some bugs their gst:
+        # 1. Weird volume bugs in playbin when playing ogg or wma files
+        # 2. When seeking the DSPs sometimes lie about the real position info
+        if util.platform == util.MAEMO:
             self.__player = gst.Pipeline('player')
-            self.__volume_multiplier = 0.6 # 1 is much too loud
-            source = gst.element_factory_make('gnomevfssrc', 'file-source')
-
-            try:
-                audio_decoder = gst.element_factory_make(
-                    'tremor', 'vorbis-decoder' )
-            except Exception, e:
-                self.__log.exception( util.notify(
-                    'No ogg decoder available, install the "mogg" package.',
-                    title='Missing Decoder.' ))
-                self.__player = None
-                return False
-
-            self.__volume_control = gst.element_factory_make('volume','volume')
-            audiosink = gst.element_factory_make('dsppcmsink', 'audio-output')
-
-            self.__player.add(
-                source, audio_decoder, self.__volume_control, audiosink )
-            gst.element_link_many(
-                source, audio_decoder, self.__volume_control, audiosink )
-
-            source.set_property( 'location', 'file://' + filepath )
+            src = gst.element_factory_make('gnomevfssrc', 'src')
+            decoder = gst.element_factory_make('decodebin', 'decoder')
+            convert = gst.element_factory_make('audioconvert', 'convert')
+            resample = gst.element_factory_make('audioresample', 'resample')
+            sink = gst.element_factory_make('dsppcmsink', 'sink')
+            
+            self.__filesrc = src # pointer to the main source element
+            
+            # The volume is set using the dsppcmsink's volume control 
+            # which takes an integer value from 0 to 65535
+            self.__volume_control = sink
+            self.__volume_multiplier = 2**16 - 1
+            
+            # Add the various elements to the player pipeline
+            self.__player.add( src, decoder, convert, resample, sink )
+            
+            # Link what can be linked now, the decoder->convert happens later
+            gst.element_link_many( src, decoder )
+            gst.element_link_many( convert, resample, sink )
+            
+            # We can't link the two halves of the pipeline until it comes
+            # time to start playing, this singal lets us know when it's time.
+            # This is because the output from decoder can't be determined until
+            # decoder knows what it's decoding.
+            decoder.connect( 'pad-added',
+                             self.__on_decoder_pad_added,
+                             convert.get_pad('sink') )
         else:
-            # Workaround for volume on maemo, they use a 0 to 10 scale
-            self.__volume_multiplier = int(util.platform == util.MAEMO)*10 or 1
-            self.__log.info( 'Using plain-old playbin.' )
+            # This is for *ahem* "normal" versions of gstreamer
             self.__player = gst.element_factory_make('playbin', 'player')
-            self.__volume_control = self.__player
-            self.__player.set_property( 'uri', 'file://' + filepath )
+            # Isn't playbin simple :)
+            self.__filesrc = self.__volume_control = self.__player
+            self.__volume_multiplier = 1.
+        
+        self.__set_uri_to_be_played( 'file://' + filepath )
 
         bus = self.__player.get_bus()
         bus.add_signal_watch()
@@ -153,7 +160,11 @@ class panucciPlayer(ObservableService):
         self.__set_volume_level( settings.volume )
 
         return True
-
+    
+    def __on_decoder_pad_added(self, decoder, src_pad, sink_pad):
+        # link the decoder's new "src_pad" to "sink_pad"
+        src_pad.link( sink_pad )
+    
     def __get_volume_level(self):
         if self.__volume_control is not None:
             return self.__volume_control.get_property(
@@ -163,9 +174,16 @@ class panucciPlayer(ObservableService):
         assert  0 <= value <= 1
 
         if self.__volume_control is not None:
-            self.__volume_control.set_property(
-                'volume', value * float(self.__volume_multiplier))
-
+            vol = value * self.__volume_multiplier
+            vol = int(vol) if util.platform == util.MAEMO else float(vol)
+            self.__volume_control.set_property( 'volume', vol )
+    
+    def __set_uri_to_be_played( self, uri ):
+        # Sets the right property depending on the platform of self.__filesrc
+        if self.__player is not None:
+            prop = 'location' if util.platform == util.MAEMO else 'uri'
+            self.__filesrc.set_property( prop, uri )
+    
     def get_formatted_position(self, pos=None):
         if pos is None:
             if self.playing:
