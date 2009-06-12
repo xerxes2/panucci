@@ -156,6 +156,18 @@
           <long>A list of file extensions that are playable by Panucci.</long>
         </locale>
       </schema>
-
+    
+      <schema>
+        <key>/schemas/apps/panucci/enable_hardware_decoding</key>
+        <applyto>/apps/panucci/enable_hardware_decoding</applyto>
+        <owner>panucci</owner>
+        <type>bool</type>
+        <default>FALSE</default>
+        <locale name="C">
+          <short>Enable hardware decoding on maemo</short>
+          <long>This allows the player to use hardware decoding for certain media types.</long>
+        </locale>
+      </schema>
+    
   </schemalist>
 </gconfschemafile>

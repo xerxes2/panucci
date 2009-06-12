@@ -28,19 +28,20 @@ SIGNAL_NAME_SUFFIX = '_changed'
 # If you add a setting _please_ update the schemas file
 
 default_settings = {
-    'allow_blanking'       : True,
-    'db_location'          : '~/.panucci.sqlite',
-    'disable_delayed_skip' : False,
-    'last_folder'          : '~',
-    'max_recent_files'     : 10,
-    'progress_locked'      : False,
-    'scrolling_labels'     : True,
-    'seek_long'            : 60,
-    'seek_short'           : 10,
-    'skip_delay'           : 0.5,
-    'supported_extensions' : 'mp2,mp3,mp4,ogg,m4a,wav',
-    'temp_playlist'        : '~/.panucci.m3u',
-    'volume'               : 0.3,
+    'allow_blanking'            : True,
+    'db_location'               : '~/.panucci.sqlite',
+    'disable_delayed_skip'      : False,
+    'enable_hardware_decoding'  : False,
+    'last_folder'               : '~',
+    'max_recent_files'          : 10,
+    'progress_locked'           : False,
+    'scrolling_labels'          : True,
+    'seek_long'                 : 60,
+    'seek_short'                : 10,
+    'skip_delay'                : 0.5,
+    'supported_extensions'      : 'mp2,mp3,mp4,ogg,m4a,wav',
+    'temp_playlist'             : '~/.panucci.m3u',
+    'volume'                    : 0.3,
 }
 
 class Settings(ObservableService):
