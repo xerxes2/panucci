@@ -344,6 +344,8 @@ class PanucciGUI(object):
             for f in self.recent_files:
                 # don't include the temporary playlist in the file list
                 if f == temp_playlist: continue
+                # don't include non-existant files
+                if not os.path.exists( f ): continue
                 filename, extension = os.path.splitext(os.path.basename(f))
                 menu_item = gtk.MenuItem( filename.replace('_', ' '))
                 menu_item.connect('activate', self.on_recent_file_activate, f)
