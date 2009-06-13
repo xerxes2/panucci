@@ -186,10 +186,12 @@ class Playlist(ObservableService):
         else:
             return self.load_from_bookmark_id( item_id, bookmark_id )
 
-    def save_bookmark( self, bookmark_name, position ): 
-        self.notify( 'bookmark_added', caller=self.save_bookmark )
-        self.__queue.current_item.save_bookmark(
-            bookmark_name, position, resume_pos=False )
+    def save_bookmark( self, bookmark_name, position ):
+        if self.__queue.current_item is not None:
+            self.__queue.current_item.save_bookmark( bookmark_name, position,
+                                                     resume_pos=False )
+            self.notify( 'bookmark_added', str(self.__queue.current_item),
+                         bookmark_name, position, caller=self.save_bookmark )
 
     def update_bookmark(self, item_id, bookmark_id, name=None, seek_pos=None):
         item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)

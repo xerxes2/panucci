@@ -621,8 +621,7 @@ class PlayerTab(gtk.HBox):
 
         self.bookmarks_button = widgets.DualActionButton(
                 generate_image('bookmark-new.png'),
-                lambda *args: True,
-                #self.__gui_root.playlist_tab.add_bookmark, # NOOOOOOOOOO!
+                player.add_bookmark_at_current_position,
                 generate_image(gtk.STOCK_JUMP_TO, True),
                 self.go_to_current_track_in_playlist)
         buttonbox.add(self.bookmarks_button)
@@ -852,9 +851,9 @@ class PlayerTab(gtk.HBox):
                 
                 if util.platform != util.MAEMO:
                     value += ' - Panucci'
-
-                self.__gui_root.main_window.set_title( value )
-
+                
+                self.__gui_root.main_window.set_title( value )        
+    
     # FIXME: this doesn't work
     def go_to_current_track_in_playlist(self):
         # Select the currently playing track in the playlist tab
@@ -970,8 +969,9 @@ class PlaylistTab(gtk.VBox):
 
         self.pack_start(self.hbox, False, True)
 
-        player.playlist.register(
-            'file_queued', lambda x,y,z: self.update_model() )
+        player.playlist.register( 'file_queued',
+                                  lambda x,y,z: self.update_model() )
+        player.playlist.register( 'bookmark_added', self.on_bookmark_added )
 
         self.show_all()
 
@@ -1068,12 +1068,8 @@ class PlaylistTab(gtk.VBox):
         else:
             self.__model.set_value(iter, 1, old_text)
 
-    def add_bookmark(self, w=None, lbl=None, pos=None):
-        (label, position) = player.get_formatted_position(pos)
-        label = label if lbl is None else lbl
-        position = position if pos is None else pos
-        player.playlist.save_bookmark( label, position )
-        util.notify(_('Bookmark added: %s') % label)
+    def on_bookmark_added(self, parent_id, bookmark_name, position):
+        util.notify(_('Bookmark added: %s') % bookmark_name)
         self.update_model()
 
     def add_file(self, widget):

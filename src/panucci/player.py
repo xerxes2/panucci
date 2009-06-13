@@ -223,6 +223,12 @@ class panucciPlayer(ObservableService):
         if self.__player is not None:
             self.__filesrc.set_property( self.__filesrc_property, uri )
     
+    def add_bookmark_at_current_position( self ):
+        label, position = player.get_formatted_position()
+        self.playlist.save_bookmark( label, position )
+        self.__log.info('Added bookmark: %s - %d', label, position)
+        return label, position
+    
     def get_formatted_position(self, pos=None):
         if pos is None:
             if self.playing:
