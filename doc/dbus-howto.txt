@@ -1,0 +1,19 @@
+Panucci D-Bus HOWTO
+
+Below are a few examples of how to use Panucci over D-Bus, please see
+doc/dbus-api.txt for a complete list of available functions.
+
+Using dbus-send:
+    dbus-send --type=method_call --dest=org.panucci.panucciInterface \
+    /panucciInterface org.panucci.panucciInterface.playPause
+
+Using python:
+    python -c "import dbus; dbus.SessionBus().get_object( \
+    'org.panucci.panucciInterface', '/panucciInterface').playPause()"
+
+In a python script:
+    import dbus
+    session_bus = dbus.SessionBus()
+    panucci_interface = session_bus.get_object(
+        'org.panucci.panucciInterface', '/panucciInterface')
+    panucci_interface.playPause()

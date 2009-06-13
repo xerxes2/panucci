@@ -1,0 +1,77 @@
+Panucci D-Bus interface
+
+name: org.panucci.panucciInterface
+path: /panucciInterface
+
+play( )
+    Starts playing the current file.
+
+pause( )
+    Pauses the current file.
+
+stop( )
+    Stops the current file and sets the current file to the first file in
+    the playlist.
+
+next( loop ) *
+    Skips to the next track in the playlist.
+    
+    loop - If True, this will cause the playlist to loop to back to the
+           beginning if the end of the playlist is reached.
+    Returns True if it was possible to skip forward.
+
+prev( loop ) *
+    Skips to the previous track in the playlist.
+    
+    loop - If True, this will cause the playlist to loop to back to the
+           beginning if trying to skip backwards before the first track.
+    Returns True if it was possible to skip forward.
+
+seek_by( amount ) *
+    Seek "amount" in the current file.
+    
+    amount - The number of _nanoseconds_ to seek from the current position in
+             the current file.
+
+current_position( ) *
+    Get the current position in the file.
+    
+    Returns the current position in _nanoseconds_ in the current file.
+
+playPause( )
+    Depending on the current status of the player, this will cause the
+    opposite opperation to occur. Eg. If the player is paused, calling
+    this will run play().
+
+play_file( filepath )
+    Erase the current playlist and start playing "filepath". If a custom
+    playlist has been created the user will be prompted to save or erase
+    the playlist.
+    
+    filepath - The full path to a compatible audio file.
+
+queue_file( filepath )
+    Add a file to the end of the playlist.
+    
+    filepath - The full path to a compatible audio file.
+
+insert_file( position, filepath )
+    Insert a file into the current playlist at "position".
+    
+    position - The position that the file should be inserted starting from 0.
+    filepath - The full path to a compatible audio file.
+
+load_directory( filepath, append )
+    Create a playlist from all the files in a directory.
+    
+    filepath - The full path to a directory of audio files
+    append   - If true, don't erase the playlist, just append files to the
+               playlist. If false, the user will be asked if they'd like to
+               overwrite the playlist.
+
+show_main_window( )
+    Brings the Panucci window to the front if it is obscured or minimized.
+
+
+
+        Stars (*) indicate a function which still has to be implemented
