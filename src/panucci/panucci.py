@@ -448,7 +448,7 @@ class PanucciGUI(object):
                 self.fullscreen = not self.fullscreen
     
     def on_recent_file_activate(self, widget, filepath):
-        self.play_file(filepath)
+        self._play_file(filepath)
 
     def on_file_queued(self, filepath, success, notify):
         if notify:
@@ -470,11 +470,7 @@ class PanucciGUI(object):
         dialog.set_version(app_version)
         dialog.run()
         dialog.destroy()
-
-    def play_file(self, filename):
-        if self.check_queue():
-            self._play_file(filename)
-
+    
     def _play_file(self, filename, pause_on_load=False):
         player.playlist.load( os.path.abspath(filename) )
         if player.playlist.is_empty:
