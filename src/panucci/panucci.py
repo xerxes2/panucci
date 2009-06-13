@@ -53,6 +53,7 @@ from simplegconf import gconf
 from settings import settings
 from player import player
 from dbusinterface import interface
+from services import ObservableService
 
 about_name = 'Panucci'
 about_text = _('Resuming audiobook and podcast player')
@@ -190,6 +191,8 @@ def set_stock_button_text( button, text ):
 class PanucciGUI(object):
     """ The object that holds the entire panucci gui """
     
+    PLAYER_TAB, PLAYLIST_TAB = range(2)
+    
     def __init__(self, filename=None):
         self.__log = logging.getLogger('panucci.panucci.PanucciGUI')  
         interface.register_gui(self)      
@@ -235,11 +238,15 @@ class PanucciGUI(object):
         self.__player_tab = PlayerTab(self)
         self.__playlist_tab = PlaylistTab(self)
         
-        self.notebook.append_page(self.__player_tab, gtk.Label(_('Player')))
+        self.notebook.insert_page( self.__player_tab,
+                                   gtk.Label(_('Player')),
+                                   self.PLAYER_TAB )
         self.notebook.set_tab_label_packing( self.__player_tab, True, True, 
                                              gtk.PACK_START)
         
-        self.notebook.append_page(self.__playlist_tab, gtk.Label(_('Playlist')))
+        self.notebook.insert_page( self.__playlist_tab,
+                                   gtk.Label(_('Playlist')),
+                                   self.PLAYLIST_TAB )
         self.notebook.set_tab_label_packing( self.__playlist_tab, True, True,
                                              gtk.PACK_START )
 
@@ -261,11 +268,13 @@ class PanucciGUI(object):
         
         player.playlist.register( 'playlist-to-be-overwritten',
                                   self.check_queue )
+        self.__player_tab.register( 'select-current-item-request', 
+                                    self.__select_current_item )
         
         self.main_window.show_all()
         
         # this should be done when the gui is ready
-        self.notebook.set_current_page(0)
+        self.notebook.set_current_page(self.PLAYER_TAB)
         self.pickle_file_conversion()
         player.init(filepath=filename)
         
@@ -489,7 +498,13 @@ class PanucciGUI(object):
                     1000 * 59, util.poke_backlight )
         else:
             self.__log.info('Blanking controls are for Maemo only.')
-
+    
+    def __select_current_item( self ):
+        # Select the currently playing track in the playlist tab
+        # and switch to it (so we can edit bookmarks, etc.. there)
+        self.notebook.set_current_page(self.PLAYLIST_TAB)
+        self.__playlist_tab.select_current_item()
+    
     def pickle_file_conversion(self):
         pickle_file = os.path.expanduser('~/.rmp-bookmarks')
         if os.path.isfile(pickle_file):
@@ -509,13 +524,17 @@ class PanucciGUI(object):
 ##################################################
 # PlayerTab                            
 ##################################################
-class PlayerTab(gtk.HBox):
+class PlayerTab(ObservableService, gtk.HBox):
     """ The tab that holds the player elements """
-
+    
+    signals = [ 'select-current-item-request', ]
+    
     def __init__(self, gui_root):
-        gtk.HBox.__init__(self)
         self.__log = logging.getLogger('panucci.panucci.PlayerTab')
         self.__gui_root = gui_root
+        
+        gtk.HBox.__init__(self)
+        ObservableService.__init__(self, self.signals, self.__log)
 
         # Timers
         self.progress_timer_id = None
@@ -623,7 +642,7 @@ class PlayerTab(gtk.HBox):
                 generate_image('bookmark-new.png'),
                 player.add_bookmark_at_current_position,
                 generate_image(gtk.STOCK_JUMP_TO, True),
-                self.go_to_current_track_in_playlist)
+                lambda *args: self.notify('select-current-item-request'))
         buttonbox.add(self.bookmarks_button)
         self.set_controls_sensitivity(False)
         main_vbox.pack_start(buttonbox, False, False)
@@ -854,21 +873,6 @@ class PlayerTab(gtk.HBox):
                 
                 self.__gui_root.main_window.set_title( value )        
     
-    # FIXME: this doesn't work
-    def go_to_current_track_in_playlist(self):
-        # Select the currently playing track in the playlist tab
-        # and switch to it (so we can edit bookmarks, etc.. there)
-        treeview = self.__playlist_tab.treeview
-        model = treeview.get_model()
-        selection = treeview.get_selection()
-        for row in iter(model):
-            if model.get_value(row.iter, 0) == str(player.playlist.get_current_item()):
-                selection.unselect_all()
-                treeview.set_cursor(row.path)
-                treeview.scroll_to_cell(row.path, use_align=True)
-                break
-        self.notebook.set_current_page(1)
-
     def do_seek(self, seek_amount):
         resp = player.do_seek(from_current=seek_amount*10**9)
         if resp:
@@ -1113,7 +1117,18 @@ class PlaylistTab(gtk.VBox):
                 model.remove(bkmk_iter)
             elif item_iter is not None:
                 model.remove(item_iter)
-
+    
+    def select_current_item(self):
+        model = self.treeview.get_model()
+        selection = self.treeview.get_selection()
+        current_item_id = str(player.playlist.get_current_item())
+        for row in iter(model):
+            if model.get_value(row.iter, 0) == current_item_id:
+                selection.unselect_all()
+                self.treeview.set_cursor(row.path)
+                self.treeview.scroll_to_cell(row.path, use_align=True)
+                break
+    
     def show_playlist_item_details(self, w):
         selection = self.treeview.get_selection()
         if selection.count_selected_rows() == 1:
