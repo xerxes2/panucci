@@ -216,7 +216,7 @@ class ScrollingLabel(gtk.DrawingArea):
         self.__x_direction = self.LEFT
         self.__x_alignment = 0
         self.__y_alignment = 0.5
-        self.__scrolling_timer = None
+        self.__scrolling_timer_id = None
         self.__scrolling_possible = True
         self.__scrolling = False
         
@@ -314,6 +314,11 @@ class ScrollingLabel(gtk.DrawingArea):
             right) if 'halfway_callback' is set after running the callback.
         """
         
+        # prevent an accidental scroll (there's a race-condition somewhere
+        # but I'm too lazy to find out where).
+        if not self.__scrolling_possible:
+            return False
+        
         rtn = True
         win_x, win_y = self.window.get_size()
         lbl_x, lbl_y = self.__pango_layout.get_pixel_size()
@@ -361,6 +366,22 @@ class ScrollingLabel(gtk.DrawingArea):
         else:
             self.__scrolling_timer = None
     
+    def __scrolling_timer_get(self):
+        return self.__scrolling_timer_id
+    
+    def __scrolling_timer_set(self, val):
+        """ When changing the scrolling timer id, make sure that only one
+            timer is running at a time. This removes the previous timer
+            before adding a new one. """
+        
+        if self.__scrolling_timer_id is not None:
+            gobject.source_remove( self.__scrolling_timer_id )
+            self.__scrolling_timer_id = None
+        
+        self.__scrolling_timer_id = val
+        
+    __scrolling_timer = property( __scrolling_timer_get, __scrolling_timer_set )
+    
     def __start_scrolling(self):
         """ Make the text start scrolling """
         self.__scrolling = True
@@ -370,7 +391,5 @@ class ScrollingLabel(gtk.DrawingArea):
     def __stop_scrolling(self):
         """ Make the text stop scrolling """
         self.__scrolling = False
-        if self.__scrolling_timer is not None:
-            gobject.source_remove( self.__scrolling_timer )
-            self.__scrolling_timer = None
+        self.__scrolling_timer = None
         
