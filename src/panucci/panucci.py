@@ -601,9 +601,10 @@ class PlayerTab(gtk.HBox):
         buttonbox.add(self.rewind_button)
 
         self.play_pause_button = gtk.Button('')
-        image(self.play_pause_button, gtk.STOCK_OPEN, True)
-        self.button_handler_id = self.play_pause_button.connect( 
-            'clicked', self.__gui_root.open_file_callback )
+        image(self.play_pause_button, 'media-playback-start.png')
+        self.play_pause_button.connect( 'clicked',
+                                        self.on_btn_play_pause_clicked )
+        self.play_pause_button.set_sensitive(False)
         buttonbox.add(self.play_pause_button)
 
         self.forward_button = widgets.DualActionButton(
@@ -666,10 +667,14 @@ class PlayerTab(gtk.HBox):
         self.set_volume(settings.volume)
     
     def set_controls_sensitivity(self, sensitive):
-        self.forward_button.set_sensitive(sensitive)
-        self.rewind_button.set_sensitive(sensitive)
-        self.fforward_button.set_sensitive(sensitive)
-        self.rrewind_button.set_sensitive(sensitive)
+        for button in self.forward_button, self.rewind_button, \
+                      self.fforward_button, self.rrewind_button:
+            
+            button.set_sensitive(sensitive)
+        
+        # the play/pause button should always be available except
+        # for when the player starts without a file
+        self.play_pause_button.set_sensitive(True)
 
     def on_key_press(self, widget, event):
         if util.platform == util.MAEMO:
@@ -738,9 +743,8 @@ class PlayerTab(gtk.HBox):
     
     def on_player_stopped(self):
         self.stop_progress_timer()
-        self.title_label.set_size_request(-1,-1)
-        self.reset_progress()
         self.set_controls_sensitivity(False)
+        image(self.play_pause_button, 'media-playback-start.png')
 
     def on_player_playing(self):
         self.start_progress_timer()
@@ -748,11 +752,6 @@ class PlayerTab(gtk.HBox):
         self.set_controls_sensitivity(True)
 
     def on_player_new_track(self, metadata):
-        image(self.play_pause_button, 'media-playback-start.png')
-        self.play_pause_button.disconnect(self.button_handler_id)
-        self.button_handler_id = self.play_pause_button.connect(
-            'clicked', self.on_btn_play_pause_clicked )
-
         for widget in [self.title_label,self.artist_label,self.album_label]:
             widget.set_markup('')
             widget.hide()
@@ -771,11 +770,7 @@ class PlayerTab(gtk.HBox):
         image(self.play_pause_button, 'media-playback-start.png')
 
     def on_player_end_of_playlist(self, loop):
-        if not loop:
-            self.play_pause_button.disconnect(self.button_handler_id)
-            self.button_handler_id = self.play_pause_button.connect(
-                'clicked', self.open_file_callback )
-            image(self.play_pause_button, gtk.STOCK_OPEN, True)
+        pass
     
     def reset_progress(self):
         self.progress.set_fraction(0)
