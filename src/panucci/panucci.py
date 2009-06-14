@@ -61,8 +61,11 @@ about_authors = ['Thomas Perl', 'Nick (nikosapi)', 'Matthew Taylor']
 about_website = 'http://panucci.garage.maemo.org/'
 app_version = ''
 
-coverart_names = [ 'cover', 'cover.jpg', 'cover.png' ]
-coverart_size = [200, 200] if util.platform == util.MAEMO else [110, 110]
+coverart_sizes = {
+    'normal'            : 110,
+    'maemo'             : 200,
+    'maemo fullscreen'  : 275,
+}
         
 gtk.about_dialog_set_url_hook(util.open_link, None)
 gtk.icon_size_register('panucci-button', 32, 32)
@@ -435,12 +438,14 @@ class PanucciGUI(object):
         return self.__window_fullscreen
 
     def __set_fullscreen(self, value):
-        if value and not self.__window_fullscreen:
-            self.main_window.fullscreen()
-        elif not value and self.__window_fullscreen:
-            self.main_window.unfullscreen()
-
-        self.__window_fullscreen = value
+        if value != self.__window_fullscreen:
+            if value:
+                self.main_window.fullscreen()
+            else:
+                self.main_window.unfullscreen()
+            
+            self.__window_fullscreen = value
+            player.playlist.send_metadata()
 
     fullscreen = property( __get_fullscreen, __set_fullscreen )
     
@@ -706,8 +711,6 @@ class PlayerTab(ObservableService, gtk.HBox):
                 self.do_seek( settings.seek_long )
             elif event.keyval == gtk.keysyms.Return: # play/pause
                 self.on_btn_play_pause_clicked()
-            elif event.keyval == gtk.keysyms.F6:
-                self.fullscreen = not self.fullscreen
 
     # The following two functions get and set the
     #   volume from the volume control widgets.
@@ -837,12 +840,23 @@ class PlayerTab(ObservableService, gtk.HBox):
         if self.progress_timer_id is not None:
             gobject.source_remove( self.progress_timer_id )
             self.progress_timer_id = None
-
+    
+    def get_coverart_size( self ):
+        if util.platform == util.MAEMO:
+            if self.__gui_root.fullscreen:
+                size = coverart_sizes['maemo fullscreen']
+            else:
+                size = coverart_sizes['maemo']
+        else:
+            size = coverart_sizes['normal']
+        
+        return size, size
+    
     def set_coverart( self, pixbuf ):
         self.cover_art.set_from_pixbuf(pixbuf)
         self.cover_art.show()
         self.has_coverart = True
-
+    
     def set_metadata( self, tag_message ):
         tags = { 'title': self.title_label, 'artist': self.artist_label,
                  'album': self.album_label }
@@ -855,8 +869,10 @@ class PlayerTab(ObservableService, gtk.HBox):
             try:
                 pbl.write(value)
                 pbl.close()
-                pixbuf = pbl.get_pixbuf().scale_simple(
-                  coverart_size[0], coverart_size[1], gtk.gdk.INTERP_BILINEAR )
+                
+                x, y = self.get_coverart_size()
+                pixbuf = pbl.get_pixbuf()
+                pixbuf = pixbuf.scale_simple( x, y, gtk.gdk.INTERP_BILINEAR )
                 self.set_coverart(pixbuf)
             except Exception, e:
                 self.__log.exception('Error setting coverart...')

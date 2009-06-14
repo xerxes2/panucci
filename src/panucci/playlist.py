@@ -129,6 +129,9 @@ class Playlist(ObservableService):
         self.notify( 'new-metadata-available',
                      caller=self.on_queue_current_item_changed )
     
+    def send_metadata(self):
+        self.notify( 'new-metadata-available', caller=self.send_metadata )
+    
     def quit(self):
         self.__log.debug('quit() called.')
         if self.__queue.modified:
