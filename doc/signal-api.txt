@@ -52,9 +52,8 @@ Playlist Signal API
     	- item: the id of item in question
 	    - position: the position of said item
 
-*   "new-metadata-available"     : ( metadata )
+    "new-metadata-available"     : ( )
     	Called when new metadata is available.
-	    - metadata: a dict of metadata for the currently playing track
 
     "new-track-playing"          : ( )
     	Called when a new track begins playing.

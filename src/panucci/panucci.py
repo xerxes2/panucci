@@ -552,8 +552,10 @@ class PlayerTab(ObservableService, gtk.HBox):
         player.register( 'paused', self.on_player_paused )
         player.playlist.register( 'end-of-playlist',
                                   self.on_player_end_of_playlist )
-        player.playlist.register( 'new_track_metadata', 
+        player.playlist.register( 'new-track-playing', 
                                   self.on_player_new_track )
+        player.playlist.register( 'new-metadata-available',
+                                  self.on_player_new_metadata )
 
     def make_player_tab(self):
         main_vbox = gtk.VBox()
@@ -767,19 +769,23 @@ class PlayerTab(ObservableService, gtk.HBox):
         image(self.play_pause_button, 'media-playback-pause.png')
         self.set_controls_sensitivity(True)
 
-    def on_player_new_track(self, metadata):
+    def on_player_new_track(self):
         for widget in [self.title_label,self.artist_label,self.album_label]:
             widget.set_markup('')
             widget.hide()
 
         self.cover_art.hide()
         self.has_coverart = False
+    
+    def on_player_new_metadata(self):
+        metadata = player.playlist.get_file_metadata()
         self.set_metadata(metadata)
-
-        text, position = player.get_formatted_position()
-        estimated_length = metadata.get('length', 0)
-        self.set_progress_callback( position, estimated_length )
-
+        
+        if not player.playing:
+            text, position = player.get_formatted_position()
+            estimated_length = metadata.get('length', 0)
+            self.set_progress_callback( position, estimated_length )
+    
     def on_player_paused( self, position, duration ):
         self.stop_progress_timer() # This should save some power
         self.set_progress_callback( position, duration )

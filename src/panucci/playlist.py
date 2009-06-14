@@ -44,9 +44,9 @@ def is_supported( filename ):
         return True # if the string is empty, allow anything
 
 class Playlist(ObservableService):
-    signals = [ 'new-track-playing', 'new_track_metadata', 'file_queued',
-        'bookmark_added', 'seek-requested', 'end-of-playlist',
-        'playlist-to-be-overwritten', 'stop-requested' ]
+    signals = [ 'new-track-playing', 'new-metadata-available', 'file_queued',
+                'bookmark_added', 'seek-requested', 'end-of-playlist',
+                'playlist-to-be-overwritten', 'stop-requested' ]
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
@@ -124,14 +124,11 @@ class Playlist(ObservableService):
         return self.save_to_new_playlist(filepath)
 
     def on_queue_current_item_changed(self):
-        self.send_new_metadata( self.on_queue_current_item_changed )
         self.notify( 'new-track-playing',
                      caller=self.on_queue_current_item_changed )
-
-    def send_new_metadata(self, caller=None):
-        self.notify( 'new_track_metadata', self.get_file_metadata(),
-            caller=caller or self.send_new_metadata )
-
+        self.notify( 'new-metadata-available',
+                     caller=self.on_queue_current_item_changed )
+    
     def quit(self):
         self.__log.debug('quit() called.')
         if self.__queue.modified:
@@ -209,7 +206,8 @@ class Playlist(ObservableService):
                 item.title = name
                 self.__queue.modified = True
             if self.__queue.current_item == item:
-                self.send_new_metadata(self.update_bookmark)
+                self.notify( 'new-metadata-available',
+                             caller=self.update_bookmark )
         else:
             bookmark.timestamp = time.time()
 
@@ -378,7 +376,7 @@ class Playlist(ObservableService):
         self.__queue.modified = os.path.expanduser(
             settings.temp_playlist ) == self.filepath
 
-        self.send_new_metadata( caller=self.load )
+        self.notify( 'new-metadata-available', caller=self.load )
 
         return not error
 
@@ -411,26 +409,34 @@ class Playlist(ObservableService):
 
     def load_directory(self, directory, append=False):
         self.__log.debug('Attempting to load directory "%s"', directory)
-
-        if not append:
-            self.reset_playlist()
-
-        if os.path.isdir(directory):
-            self.filepath = settings.temp_playlist
-            self.__queue.playlist_id = self.id
-            items = []
-
-            for item in os.listdir(directory):
-                filepath = os.path.join( directory, item )
-                if os.path.isfile(filepath) and is_supported(filepath):
-                    items.append(filepath)
-
-            items.sort()
-            for item in items:
-                self.append( item, notify=False )
-        else:
+        
+        if not os.path.isdir(directory):
             self.__log.warning('"%s" is not a directory.', directory)
             return False
+        
+        if not append:
+            if self.notify( 'playlist-to-be-overwritten',
+                            caller=self.load_directory ):
+                self.reset_playlist()
+            else:
+                self.__log.info('Directory load aborted by user.')
+                return False
+        
+        self.filepath = settings.temp_playlist
+        self.__queue.playlist_id = self.id
+        items = []
+
+        for item in os.listdir(directory):
+            filepath = os.path.join( directory, item )
+            if os.path.isfile(filepath) and is_supported(filepath):
+                items.append(filepath)
+
+        items.sort()
+        for item in items:
+            self.append( item, notify=False )
+        
+        if not append:
+            self.on_queue_current_item_changed()
 
         return True
 
