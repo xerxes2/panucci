@@ -315,15 +315,22 @@ class PanucciGUI(object):
 
         menu_settings_enable_dual_action = gtk.CheckMenuItem(
             _('Enable dual-action buttons') )
-        settings.attach_checkbutton(
-            menu_settings_enable_dual_action, 'enable_dual_action_btn' )
+        settings.attach_checkbutton( menu_settings_enable_dual_action,
+                                     'enable_dual_action_btn' )
         menu_settings_sub.append(menu_settings_enable_dual_action)
-
+        
+        if util.platform == util.MAEMO:
+            menu_settings_enable_hw_decoding = gtk.CheckMenuItem(
+                _('Enable hardware decoding') )
+            settings.attach_checkbutton( menu_settings_enable_hw_decoding,
+                                        'enable_hardware_decoding' )
+            menu_settings_sub.append(menu_settings_enable_hw_decoding)
+        
         menu_settings_lock_progress = gtk.CheckMenuItem(_('Lock Progress Bar'))
-        settings.attach_checkbutton(
-            menu_settings_lock_progress, 'progress_locked' )
+        settings.attach_checkbutton( menu_settings_lock_progress,
+                                     'progress_locked' )
         menu_settings_sub.append(menu_settings_lock_progress)
-
+        
         menu_about = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
         menu_about.connect("activate", self.show_about, self.main_window)
         menu.append(menu_about)
