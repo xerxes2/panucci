@@ -424,9 +424,12 @@ class Playlist(ObservableService):
         
         self.filepath = settings.temp_playlist
         self.__queue.playlist_id = self.id
+        
         items = []
+        potential_items = os.listdir(directory)
+        potential_items.sort()
 
-        for item in os.listdir(directory):
+        for item in potential_items:
             filepath = os.path.join( directory, item )
             if os.path.isfile(filepath) and is_supported(filepath):
                 items.append(filepath)
@@ -1213,6 +1216,7 @@ class M3U_Playlist(PlaylistFile):
                     self.current_item = PlaylistItem()
                 elif os.path.isdir( path ):
                     files = os.listdir( path )
+                    files.sort()
                     for file in files:
                         item = PlaylistItem()
                         item.playlist_reported_filepath=os.path.join(line,file)
