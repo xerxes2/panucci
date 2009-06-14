@@ -313,11 +313,11 @@ class PanucciGUI(object):
         menu_settings_sub = gtk.Menu()
         menu_settings.set_submenu(menu_settings_sub)
 
-        menu_settings_disable_skip = gtk.CheckMenuItem(
-            _('Disable Delayed Track Skipping') )
+        menu_settings_enable_dual_action = gtk.CheckMenuItem(
+            _('Enable dual-action buttons') )
         settings.attach_checkbutton(
-            menu_settings_disable_skip, 'disable_delayed_skip' )
-        menu_settings_sub.append(menu_settings_disable_skip)
+            menu_settings_enable_dual_action, 'enable_dual_action_btn' )
+        menu_settings_sub.append(menu_settings_enable_dual_action)
 
         menu_settings_lock_progress = gtk.CheckMenuItem(_('Lock Progress Bar'))
         settings.attach_checkbutton(
@@ -548,6 +548,10 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.has_coverart = False
         self.set_volume(settings.volume)
         
+        settings.register( 'enable_dual_action_btn_changed', 
+                           self.on_dual_action_setting_changed )
+        settings.register( 'dual_action_button_delay_changed', 
+                           self.on_dual_action_setting_changed )
         settings.register( 'volume_changed', self.set_volume )
         settings.register( 'scrolling_labels_changed', lambda v:
                            setattr( self.title_label, 'scrolling', v ) )
@@ -611,15 +615,20 @@ class PlayerTab(ObservableService, gtk.HBox):
 
         # make the button box
         buttonbox = gtk.HBox()
-
-        self.rrewind_button = widgets.DualActionButton(
+        
+        # A wrapper to help create DualActionButtons with the right settings
+        create_da = lambda a, b, c=None, d=None: widgets.DualActionButton(
+            a, b, c, d, settings.dual_action_button_delay,
+            settings.enable_dual_action_btn )
+        
+        self.rrewind_button = create_da(
                 generate_image('media-skip-backward.png'),
                 lambda: self.do_seek(-1*settings.seek_long),
                 generate_image(gtk.STOCK_GOTO_FIRST, True),
                 player.playlist.prev)
         buttonbox.add(self.rrewind_button)
 
-        self.rewind_button = widgets.DualActionButton(
+        self.rewind_button = create_da(
                 generate_image('media-seek-backward.png'),
                 lambda: self.do_seek(-1*settings.seek_short))
         buttonbox.add(self.rewind_button)
@@ -631,19 +640,19 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.play_pause_button.set_sensitive(False)
         buttonbox.add(self.play_pause_button)
 
-        self.forward_button = widgets.DualActionButton(
+        self.forward_button = create_da(
                 generate_image('media-seek-forward.png'),
                 lambda: self.do_seek(settings.seek_short))
         buttonbox.add(self.forward_button)
 
-        self.fforward_button = widgets.DualActionButton(
+        self.fforward_button = create_da(
                 generate_image('media-skip-forward.png'),
                 lambda: self.do_seek(settings.seek_long),
                 generate_image(gtk.STOCK_GOTO_LAST, True),
                 player.playlist.next)
         buttonbox.add(self.fforward_button)
 
-        self.bookmarks_button = widgets.DualActionButton(
+        self.bookmarks_button = create_da(
                 generate_image('bookmark-new.png'),
                 player.add_bookmark_at_current_position,
                 generate_image(gtk.STOCK_JUMP_TO, True),
@@ -698,7 +707,15 @@ class PlayerTab(ObservableService, gtk.HBox):
         # the play/pause button should always be available except
         # for when the player starts without a file
         self.play_pause_button.set_sensitive(True)
-
+    
+    def on_dual_action_setting_changed( self, *args ):
+        for button in self.forward_button, self.rewind_button, \
+                      self.fforward_button, self.rrewind_button, \
+                      self.bookmarks_button:
+            
+            button.set_longpress_enabled( settings.enable_dual_action_btn )
+            button.set_duration( settings.dual_action_button_delay )
+    
     def on_key_press(self, widget, event):
         if util.platform == util.MAEMO:
             if event.keyval == gtk.keysyms.F7: #plus

@@ -30,7 +30,8 @@ SIGNAL_NAME_SUFFIX = '_changed'
 default_settings = {
     'allow_blanking'            : True,
     'db_location'               : '~/.panucci.sqlite',
-    'disable_delayed_skip'      : False,
+    'dual_action_button_delay'  : 0.5,
+    'enable_dual_action_btn'    : True,
     'enable_hardware_decoding'  : False,
     'last_folder'               : '~',
     'max_recent_files'          : 10,
@@ -38,7 +39,6 @@ default_settings = {
     'scrolling_labels'          : True,
     'seek_long'                 : 60,
     'seek_short'                : 10,
-    'skip_delay'                : 0.5,
     'supported_extensions'      : 'mp2,mp3,mp4,ogg,m4a,wav',
     'temp_playlist'             : '~/.panucci.m3u',
     'volume'                    : 0.3,
