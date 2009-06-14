@@ -487,10 +487,9 @@ class PanucciGUI(object):
     
     def _play_file(self, filename, pause_on_load=False):
         player.playlist.load( os.path.abspath(filename) )
+        
         if player.playlist.is_empty:
             return False
-
-        player.play()
     
     def handle_headset_button(self, event, button):
         if event == 'ButtonPressed' and button == 'phone':
