@@ -334,7 +334,7 @@ class Playlist(ObservableService):
     # File importing functions
     ##################################
 
-    def load(self, filepath):
+    def load(self, filepath, play=True):
         """ Detects filepath's filetype then loads it using
             the appropriate loader function """
         self.__log.debug('Attempting to load %s', filepath)
@@ -375,7 +375,12 @@ class Playlist(ObservableService):
 
         self.__queue.modified = os.path.expanduser(
             settings.temp_playlist ) == self.filepath
-
+        
+        # This is hacky: don't send 'new-track-playing' when first started
+        # otherwise the player will start playing, just send the metadata.
+        if play:
+            self.notify( 'new-track-playing', caller=self.load )
+        
         self.notify( 'new-metadata-available', caller=self.load )
 
         return not error
@@ -383,7 +388,7 @@ class Playlist(ObservableService):
     def load_last_played(self):
         recent = self.get_recent_files(max_files=1)
         if recent:
-            self.load(recent[0])
+            self.load(recent[0], play=False)
 
         return bool(recent)
 
