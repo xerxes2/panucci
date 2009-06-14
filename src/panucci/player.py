@@ -46,9 +46,10 @@ class panucciPlayer(ObservableService):
         self.playlist.register( 'seek-requested', self.do_seek )
         self.playlist.register( 'stop-requested', self.stop )
         settings.register( 'volume_changed', self.__set_volume_level )
-
-        self.__initial_seek = False # have we preformed the initial seek?
-        self.seeking = False        # are we seeking?
+        
+        # have we preformed the initial seek?
+        self.__initial_seek_completed = False
+        self.seeking = False # are we seeking?
 
         self.__player = None
         self.__filesrc = None
@@ -70,7 +71,7 @@ class panucciPlayer(ObservableService):
         have_player = self.__player is not None
         if have_player or self.__setup_player():
             self.notify('playing', caller=self.play)
-            self.__initial_seek = have_player
+            self.__initial_seek_completed = have_player
             self.__player.set_state(gst.STATE_PLAYING)
             return True
         else:
@@ -326,7 +327,7 @@ class panucciPlayer(ObservableService):
             if ( message.src == self.__player and
                 message.structure['new-state'] == gst.STATE_PLAYING ):
 
-                if not self.__initial_seek:
+                if not self.__initial_seek_completed:
                     # This only gets called when the file is first loaded
                     pause_time = self.playlist.play()
                     # don't seek if position is 0
@@ -336,7 +337,7 @@ class panucciPlayer(ObservableService):
                         # to query the player this early in the process
                         self.__seek(pause_time)
 
-                    self.__initial_seek = True
+                    self.__initial_seek_completed = True
 
     def quit(self):
         """ Called when the application exits """
