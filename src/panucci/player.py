@@ -256,7 +256,11 @@ class panucciPlayer(ObservableService):
         """
         error = False
         position, duration = self.get_position_duration()
-
+        
+        # if we're on maemo and paused the position is wrong (go figure...)
+        if util.platform == util.MAEMO and not self.playing:
+            position = self.playlist.get_current_position()
+        
         # if position and duration are 0 then player_get_position caught an
         # exception. Therefore self.__player isn't ready to be seeking.
         if not ( position or duration ) or self.__player is None:
@@ -294,7 +298,11 @@ class panucciPlayer(ObservableService):
         except Exception, e:
             self.__log.exception( 'Error seeking' )
             error = True
-
+        
+        # (see above) if we're paused and on maemo update the PlaylistItem
+        if not error and util.platform == util.MAEMO and not self.playing:
+            self.playlist.pause(position)
+        
         self.seeking = False
         return not error
 
