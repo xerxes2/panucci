@@ -22,6 +22,7 @@ app_version = '0.3-pre0.4'
 import dbus
 import dbus.glib
 import logging
+import logging.handlers
 import os.path
 import sys
 from optparse import OptionParser
@@ -55,10 +56,34 @@ try:
 except dbus.exceptions.DBusException:
     remote_object = None
 
+def init_logging( log_level ):
+    """ Configure the logging module for panucci """
+    logger = logging.getLogger('panucci')
+    logger.setLevel( logging.DEBUG )
+    
+    # the stream handler (logging to the console)
+    sh = logging.StreamHandler()
+    sh.setLevel( log_level )
+    fmt = logging.Formatter('%(levelname)s:%(name)s %(message)s')
+    sh.setFormatter(fmt)
+    logger.addHandler(sh)
+    
+    # the file handler (logging to a file)
+    from panucci import util
+    f = util.get_logfile()
+    fh = logging.handlers.RotatingFileHandler( f, backupCount=0, # 25kb should
+                                               maxBytes=25*1024 ) # be enough.
+    fh.doRollover() # reset the logfile at startup
+    fh.setLevel( logging.DEBUG ) # log everything to the file
+    fmt = logging.Formatter('%(asctime)s %(levelname)s:%(name)s %(message)s')
+    fh.setFormatter(fmt)
+    logger.addHandler(fh)
+
 if remote_object is None:
+    # configure logging
+    init_logging( logging.DEBUG if opts.debug else logging.ERROR )
+    
     from panucci import panucci
-    log_level = logging.DEBUG if opts.debug else logging.ERROR
-    logging.basicConfig(level=log_level)
     panucci.app_version = app_version
     panucci.run( filename=filepath ) 
 else:
