@@ -34,6 +34,7 @@ import pango
 
 import widgets
 import util
+import ossohelper
 
 log = logging.getLogger('panucci.panucci')
 
@@ -1273,8 +1274,10 @@ class PlaylistItemDetails(gtk.Dialog):
 
 
 def run(filename=None):
+    ossohelper.application_init('panucci', '0.4')
     PanucciGUI( filename )
     gtk.main()
+    ossohelper.application_exit()
 
 if __name__ == '__main__':
     log.error( 'Use the "panucci" executable to run this program.' )
