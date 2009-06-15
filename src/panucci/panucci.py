@@ -33,14 +33,10 @@ import gobject
 import pango
 
 import widgets
-
-# At the moment, we don't have gettext support, so
-# make a dummy "_" function to passthrough the string
-_ = lambda s: s
+import util
 
 log = logging.getLogger('panucci.panucci')
 
-import util
 
 try:
     import hildon

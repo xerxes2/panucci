@@ -32,8 +32,6 @@ from settings import settings
 from simplegconf import gconf
 from services import ObservableService
 
-_ = lambda x: x
-
 
 def is_supported( filename ):
     if settings.supported_extensions:

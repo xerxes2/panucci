@@ -19,6 +19,11 @@
 PREFIX ?= /usr
 DESTDIR ?= /
 
+PANUCCIBIN = bin/panucci
+PANUCCIVERSION = `grep -m 1 app_version bin/panucci | cut -d "'" -f 2`
+MESSAGESPOT = data/messages.pot
+
+
 PYTHON = /usr/bin/python2.5
 
 all:
@@ -28,7 +33,7 @@ all:
 	@echo "    distclean - remove build files + dist target"
 	@echo "    test - test the application"
 
-install: python-install post-install install-schemas
+install: gen_gettext python-install post-install install-schemas
 	replace @INSTALL_PREFIX@ $(DESTDIR)$(PREFIX) < \
 	  data/panucci.service.in > data/panucci.service
 	install data/panucci.service $(DESTDIR)$(PREFIX)/share/dbus-1/services/
@@ -52,7 +57,9 @@ post-install:
 	update-desktop-database $(DESTDIR)$(PREFIX)/share/applications/
 
 clean:
-	rm -rf build src/panucci/*.{pyc,pyo} data/panucci.service
+	rm -rf build src/panucci/*.pyc src/panucci/*.pyo
+	rm -f data/panucci.service data/messages.pot
+	make -C data/po clean
 
 distclean: clean
 	rm -rf dist
@@ -68,3 +75,18 @@ build-package:
 	# See: http://wiki.maemo.org/Uploading_to_Extras#Debian_tooling
 	dpkg-buildpackage -rfakeroot -sa -i -I.git
 
+messagespot:
+	xgettext -k_ --from-code utf-8 --language Python \
+	  -o $(MESSAGESPOT) bin/panucci src/panucci/*.py
+	sed -i \
+	  -e 's/SOME DESCRIPTIVE TITLE/Panucci translation template/g' \
+	  -e 's/THE PACKAGE'"'"'S COPYRIGHT HOLDER/Panucci Contributors/g' \
+	  -e 's/YEAR/2009/g' \
+	  -e 's/FIRST AUTHOR <EMAIL@ADDRESS>/Nick Nobody <me@nikosapi.org>/g' \
+	  -e 's/PACKAGE VERSION/Panucci '$(PANUCCIVERSION)'/g' \
+	  -e 's/-Bugs-To: /-Bugs-To: gpodder-panucci@lists.berlios.de/g' \
+	  -e 's/PACKAGE/Panucci/g' $(MESSAGESPOT)
+
+gen_gettext: messagespot
+	make -C data/po generators
+	make -C data/po update

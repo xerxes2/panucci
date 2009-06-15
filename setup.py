@@ -32,9 +32,20 @@ data_files = [
     (applications_dir, ['data/panucci.desktop']),
     ('share/icons/hicolor/scalable/apps', ['data/panucci.png']),
 ]
-    
+
+# search for translations and repare to install
+translation_files = []
+for mofile in glob.glob('data/locale/*/LC_MESSAGES/panucci.mo'):
+    modir = os.path.dirname(mofile).replace('data', 'share')
+    translation_files.append((modir, [mofile]))
+
+if not len(translation_files) and not 'clean' in sys.argv:
+    print >>sys.stderr, """
+    Warning: No translation files. (Did you forget to run "make gen_gettext"?)
+    """
+
 setup(name='Panucci',
-      version='0.2',
+      version='0.4',
       description='A Resuming Media Player',
       author='Thomas Perl',
       author_email='thp@perli.net',
@@ -42,5 +53,5 @@ setup(name='Panucci',
       packages=['panucci'],
       package_dir={ '':'src' },
       scripts=['bin/panucci'],
-      data_files=data_files,
+      data_files=data_files + translation_files,
      )

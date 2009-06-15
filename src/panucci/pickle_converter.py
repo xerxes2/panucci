@@ -26,7 +26,6 @@ import logging
 from dbsqlite import db
 from playlist import Bookmark
 
-_ = lambda s: s
 log = logging.getLogger('panucci.pickle_converter')
 
 def load_pickle_file( pfile, create_backup=True ):

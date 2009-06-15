@@ -27,8 +27,22 @@ import os.path
 import sys
 from optparse import OptionParser
 
-_ = lambda s: s
 
+# Set up gettext support
+import locale
+import gettext
+
+prefix = os.path.join( os.path.dirname(sys.argv[0]), '..' )
+
+for basedir in 'share', 'data':
+    locale_dir = os.path.abspath(os.path.join( prefix, basedir, 'locale' ))
+    if os.path.exists( locale_dir ):
+        break
+
+locale_dir = os.environ.get('LOCALE_DIR', locale_dir)
+gettext.install( 'panucci', locale_dir )
+
+# Set up the command line option parser
 usage = 'usage: %prog [options] FILE'
 parser = OptionParser(usage=usage, version='%prog ' + app_version)
 parser.add_option('-q', '--queue', action='store', type='string',
@@ -41,6 +55,7 @@ if len(args) > 1 or ( opts.queue_filename and len(args) ):
     parser.print_help()
     sys.exit(1)
 
+# add src/ to the PYTHONPATH
 local_module_dir = os.path.join(os.path.dirname(sys.argv[0]), '..', 'src')
 if os.path.isdir(local_module_dir):
     sys.path.append(local_module_dir)
@@ -48,13 +63,6 @@ if os.path.isdir(local_module_dir):
 from panucci import util
 filepath = util.build_full_path(args[0] if len(args) else opts.queue_filename)
 
-session_bus = dbus.SessionBus()
-try:
-    remote_object = session_bus.get_object(
-        'org.panucci.panucciInterface', '/panucciInterface' )
-    print _('Found panucci instance already running, will try to use it...')
-except dbus.exceptions.DBusException:
-    remote_object = None
 
 def init_logging( log_level ):
     """ Configure the logging module for panucci """
@@ -82,6 +90,17 @@ def init_logging( log_level ):
     # force all exceptions to pass through the logger
     sys.excepthook = lambda *args: logger.critical( 'Exception caught:',
                                                     exc_info=args )
+
+
+# Attempt to contact an already-running copy of Panucci
+session_bus = dbus.SessionBus()
+try:
+    remote_object = session_bus.get_object(
+        'org.panucci.panucciInterface', '/panucciInterface' )
+    print _('Found panucci instance already running, will try to use it...')
+except dbus.exceptions.DBusException:
+    remote_object = None
+
 
 if remote_object is None:
     # configure logging
