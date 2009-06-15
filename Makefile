@@ -33,10 +33,13 @@ all:
 	@echo "    distclean - remove build files + dist target"
 	@echo "    test - test the application"
 
-install: gen_gettext python-install post-install install-schemas
-	sed 's|@INSTALL_PREFIX@|'$(DESTDIR)$(PREFIX)'|g' < \
+install: gen_gettext python-install dbus-service-install post-install install-schemas
+
+dbus-service-install:
+	sed 's|@INSTALL_PREFIX@|'/$(PREFIX)'|g' < \
 	  data/panucci.service.in > data/panucci.service
-	install data/panucci.service $(DESTDIR)$(PREFIX)/share/dbus-1/services/
+	mkdir -p $(DESTDIR)/$(PREFIX)/share/dbus-1/services/
+	install data/panucci.service $(DESTDIR)/$(PREFIX)/share/dbus-1/services/
 
 python-install:
 	$(PYTHON) setup.py install --optimize 2 --root=$(DESTDIR) --prefix=$(PREFIX)

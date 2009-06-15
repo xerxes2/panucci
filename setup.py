@@ -20,6 +20,7 @@
 from distutils.core import setup
 from glob import glob
 import os
+import sys
 
 running_on_tablet = os.path.exists('/etc/osso_software_version')
 

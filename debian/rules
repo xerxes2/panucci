@@ -45,8 +45,8 @@ install: build
 	dh_testroot
 	dh_clean -k
 	dh_installdirs
+	PREFIX=$(PREFIX) DESTDIR=$(DESTDIR) $(MAKE) gen_gettext dbus-service-install copy-schemas
 	${SETUP} install --no-compile -O2 --root='$(DESTDIR)' --prefix='$(PREFIX)'
-	$(MAKE) copy-schemas PREFIX=$(PREFIX) DESTDIR=$(DESTDIR)
 
 binary-arch:
 
