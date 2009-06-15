@@ -35,7 +35,7 @@ data_files = [
 
 # search for translations and repare to install
 translation_files = []
-for mofile in glob.glob('data/locale/*/LC_MESSAGES/panucci.mo'):
+for mofile in glob('data/locale/*/LC_MESSAGES/panucci.mo'):
     modir = os.path.dirname(mofile).replace('data', 'share')
     translation_files.append((modir, [mofile]))
 

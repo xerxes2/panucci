@@ -24,7 +24,7 @@ PANUCCIVERSION = `grep -m 1 app_version bin/panucci | cut -d "'" -f 2`
 MESSAGESPOT = data/messages.pot
 
 
-PYTHON = /usr/bin/python2.5
+PYTHON ?= /usr/bin/python2.5
 
 all:
 	@echo "Possible make targets:"
@@ -34,7 +34,7 @@ all:
 	@echo "    test - test the application"
 
 install: gen_gettext python-install post-install install-schemas
-	replace @INSTALL_PREFIX@ $(DESTDIR)$(PREFIX) < \
+	sed 's|@INSTALL_PREFIX@|'$(DESTDIR)$(PREFIX)'|g' < \
 	  data/panucci.service.in > data/panucci.service
 	install data/panucci.service $(DESTDIR)$(PREFIX)/share/dbus-1/services/
 
