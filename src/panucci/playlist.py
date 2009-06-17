@@ -546,6 +546,9 @@ class Queue(list, ObservableService):
         self.modified = False # Has the queue been modified?
         self.disable_notifications = False
         self.__current_item_position = 0
+        # This is a hack and WILL BE REPLACED WITH SOMETHING BETTER.
+        # it's here to speed up the get_item function
+        self.__mapping_dict = {}
         list.__init__(self)
 
     def __get_current_item_position(self):
@@ -620,10 +623,10 @@ class Queue(list, ObservableService):
         self.playlist_id = None
         self.modified = False
         self.__current_item_position = 0
+        self.__mapping_dict = {}
 
     def get_item(self, item_id):
-        if self.count(item_id):
-            return self[self.index(item_id)]
+        return self.__mapping_dict.get(item_id)
 
     def get_bookmark(self, item_id, bookmark_id):
         item = self.get_item(item_id)
@@ -663,6 +666,9 @@ class Queue(list, ObservableService):
                 if i.filepath == item.filepath:
                     i.is_modified = True
                     i.duplicate_id += 1
+            
+            # to be safe rebuild self.__mapping_dict
+            self.__mapping_dict = dict([(str(i),i) for i in self])
         elif not self.__count_dupe_items(self[:position], item):
             # there are no other items like this one so it's *safe* to load
             # bookmarks without a potential conflict, but there's a good chance
@@ -673,6 +679,7 @@ class Queue(list, ObservableService):
         if position <= self.current_item_position:
             self.__current_item_position += 1
 
+        self.__mapping_dict[str(item)] = item
         list.insert(self, position, item)
         return True
 
@@ -682,7 +689,8 @@ class Queue(list, ObservableService):
 
         item.duplicate_id = self.__count_dupe_items(self, item)
         item.load_bookmarks()
-
+        
+        self.__mapping_dict[str(item)] = item
         list.append(self, item)
         return True
 
@@ -692,7 +700,8 @@ class Queue(list, ObservableService):
 
             if self.index(item) < self.current_item_position:
                 self.__current_item_position -= 1
-
+            
+            del self.__mapping_dict[str(item)]
             list.remove(self, item)
 
     def extend(self, items):
