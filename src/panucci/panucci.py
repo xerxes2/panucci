@@ -1274,7 +1274,7 @@ class PlaylistItemDetails(gtk.Dialog):
 
 
 def run(filename=None):
-    ossohelper.application_init('panucci', '0.4')
+    ossohelper.application_init('org.panucci', '0.4')
     PanucciGUI( filename )
     gtk.main()
     ossohelper.application_exit()
