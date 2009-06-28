@@ -217,7 +217,7 @@ class ScrollingLabel(gtk.DrawingArea):
         self.__x_alignment = 0
         self.__y_alignment = 0.5
         self.__scrolling_timer_id = None
-        self.__scrolling_possible = True
+        self.__scrolling_possible = False
         self.__scrolling = False
         
         # user-defined parameters (can be changed on-the-fly)
