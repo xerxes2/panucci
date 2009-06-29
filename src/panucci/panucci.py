@@ -939,7 +939,8 @@ class PlaylistTab(gtk.VBox):
         self.treeview.set_model(self.__model)
         self.treeview.set_headers_visible(True)
         tree_selection = self.treeview.get_selection()
-        tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
+        # This breaks drag and drop, only use single selection for now
+        # tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         tree_selection.connect('changed', self.tree_selection_changed)
 
         # The tree lines look nasty on maemo
