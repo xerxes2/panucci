@@ -17,7 +17,7 @@
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-app_version = '0.3-pre0.4'
+app_version = '0.4'
 
 import dbus
 import dbus.glib
