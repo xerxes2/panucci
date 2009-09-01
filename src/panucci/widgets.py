@@ -232,6 +232,7 @@ class ScrollingLabel(gtk.DrawingArea):
         
         self.connect('expose-event', self.__on_expose_event)
         self.connect('size-allocate', lambda w,a: self.__reset_widget() )
+        self.connect('map', lambda w: self.__reset_widget() )
 
     def __set_scrolling(self, value):
         if value:
@@ -295,6 +296,9 @@ class ScrollingLabel(gtk.DrawingArea):
         self.set_size_request( -1, lbl_y )
         
         self.__scrolling_possible = lbl_x > win_x
+
+        # Remove any lingering scrolling timers
+        self.__scrolling_timer = None
         
         if self.__scrolling:
             self.__start_scrolling()
