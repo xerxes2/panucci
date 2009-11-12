@@ -45,6 +45,7 @@ class Storage(object):
     def db(self):
         if self.__db is None:
             self.__db = sqlite.connect(self.__db_file)
+            self.__db.text_factory = str
             self.__log.debug('Connected to %s', self.__db_file)
             self.__check_schema()
         return self.__db
