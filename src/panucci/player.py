@@ -164,7 +164,7 @@ class panucciPlayer(ObservableService):
         """ This is for situations where we have a normal (read: non-maemo)
             version of gstreamer like on a regular linux distro. """
         
-        self.__player = gst.element_factory_make('playbin', 'player')
+        self.__player = gst.element_factory_make('playbin2', 'player')
         self.__filesrc = self.__player
         self.__filesrc_property = 'uri'
         self.__volume_control = self.__player
