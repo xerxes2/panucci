@@ -396,4 +396,25 @@ class ScrollingLabel(gtk.DrawingArea):
         """ Make the text stop scrolling """
         self.__scrolling = False
         self.__scrolling_timer = None
-        
+
+
+if __name__ == '__main__':
+    w = gtk.Window()
+    w.set_geometry_hints(w, 100, 20)
+    hb = gtk.HBox(homogeneous=True, spacing=1)
+    w.add(hb)
+
+    # scroll 7 pixels per 0.2 seconds, wait halfway for 0.5 seconds and finally
+    # wait 2 seconds after a complete scroll. wash, rinse, repeat.
+    l = ScrollingLabel('N/A', 200, 7, 2000, 500)
+    l.markup = 'some random text 1234'
+    hb.pack_end(l)
+
+    btn = gtk.Button('start/stop')
+    hb.pack_start(btn)
+    btn.connect('clicked', lambda w,e: setattr(e,'scrolling', not e.scrolling), l)
+
+    w.connect('destroy', gtk.main_quit)
+    w.show_all()
+    gtk.main()
+
