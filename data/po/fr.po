@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Panucci 0.4\n"
 "Report-Msgid-Bugs-To: gpodder-panucci@lists.berlios.de\n"
-"POT-Creation-Date: 2009-12-30 10:15-0500\n"
+"POT-Creation-Date: 2009-12-30 11:13-0500\n"
 "PO-Revision-Date: 2009-06-15 14:55+0100\n"
 "Last-Translator: Philippe <filip@disque-monde.org>\n"
 "Language-Team: French\n"
@@ -192,3 +192,27 @@ msgstr "Marque-pages"
 #: src/panucci/playlist.py:470
 msgid "Auto Bookmark"
 msgstr "Marque-page automatique"
+
+#: src/panucci/backends/base.py:27
+msgid "No media selected"
+msgstr ""
+
+#: src/panucci/backends/base.py:28
+msgid "Unsupported filetype."
+msgstr ""
+
+#: src/panucci/backends/base.py:29
+msgid "Something wrong with the backend"
+msgstr ""
+
+#: src/panucci/backends/base.py:30
+msgid "Hardware blocked/in-use"
+msgstr ""
+
+#: src/panucci/backends/base.py:31
+msgid "File is corrupted/incomplete"
+msgstr ""
+
+#: src/panucci/backends/base.py:32
+msgid "File not found, make sure the file still exists."
+msgstr ""
