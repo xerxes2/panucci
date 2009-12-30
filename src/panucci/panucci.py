@@ -996,9 +996,13 @@ class PlaylistTab(gtk.VBox):
         self.dir_button.connect('clicked', self.add_directory)
         self.hbox.pack_start(self.dir_button, True, True)
 
-        self.remove_button = gtk.Button(gtk.STOCK_REMOVE)
-        self.remove_button.set_use_stock(True)
-        self.remove_button.connect('clicked', self.remove_bookmark)
+        self.remove_button = widgets.DualActionButton( 
+            generate_image(gtk.STOCK_REMOVE, True),
+            self.remove_bookmark, 
+            generate_image(gtk.STOCK_CANCEL, True),
+            lambda *a: player.playlist.reset_playlist() )
+        #self.remove_button.set_use_stock(True)
+        #self.remove_button.connect('clicked', self.remove_bookmark)
         self.hbox.pack_start(self.remove_button, True, True)
 
         self.jump_button = gtk.Button(gtk.STOCK_JUMP_TO)
