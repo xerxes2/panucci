@@ -34,7 +34,6 @@ class GstBasePlayer(base.BasePlayer):
         
         # have we preformed the initial seek?
         self.__initial_seek_completed = False
-        self.seeking = False # are we seeking?
 
         self._player = None
         self._filesrc = None
@@ -82,7 +81,7 @@ class GstBasePlayer(base.BasePlayer):
             # should something happen here? perhaps self.stop()?
             return False
     
-    def stop(self, save_resume_point=True):
+    def stop(self):
         self.notify('stopped', caller=self.stop)
 
         if self._player is not None:

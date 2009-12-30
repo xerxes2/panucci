@@ -63,6 +63,7 @@ class BasePlayer(ObservableService):
         
         # Cached copies of position and duration
         self.__position, self.__duration = 0, 0
+        self.seeking = False # Are we seeking?
     
     
     #############################################

@@ -27,6 +27,7 @@ class GstPlaybinPlayer(gstbase.GstBasePlayer):
     def __init__(self):
         gstbase.GstBasePlayer.__init__(self)
         self.__log = logging.getLogger('panucci.backends.GstPlaybinPlayer')
+        self.__log.debug("Initialized GstPlaybinPlayer backend")
     
     def _setup_player(self, filetype=None):
         self.__log.debug("Creating playbin-based gstreamer player")

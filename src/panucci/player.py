@@ -23,8 +23,8 @@ from playlist import Playlist
 from settings import settings
 from services import ObservableService
 from dbusinterface import interface
+from backends import osso, gstplaybin
 
-import backends.gstplaybin
 import util
 
 
@@ -107,7 +107,7 @@ class PanucciPlayer(ObservableService):
     def on_new_track(self):
         """ New track callback; stops the player and starts the new track. """
         
-        self.stop(save_resume_point=False)
+        self.stop()
         self.load_media( "file://" + self.playlist.current_filepath )
         
         # This is just here to prevent the player from starting to play
@@ -136,6 +136,11 @@ class PanucciPlayer(ObservableService):
         self.playlist.quit()
     
 
+if util.platform == util.MAEMO:
+    backend = osso.ossoPlayer
+else:
+    backend = gstplaybin.GstPlaybinPlayer
+
 # there should only ever be one panucciPlayer object
-player = PanucciPlayer(backends.gstplaybin.GstPlaybinPlayer())
+player = PanucciPlayer( backend() )
 
