@@ -63,7 +63,7 @@ clean:
 	rm -rf build
 	rm -f src/panucci/*.pyc src/panucci/*.pyo
 	rm -f src/panucci/backends/*.pyc src/panucci/backends/*.pyo
-	rm -f data/panucci.service data/messages.pot
+	rm -f data/panucci.service
 	make -C data/po clean
 
 distclean: clean
@@ -82,7 +82,7 @@ build-package:
 
 messagespot:
 	xgettext -k_ --from-code utf-8 --language Python \
-	  -o $(MESSAGESPOT) bin/panucci src/panucci/*.py
+	  -o $(MESSAGESPOT) bin/panucci src/panucci/*.py src/panucci/backends/*.py
 	sed -i \
 	  -e 's/SOME DESCRIPTIVE TITLE/Panucci translation template/g' \
 	  -e 's/THE PACKAGE'"'"'S COPYRIGHT HOLDER/Panucci Contributors/g' \
