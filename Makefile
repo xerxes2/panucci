@@ -60,7 +60,9 @@ post-install:
 	update-desktop-database $(DESTDIR)$(PREFIX)/share/applications/
 
 clean:
-	rm -rf build src/panucci/*.pyc src/panucci/*.pyo
+	rm -rf build
+	rm -f src/panucci/*.pyc src/panucci/*.pyo
+	rm -f src/panucci/backends/*.pyc src/panucci/backends/*.pyo
 	rm -f data/panucci.service data/messages.pot
 	make -C data/po clean
 
