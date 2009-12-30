@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Panucci 0.4\n"
 "Report-Msgid-Bugs-To: gpodder-panucci@lists.berlios.de\n"
-"POT-Creation-Date: 2009-06-15 12:00-0400\n"
+"POT-Creation-Date: 2009-12-30 10:15-0500\n"
 "PO-Revision-Date: 2009-06-15 14:55+0100\n"
 "Last-Translator: Philippe <filip@disque-monde.org>\n"
 "Language-Team: French\n"
@@ -21,79 +21,79 @@ msgstr ""
 msgid "Found panucci instance already running, will try to use it..."
 msgstr ""
 
-#: src/panucci/panucci.py:55
+#: src/panucci/panucci.py:56
 msgid "Resuming audiobook and podcast player"
 msgstr "Un lecteur de podcasts et de livres audio gérant les marque-pages"
 
-#: src/panucci/panucci.py:153
+#: src/panucci/panucci.py:154
 msgid "Select file to save playlist to"
 msgstr "Sélectionnez le fichier de sauvegarde de la liste de lecture"
 
-#: src/panucci/panucci.py:158
+#: src/panucci/panucci.py:159
 msgid "Select podcast or audiobook"
 msgstr "Sélectionnez le podcast ou le livre audio"
 
-#: src/panucci/panucci.py:241
+#: src/panucci/panucci.py:242
 msgid "Player"
 msgstr "Lecteur"
 
-#: src/panucci/panucci.py:247
+#: src/panucci/panucci.py:248
 msgid "Playlist"
 msgstr "Liste de lecture"
 
-#: src/panucci/panucci.py:284
+#: src/panucci/panucci.py:285
 msgid "Open playlist"
 msgstr "Ouvrir la liste de lecture"
 
-#: src/panucci/panucci.py:291
+#: src/panucci/panucci.py:292
 msgid "Open recent playlist"
 msgstr "Ouvrir une liste de lecture récente"
 
-#: src/panucci/panucci.py:297 src/panucci/panucci.py:380
+#: src/panucci/panucci.py:298 src/panucci/panucci.py:381
 msgid "Save current playlist"
 msgstr "Sauvegarder la liste de lecture en cours"
 
-#: src/panucci/panucci.py:306
+#: src/panucci/panucci.py:307
 msgid "Settings"
 msgstr "Options"
 
-#: src/panucci/panucci.py:313
+#: src/panucci/panucci.py:314
 msgid "Enable dual-action buttons"
 msgstr "Activer les boutons à deux actions"
 
-#: src/panucci/panucci.py:320
+#: src/panucci/panucci.py:321
 msgid "Enable hardware decoding"
 msgstr "Activer le décodage matériel"
 
-#: src/panucci/panucci.py:325
+#: src/panucci/panucci.py:326
 msgid "Lock Progress Bar"
 msgstr "Verrouiller la barre de progression"
 
-#: src/panucci/panucci.py:360
+#: src/panucci/panucci.py:361
 msgid "No recent files available."
 msgstr "Pas de fichier récent disponible."
 
-#: src/panucci/panucci.py:381
+#: src/panucci/panucci.py:382
 msgid "Current playlist has been modified"
 msgstr "La liste de lecture courante a été modifiée"
 
-#: src/panucci/panucci.py:382
+#: src/panucci/panucci.py:383
 msgid "Opening a new file will replace the current playlist. "
 msgstr "Ouvrir un nouveau fichier va effacer la liste de lecture en cours."
 
-#: src/panucci/panucci.py:383
+#: src/panucci/panucci.py:384
 msgid "Do you want to save it before creating a new one?"
 msgstr "Voulez-vous la sauvegarder avant d'en créer une nouvelle ?"
 
-#: src/panucci/panucci.py:385
+#: src/panucci/panucci.py:386
 msgid "Discard changes"
 msgstr "Annuler les modifications"
 
-#: src/panucci/panucci.py:418 src/panucci/panucci.py:419
+#: src/panucci/panucci.py:419 src/panucci/panucci.py:420
 msgid "File already exists"
 msgstr "Le fichier existe déjà"
 
-#: src/panucci/panucci.py:420
+#: src/panucci/panucci.py:421
 #, python-format
 msgid ""
 "The file %s already exists. You can choose another name or overwrite the "
@@ -102,93 +102,93 @@ msgstr ""
 "Le fichier %s existe déjà. Vous pouvez choisir un autre nom ou écraser le "
 "fichier existant."
 
-#: src/panucci/panucci.py:423
+#: src/panucci/panucci.py:424
 msgid "Rename file"
 msgstr "Renommer le fichier"
 
-#: src/panucci/panucci.py:435
+#: src/panucci/panucci.py:436
 msgid "Error saving playlist..."
 msgstr "Erreur lors de la sauvegarde de la liste de lecture..."
 
-#: src/panucci/panucci.py:519
+#: src/panucci/panucci.py:520
 msgid "Converting old pickle format to SQLite."
 msgstr "Convertir de l'ancien format pickle vers SQLite"
 
-#: src/panucci/panucci.py:520
+#: src/panucci/panucci.py:521
 msgid "This may take a while..."
 msgstr "Ceci peut prendre un moment..."
 
-#: src/panucci/panucci.py:524
+#: src/panucci/panucci.py:525
 msgid "Pickle file converted successfully."
 msgstr "Fichier pickle converti avec succès."
 
-#: src/panucci/panucci.py:527
+#: src/panucci/panucci.py:528
 msgid "Error converting pickle file, check your log..."
 msgstr ""
 "Erreur lors de la conversion du fichier pickle, vérifier le journal (log)"
 
-#: src/panucci/panucci.py:949
+#: src/panucci/panucci.py:951
 msgid "Name"
 msgstr "Nom"
 
-#: src/panucci/panucci.py:958
+#: src/panucci/panucci.py:960
 msgid "Position"
 msgstr "Position"
 
-#: src/panucci/panucci.py:987
+#: src/panucci/panucci.py:989
 msgid "Add File"
 msgstr "Ajouter un fichier"
 
-#: src/panucci/panucci.py:993
+#: src/panucci/panucci.py:995
 msgid "Add Directory"
 msgstr "Ajouter un répertoire"
 
-#: src/panucci/panucci.py:1115
+#: src/panucci/panucci.py:1121
 #, python-format
 msgid "Bookmark added: %s"
 msgstr "Marque-page ajouté : %s"
 
-#: src/panucci/panucci.py:1197
+#: src/panucci/panucci.py:1203
 msgid "Playlist item details"
 msgstr "Détails des éléments de la liste de lecture"
 
-#: src/panucci/panucci.py:1215
+#: src/panucci/panucci.py:1221
 msgid "Custom title:"
 msgstr "Titre personnalisé"
 
-#: src/panucci/panucci.py:1216
+#: src/panucci/panucci.py:1222
 msgid "ID:"
 msgstr "ID :"
 
-#: src/panucci/panucci.py:1217
+#: src/panucci/panucci.py:1223
 msgid "Playlist ID:"
 msgstr "ID de la liste de lecture  :"
 
-#: src/panucci/panucci.py:1218
+#: src/panucci/panucci.py:1224
 msgid "Filepath:"
 msgstr "Chemin du fichier :"
 
-#: src/panucci/panucci.py:1230
+#: src/panucci/panucci.py:1236
 msgid "<not modified>"
 msgstr "<aucune modification>"
 
-#: src/panucci/panucci.py:1241
+#: src/panucci/panucci.py:1247
 msgid "<not set>"
 msgstr "<non défini>"
 
-#: src/panucci/panucci.py:1256
+#: src/panucci/panucci.py:1262
 msgid "Title"
 msgstr "Titre"
 
-#: src/panucci/panucci.py:1259
+#: src/panucci/panucci.py:1265
 msgid "Time"
 msgstr "Temps"
 
-#: src/panucci/panucci.py:1270
+#: src/panucci/panucci.py:1276
 msgid "Bookmarks"
 msgstr "Marque-pages"
 
 #: src/panucci/pickle_converter.py:55 src/panucci/pickle_converter.py:66
-#: src/panucci/playlist.py:474
+#: src/panucci/playlist.py:470
 msgid "Auto Bookmark"
 msgstr "Marque-page automatique"
