@@ -564,7 +564,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         player.register( 'paused', self.on_player_paused )
         player.playlist.register( 'end-of-playlist',
                                   self.on_player_end_of_playlist )
-        player.playlist.register( 'new-track-playing', 
+        player.playlist.register( 'new-track-loaded', 
                                   self.on_player_new_track )
         player.playlist.register( 'new-metadata-available',
                                   self.on_player_new_metadata )
