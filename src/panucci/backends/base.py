@@ -162,7 +162,7 @@ class BasePlayer(ObservableService):
         
         # if position and duration are 0 then player_get_position caught an
         # exception. Therefore self.__player isn't ready to be seeking.
-        if not ( position or duration ) or self.get_state == self.STATE_NULL:
+        if not duration or self.get_state == self.STATE_NULL:
             error = True
         else:
             if from_beginning is not None:
