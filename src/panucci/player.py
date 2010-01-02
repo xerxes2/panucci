@@ -127,7 +127,7 @@ class PanucciPlayer(ObservableService):
         
         seek = self.playlist.play()
         if seek > 0:
-            self.do_seek(seek)
+            self._seek(seek)
     
     def quit(self):
         """ Called when the application exits """
