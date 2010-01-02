@@ -805,7 +805,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.set_metadata(metadata)
         
         if not player.playing:
-            text, position = player.get_formatted_position()
+            position = player.playlist.get_current_position()
             estimated_length = metadata.get('length', 0)
             self.set_progress_callback( position, estimated_length )
     
