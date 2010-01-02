@@ -48,6 +48,7 @@ class PanucciPlayer(ObservableService):
         
         self.__player.register( "playing", self.on_playing )
         self.__player.register( "error", self.on_player_error )
+        self._set_volume_level( settings.volume )
         
         self.playlist = Playlist()
         self.playlist.register( 'new-track-loaded', self.on_new_track )
