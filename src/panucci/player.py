@@ -41,12 +41,13 @@ class PanucciPlayer(ObservableService):
         ObservableService.__init__(self, self.signals, self.__log)
         self.__player = player
         
-        # Forward the following signals (messy...)
-        self.__player.register( "playing", lambda: self.notify("playing"))
-        self.__player.register( "playing", self.on_playing)
-        self.__player.register( "paused",  lambda *x: self.notify("paused", *x))
-        self.__player.register( "stopped", lambda: self.notify("stopped"))
-        self.__player.register( "eof",     lambda: self.notify("eof"))
+        # Forward the following signals
+        def n(sig): return lambda *y: self.notify(sig, caller=PanucciPlayer, *y) 
+        for signal in [ "playing", "paused", "stopped", "eof" ]:
+            self.__player.register( signal, n(signal) )
+        
+        self.__player.register( "playing", self.on_playing )
+        self.__player.register( "error", self.on_player_error )
         
         self.playlist = Playlist()
         self.playlist.register( 'new-track-loaded', self.on_new_track )
@@ -128,6 +129,9 @@ class PanucciPlayer(ObservableService):
         seek = self.playlist.play()
         if seek > 0:
             self._seek(seek)
+    
+    def on_player_error(self, msg):
+        self.__log.error("Error from %s: %s", msg.__name__, msg.error)
     
     def quit(self):
         """ Called when the application exits """

@@ -80,10 +80,9 @@ class ossoPlayer(base.BasePlayer):
                                             lambda x: self.notify("eof") )
         
         # Connect error signals
+        def e(err): return lambda *y: self.notify("error",err,caller=ossoPlayer)
         for error,msg in error_signals.iteritems():
-            self.audio_proxy.connect_to_signal( error, lambda *x:
-                                                self.notify( "error", msg,
-                                                             caller=ossoPlayer))
+            self.audio_proxy.connect_to_signal( error, e(msg) )
     
     def _on_state_changed(self, state):
         state_map = { "playing": self.STATE_PLAYING,

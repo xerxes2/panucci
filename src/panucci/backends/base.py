@@ -23,14 +23,21 @@ import panucci
 from panucci.settings import settings
 from panucci.services import ObservableService
 
-_ = lambda x: x
-BASE_ERROR_NO_MEDIA         = ("nomedia", _("No media selected"))
-BASE_ERROR_UNSUPPORTED      = ("unsupp", _("Unsupported filetype."))
-BASE_ERROR_BACKEND          = ("backend", _("Something wrong with the backend"))
-BASE_ERROR_HARDWARE         = ("hw", _("Hardware blocked/in-use"))
-BASE_ERROR_BAD_FILE         = ("bf", _("File is corrupted/incomplete"))
-BASE_ERROR_FILE_NOT_FOUND   = ("fnf", _("File not found, make sure the "
-                                        "file still exists."))
+
+class BASE_ERROR:
+    pass
+class BASE_ERROR_NO_MEDIA(BASE_ERROR):
+    error = _("No media selected")
+class BASE_ERROR_UNSUPPORTED(BASE_ERROR):
+    error = _("Unsupported filetype.")
+class BASE_ERROR_BACKEND(BASE_ERROR):
+    error = _("Something wrong with the backend")
+class BASE_ERROR_HARDWARE(BASE_ERROR):
+    error = _("Hardware blocked/in-use")
+class BASE_ERROR_BAD_FILE(BASE_ERROR):
+    error = _("File is corrupted/incomplete")
+class BASE_ERROR_FILE_NOT_FOUND(BASE_ERROR):
+    error = _("File not found, make sure the file still exists.")
 
 
 class BasePlayer(ObservableService):
