@@ -1,0 +1,215 @@
+# Panucci translation template.
+# Copyright (C) 2009 Panucci Contributors
+# This file is distributed under the same license as the Panucci package.
+# Nick Nobody <me@nikosapi.org>, 2009.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Panucci 0.4\n"
+"Report-Msgid-Bugs-To: gpodder-panucci@lists.berlios.de\n"
+"POT-Creation-Date: 2009-12-30 11:13-0500\n"
+"PO-Revision-Date: 2010-01-02 12:48-0200\n"
+"Last-Translator: Silvio Sisto <sisto.silvio@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: bin/panucci:100
+msgid "Found panucci instance already running, will try to use it..."
+msgstr "Se encontró instancia de panucci en ejecución, intentando usarla..."
+
+#: src/panucci/panucci.py:56
+msgid "Resuming audiobook and podcast player"
+msgstr "Reproductor de audiolibros y podcasts con reanudación"
+
+#: src/panucci/panucci.py:154
+msgid "Select file to save playlist to"
+msgstr "Seleccione el archivo para guardar la lista de reproducción"
+
+#: src/panucci/panucci.py:159
+msgid "Select podcast or audiobook"
+msgstr "Seleccionar lista de reproducción o audiolibro"
+
+#: src/panucci/panucci.py:242
+msgid "Player"
+msgstr "Reproductor"
+
+#: src/panucci/panucci.py:248
+msgid "Playlist"
+msgstr "Lista de reproducción"
+
+#: src/panucci/panucci.py:285
+msgid "Open playlist"
+msgstr "Abrir lista de reproducción"
+
+#: src/panucci/panucci.py:292
+msgid "Open recent playlist"
+msgstr "Abrir lista de reproducción reciente"
+
+#: src/panucci/panucci.py:298
+#: src/panucci/panucci.py:381
+msgid "Save current playlist"
+msgstr "Guardar la lista de reproducción actual"
+
+#: src/panucci/panucci.py:307
+msgid "Settings"
+msgstr "Configuración"
+
+#: src/panucci/panucci.py:314
+msgid "Enable dual-action buttons"
+msgstr "Habilitar botones de acción doble"
+
+#: src/panucci/panucci.py:321
+msgid "Enable hardware decoding"
+msgstr "Habilitar decodificación de hardware"
+
+#: src/panucci/panucci.py:326
+msgid "Lock Progress Bar"
+msgstr "Bloquear Barra de progreso"
+
+#: src/panucci/panucci.py:361
+msgid "No recent files available."
+msgstr "No hay archivos recientes."
+
+#: src/panucci/panucci.py:382
+msgid "Current playlist has been modified"
+msgstr "La lista de reproducción actual ha sido modificada"
+
+#: src/panucci/panucci.py:383
+msgid "Opening a new file will replace the current playlist. "
+msgstr "Abrir un nuevo archivo remplazará la lista de reproducción actual."
+
+#: src/panucci/panucci.py:384
+msgid "Do you want to save it before creating a new one?"
+msgstr "Desea guardarla antes de crear una nueva?"
+
+#: src/panucci/panucci.py:386
+msgid "Discard changes"
+msgstr "Descartar cambios"
+
+#: src/panucci/panucci.py:419
+#: src/panucci/panucci.py:420
+msgid "File already exists"
+msgstr "El archivo ya existe"
+
+#: src/panucci/panucci.py:421
+#, python-format
+msgid "The file %s already exists. You can choose another name or overwrite the existing file."
+msgstr "El archivo %s ya existe. Usted puede elegir otro nombre o sobrescribir el archivo existente."
+
+#: src/panucci/panucci.py:424
+msgid "Rename file"
+msgstr "Renombrar archivo"
+
+#: src/panucci/panucci.py:436
+msgid "Error saving playlist..."
+msgstr "Error al guardar lista de reproducción..."
+
+#: src/panucci/panucci.py:520
+msgid "Converting old pickle format to SQLite."
+msgstr "Convirtiendo viejo formato pickle a SQLite."
+
+#: src/panucci/panucci.py:521
+msgid "This may take a while..."
+msgstr "Esto puede tomar un tiempo..."
+
+#: src/panucci/panucci.py:525
+msgid "Pickle file converted successfully."
+msgstr "Archivo pickle convertido con éxito."
+
+#: src/panucci/panucci.py:528
+msgid "Error converting pickle file, check your log..."
+msgstr "Error al convertir el archivo pickle, revise su registro..."
+
+#: src/panucci/panucci.py:951
+msgid "Name"
+msgstr "Nombre"
+
+#: src/panucci/panucci.py:960
+msgid "Position"
+msgstr "Posición"
+
+#: src/panucci/panucci.py:989
+msgid "Add File"
+msgstr "Agregar Archivo"
+
+#: src/panucci/panucci.py:995
+msgid "Add Directory"
+msgstr "Agregar Directorio"
+
+#: src/panucci/panucci.py:1121
+#, python-format
+msgid "Bookmark added: %s"
+msgstr "Marcador agregado: %s"
+
+#: src/panucci/panucci.py:1203
+msgid "Playlist item details"
+msgstr "Detalles del ítem de la lista"
+
+#: src/panucci/panucci.py:1221
+msgid "Custom title:"
+msgstr "Título personalizado:"
+
+#: src/panucci/panucci.py:1222
+msgid "ID:"
+msgstr "ID:"
+
+#: src/panucci/panucci.py:1223
+msgid "Playlist ID:"
+msgstr "ID de lista de reproducción:"
+
+#: src/panucci/panucci.py:1224
+msgid "Filepath:"
+msgstr "Ruta de archivo:"
+
+#: src/panucci/panucci.py:1236
+msgid "<not modified>"
+msgstr "<no modificado>"
+
+#: src/panucci/panucci.py:1247
+msgid "<not set>"
+msgstr "<no configurado>"
+
+#: src/panucci/panucci.py:1262
+msgid "Title"
+msgstr "Título"
+
+#: src/panucci/panucci.py:1265
+msgid "Time"
+msgstr "Tiempo"
+
+#: src/panucci/panucci.py:1276
+msgid "Bookmarks"
+msgstr "Marcadores"
+
+#: src/panucci/pickle_converter.py:55
+#: src/panucci/pickle_converter.py:66
+#: src/panucci/playlist.py:470
+msgid "Auto Bookmark"
+msgstr "Marcador automático"
+
+#: src/panucci/backends/base.py:27
+msgid "No media selected"
+msgstr "No hay archivo seleccionado"
+
+#: src/panucci/backends/base.py:28
+msgid "Unsupported filetype."
+msgstr "Tipo de archivo no soportado."
+
+#: src/panucci/backends/base.py:29
+msgid "Something wrong with the backend"
+msgstr "Algo mal con el backend"
+
+#: src/panucci/backends/base.py:30
+msgid "Hardware blocked/in-use"
+msgstr "Dispositivo bloqueado/en-uso"
+
+#: src/panucci/backends/base.py:31
+msgid "File is corrupted/incomplete"
+msgstr "Archivo corrupto/incompleto"
+
+#: src/panucci/backends/base.py:32
+msgid "File not found, make sure the file still exists."
+msgstr "Archivo no encontrado, asegúrese que todavía existe."
+
