@@ -29,7 +29,7 @@ import base
 
 class ossoPlayer(base.BasePlayer):
     """
-    A player which uses osso-media-player for playback (Maemo-specific)
+    A player which uses osso-media-server for playback (Maemo-specific)
     """
     
     SERVICE_NAME         = "com.nokia.osso_media_server"
@@ -82,7 +82,8 @@ class ossoPlayer(base.BasePlayer):
         # Connect error signals
         for error,msg in error_signals.iteritems():
             self.audio_proxy.connect_to_signal( error, lambda *x:
-                                                self.notify("error", msg))
+                                                self.notify( "error", msg,
+                                                             caller=ossoPlayer))
     
     def _on_state_changed(self, state):
         state_map = { "playing": self.STATE_PLAYING,
@@ -94,9 +95,10 @@ class ossoPlayer(base.BasePlayer):
         
         if state in state_map.keys():
             if state == "paused":
-                self.notify( "paused", *self.get_position_duration() )
+                pos, dur = self.get_position_duration()
+                self.notify( "paused", pos, dur, caller=ossoPlayer )
             else:
-                self.notify(state)
+                self.notify( state, caller=ossoPlayer )
         else:
             self.__log.info("Unknown state: %s", state)
     
@@ -104,7 +106,7 @@ class ossoPlayer(base.BasePlayer):
         return self.__state
     
     def load_media(self, uri):
-        self.audio_proxy.play_media(uri)
+        self.audio_proxy.set_media_location(uri)
     
     def pause(self):
         if self.playing:
@@ -112,7 +114,7 @@ class ossoPlayer(base.BasePlayer):
             self.get_position_duration()
             self.audio_proxy.pause()
     
-    def play(self, position=None):
+    def play(self):
         self.audio_proxy.play()
     
     def stop(self):
