@@ -73,7 +73,6 @@ class GstBasePlayer(base.BasePlayer):
     def play(self):
         have_player = self._player is not None
         if have_player or self.__setup_player():
-            #self.notify('playing', caller=self.play)
             self._initial_seek_completed = have_player
             self._player.set_state(gst.STATE_PLAYING)
             return True
@@ -135,6 +134,8 @@ class GstBasePlayer(base.BasePlayer):
         
         if self._player is not None:
             self._filesrc.set_property( self._filesrc_property, uri )
+        
+        self._current_filetype = filetype
     
     def __on_message(self, bus, message):
         t = message.type
@@ -146,7 +147,7 @@ class GstBasePlayer(base.BasePlayer):
         elif t == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
             self.__log.critical( 'Error: %s %s', err, debug )
-            self.notify( "error", caller=self.__on_message )
+            self.notify( "error", debug, caller=self.__on_message )
 
         elif t == gst.MESSAGE_STATE_CHANGED:
             if ( message.src == self._player and

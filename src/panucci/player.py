@@ -40,6 +40,7 @@ class PanucciPlayer(ObservableService):
         self.__log = logging.getLogger('panucci.player.PanucciPlayer')
         ObservableService.__init__(self, self.signals, self.__log)
         self.__player = player
+        self.__initialized = False
         
         # Forward the following signals
         def n(sig): return lambda *y: self.notify(sig, caller=PanucciPlayer, *y) 
@@ -53,7 +54,7 @@ class PanucciPlayer(ObservableService):
         self.playlist = Playlist()
         self.playlist.register( 'new-track-loaded', self.on_new_track )
         self.playlist.register( 'seek-requested', self.do_seek )
-        self.playlist.register( 'stop-requested', self.stop )
+        self.playlist.register( 'stop-requested', self.on_stop_requested )
         settings.register( 'volume_changed', self._set_volume_level )
         
         # Register the d-bus interface only once we're ready
@@ -109,16 +110,16 @@ class PanucciPlayer(ObservableService):
     def on_new_track(self):
         """ New track callback; stops the player and starts the new track. """
         
-        self.stop()
-        self.load_media( "file://" + self.playlist.current_filepath )
-        
-        # This is just here to prevent the player from starting to play
-        # when it is first opened. The first time this function is called it
-        # doesn't run self.play(), but otherwise it will.
-        if hasattr( self, "__initialized" ):
-            self.play()
-        else:
-            self.__initialized = True
+        if self.playlist.current_filepath is not None:
+            self.load_media( "file://" + self.playlist.current_filepath )
+            
+            # This is just here to prevent the player from starting to play
+            # when it is first opened. The first time this function is called it
+            # doesn't run self.play(), but otherwise it will.
+            if self.__initialized:
+                self.play()
+
+        self.__initialized = True
     
     def on_playing(self):
         """ 
@@ -131,13 +132,16 @@ class PanucciPlayer(ObservableService):
         if seek > 0:
             self._seek(seek)
     
+    def on_stop_requested(self):
+        self.playlist.stop( self.get_position_duration()[0] )
+        self.stop()
+    
     def on_player_error(self, msg):
         self.__log.error("Error from %s: %s", msg.__name__, msg.error)
     
     def quit(self):
         """ Called when the application exits """
-        self.playlist.stop( self.get_position_duration()[0] )
-        self.stop()
+        self.on_stop_requested()
         self.playlist.quit()
     
 
