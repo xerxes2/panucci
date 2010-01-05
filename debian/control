@@ -17,7 +17,7 @@ Description: Play audio books, podcasts and live concerts with resuming
   Panucci will automatically resume the playback from the position
   where you stopped last time. Bookmarks are also supported. The 
   interface has elements big enough to be used with your fingers. 
-Description-pl_PL: Odtwarzacz audiobooków, podcastów i nagrań z koncertów,
+XB-Description-pl_PL: Odtwarzacz audiobooków, podcastów i nagrań z koncertów,
   ze wznawianiem.
 XB-Maemo-Display-Name: Panucci Audiobook and Podcast Player
 XB-Maemo-Display-Name-pl_PL: Odtwarzacz audiobooków i podcastów Panucci
