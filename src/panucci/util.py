@@ -61,15 +61,15 @@ class Platform(object):
                  os.path.exists('/proc/component_version') or
                  string_in_file('/etc/issue', 'maemo') ):
                 self.MAEMO = True
-                
-            # Check for Maemo 5 (fremantle)
-            elif string_in_file('/etc/issue', 'Maemo 5'):
-                self.MAEMO5 = True
-                
+            
             # Otherwise we're just using regular desktop-linux
             else:
                 self.DESKTOP = True
-        
+            
+            # Check for Maemo 5 (fremantle)
+            if string_in_file('/etc/issue', 'Maemo 5'):
+                self.MAEMO5 = True
+                
         # For now MAEMO5 implies MAEMO
         self.MAEMO = self.MAEMO or self.MAEMO5
 
