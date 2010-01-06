@@ -18,6 +18,7 @@
 #
 
 import gtk
+import os
 import os.path
 import sys
 import traceback
@@ -37,27 +38,52 @@ def string_in_file( filepath, string ):
 
     return found
 
-MAEMO, LINUX = range(2)
 
-def get_platform():
-    if ( os.path.exists('/etc/osso_software_version') or
-         os.path.exists('/proc/component_version') or
-         string_in_file('/etc/issue', 'maemo') ):
-        return MAEMO
-    else:
-        return LINUX
+class Platform(object):
+    """ A platform detection class """
+    
+    PLATFORM_ENV_VAR = "PANUCCIPLATFORM"
+    
+    def __init__(self):
+        self.MAEMO, self.MAEMO5, self.DESKTOP = (False,)*3
+        
+        if os.getenv(self.PLATFORM_ENV_VAR) is not None:
+            self.MAEMO   = os.getenv(self.PLATFORM_ENV_VAR) == "MAEMO"
+            self.MAEMO5  = os.getenv(self.PLATFORM_ENV_VAR) == "MAEMO5"
+            self.DESKTOP = os.getenv(self.PLATFORM_ENV_VAR) == "DESKTOP"
+        
+        # If no platform is forced by an environment variable, try to
+        # detect what platform we're running on
+        if not ( self.MAEMO or self.MAEMO5 or self.DESKTOP ):
+        
+            # Checks for older versions of Maemo (diablo, chinook, etc)
+            if ( os.path.exists('/etc/osso_software_version') or
+                 os.path.exists('/proc/component_version') or
+                 string_in_file('/etc/issue', 'maemo') ):
+                self.MAEMO = True
+                
+            # Check for Maemo 5 (fremantle)
+            elif string_in_file('/etc/issue', 'Maemo 5'):
+                self.MAEMO5 = True
+                
+            # Otherwise we're just using regular desktop-linux
+            else:
+                self.DESKTOP = True
+        
+        # For now MAEMO5 implies MAEMO
+        self.MAEMO = self.MAEMO or self.MAEMO5
 
-platform = get_platform()
 
+platform = Platform()
 
-if platform == LINUX:
+if platform.DESKTOP:
     try:
         import pynotify
         pynotify.init('Panucci')
         have_pynotify = True
     except:
         have_pynotify = False
-elif platform == MAEMO:
+elif platform.MAEMO:
     import hildon
 
 try:
@@ -122,12 +148,12 @@ def find_image(filename):
 def notify( msg, title='Panucci' ):
     """ Sends a notification using pynotify, returns msg """
 
-    if platform == LINUX and have_pynotify:
+    if platform.DESKTOP and have_pynotify:
         icon = find_image('panucci_64x64.png')
         args = ( title, msg ) if icon is None else ( title, msg, icon )
         notification = pynotify.Notification(*args)
         notification.show()
-    elif platform == MAEMO:
+    elif platform.MAEMO:
         # Note: This won't work if we're not in the gtk main loop
         markup = '<b>%s</b>\n<small>%s</small>' % (title, msg)
         hildon.hildon_banner_show_information_with_markup(
@@ -142,14 +168,14 @@ def poke_backlight():
     if have_osso:
         dev = osso.DeviceState(osso.Context('ScreenManager', '0.0.1', False))
         dev.display_blanking_pause()
-    elif platform == MAEMO:
+    elif platform.MAEMO:
         __log.info('Please install python2.5-osso for backlight ctl support.')
         return False
 
     return True
 
 def get_logfile():
-    if platform == MAEMO:
+    if platform.MAEMO:
         f = '~/MyDocs/panucci.log'
     else:
         f = '~/.panucci.log'

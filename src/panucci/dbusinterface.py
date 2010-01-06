@@ -36,7 +36,7 @@ class panucciInterface(dbus.service.Object):
         self.gui = None
         self.headset_device = None
 
-        if util.platform == util.MAEMO:
+        if util.platform.MAEMO:
             headset_button = dbus.SystemBus().get_object(
                 'org.freedesktop.Hal', '/org/freedesktop/Hal/devices/'
                 'platform_retu_headset_logicaldev_input' )

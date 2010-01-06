@@ -144,11 +144,13 @@ class PanucciPlayer(ObservableService):
         self.on_stop_requested()
         self.playlist.quit()
     
-
-if util.platform == util.MAEMO:
+print util.platform
+if util.platform.MAEMO5 or util.platform.DESKTOP:
+    backend = gstplaybin.GstPlaybinPlayer
+elif util.platform.MAEMO:
     backend = osso.ossoPlayer
 else:
-    backend = gstplaybin.GstPlaybinPlayer
+    raise Exception
 
 # there should only ever be one panucciPlayer object
 player = PanucciPlayer( backend() )
