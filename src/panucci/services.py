@@ -104,7 +104,7 @@ class __headphone_watcher(ObservableService):
 
         self.__is_connected = None
 
-        if util.platform.MAEMO:
+        if util.platform.MAEMO and not util.platform.MAEMO5:
             try:
                 self.__sys_file = open( sys_file, 'r' )
                 self.__is_connected = self.__get_state_from_fd(self.__sys_file)
