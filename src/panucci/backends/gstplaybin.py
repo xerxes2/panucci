@@ -31,7 +31,7 @@ class GstPlaybinPlayer(gstbase.GstBasePlayer):
     
     def _setup_player(self, filetype=None):
         self.__log.debug("Creating playbin-based gstreamer player")
-        self._player = gst.element_factory_make('playbin', 'player')
+        self._player = gst.element_factory_make('playbin2', 'player')
         self._filesrc = self._player
         self._filesrc_property = 'uri'
         self._volume_control = self._player
