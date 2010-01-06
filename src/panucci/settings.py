@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # This file is part of Panucci.
-# Copyright (c) 2008-2009 The Panucci Audiobook and Podcast Player Project
+# Copyright (c) 2008-2010 The Panucci Audiobook and Podcast Player Project
 #
 # Panucci is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
