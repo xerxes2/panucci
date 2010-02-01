@@ -30,41 +30,41 @@ import gobject
 
 class ObservableService(object):
     def __init__(self, signal_names=[], log=None):
-        self.__log = getLogger('ObservableService') if log is None else log
+        self._log = getLogger('ObservableService') if log is None else log
 
         self.observers = {}
         for signal in signal_names:
             self.observers[signal] = []
 
         if not signal_names:
-            self.__log.warning('No signal names defined...')
+            self._log.warning('No signal names defined...')
 
     def register(self, signal_name, observer):
         if signal_name in self.observers:
             if not observer in self.observers[signal_name]:
                 self.observers[signal_name].append(observer)
-                self.__log.debug( 'Registered "%s" as an observer for "%s"',
+                self._log.debug( 'Registered "%s" as an observer for "%s"',
                     observer.__name__, signal_name )
             else:
-                self.__log.warning(
+                self._log.warning(
                     'Observer "%s" is already added to signal "%s"',
                     observer.__name__, signal_name )
         else:
-            self.__log.warning(
+            self._log.warning(
                 'Signal "%s" is not available for registration', signal_name )
 
     def unregister(self, signal_name, observer):
         if signal_name in self.observers:
             if observer in self.observers[signal_name]:
                 self.observers[signal_name].remove(observer)
-                self.__log.debug( 'Unregistered "%s" as an observer for "%s"',
+                self._log.debug( 'Unregistered "%s" as an observer for "%s"',
                     observer.__name__, signal_name )
             else:
-                self.__log.warning(
+                self._log.warning(
                     'Observer "%s" could not be removed from signal "%s"', 
                     observer.__name__, signal_name )
         else:
-            self.__log.warning(
+            self._log.warning(
                 'Signal "%s" is not available for un-registration.',
                 signal_name )
 
@@ -74,14 +74,14 @@ class ObservableService(object):
         rtn_value = False
 
         if signal_name in self.observers:
-            self.__log.debug(
+            self._log.debug(
                 'Sending signal "%s" for caller "%s"', signal_name, caller )
 
             rtn_value = True
             for observer in self.observers[signal_name]:
                 rtn_value &= bool(observer( *args ))
         else:
-            self.__log.warning(
+            self._log.warning(
                 'Signal "%s" (from caller "%s") is not available '
                 'for notification', signal_name, caller )
 
@@ -114,7 +114,7 @@ class ForwardingObservableService(ObservableService):
         
         # bail if the from object isn't an ObservableService
         if not isinstance( from_object, ObservableService ):
-            self.__log.error( "Can't forward signals for "
+            self._log.error( "Can't forward signals for "
                               "non-ObservableService type objects")
             return
         
@@ -139,7 +139,7 @@ class ForwardingObservableService(ObservableService):
     
         def _callback( *args, **kwargs ):
             kwargs["caller"] = caller
-            self.notify( emitted_signal_name, *args, **kwargs )
+            return self.notify( emitted_signal_name, *args, **kwargs )
         
         return _callback
 
