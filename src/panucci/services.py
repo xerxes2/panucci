@@ -109,7 +109,7 @@ class ForwardingObservableService(ObservableService):
             original object's signal is named "foo-bar" but you want this
             object to emit "foo") you can do so by passing a dict to
             signal_names. This dict must contain string pairs:
-            { "from-object-name" : "new name" }
+            { "new name" : "from-object name", }
         """
         
         # bail if the from object isn't an ObservableService
@@ -130,7 +130,7 @@ class ForwardingObservableService(ObservableService):
         elif isinstance( signal_names, dict ):
             signals = signal_names
         
-        for from_name, to_name in signals.iteritems():
+        for to_name, from_name in signals.iteritems():
             from_object.register( from_name, self._forward( to_name, caller ))
     
     def _forward( self, emitted_signal_name, caller ):
