@@ -72,13 +72,14 @@ class PanucciPlayer(ForwardingObservableService):
             self.__log.critical("No player available")
             raise AttributeError
     
-    def add_bookmark_at_current_position( self ):
+    def add_bookmark_at_current_position( self, label=None ):
         """ Adds a bookmark at the current position
             
             Returns: (bookmark lable string, position in nanoseconds)
         """
         
-        label, position = player.get_formatted_position()
+        default_label, position = player.get_formatted_position()
+        label = default_label if label is None else label
         self.playlist.save_bookmark( label, position )
         self.__log.info('Added bookmark: %s - %d', label, position)
         return label, position
