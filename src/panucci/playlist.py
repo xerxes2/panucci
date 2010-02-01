@@ -469,13 +469,13 @@ class Playlist(ObservableService):
             self.__queue.current_item.save_bookmark(
                 _('Auto Bookmark'), position, True )
 
-    def skip(self, skip_by=None, skip_to=None, dont_loop=False):
+    def skip(self, skip_by=None, skip_to=None, loop=True):
         """ Skip to another track in the playlist.
             Use either skip_by or skip_to, skip_by has precedence.
                 skip_to: skip to a known playlist position
                 skip_by: skip by n number of episodes (positive or negative)
-                dont_loop: prevents looping if the track requested lays out of
-                    the 0 to queue_length-1 boundary.
+                loop: loop if the track requested lays out of
+                      the 0 to queue_length-1 boundary.
         """
         if not self.__queue:
             return False
@@ -491,9 +491,9 @@ class Playlist(ObservableService):
             self.__log.warning('No skip method provided...')
 
         if not 0 <= skip < self.queue_length:
-            self.notify( 'end-of-playlist', not dont_loop, caller=self.skip )
+            self.notify( 'end-of-playlist', loop, caller=self.skip )
 
-            if dont_loop:
+            if not loop:
                 self.__log.warning( "Can't skip to non-existant file w/o loop."
                                     " (requested=%d, total=%d)", skip,
                                     self.queue_length )
@@ -522,11 +522,11 @@ class Playlist(ObservableService):
     def next(self):
         """ Move the playlist to the next track.
             False indicates end of playlist. """
-        return self.skip( skip_by=1, dont_loop=True )
+        return self.skip( skip_by=1, loop=False )
 
     def prev(self):
         """ Same as next() except moves to the previous track. """
-        return self.skip( skip_by=-1, dont_loop=True )
+        return self.skip( skip_by=-1, loop=False )
 
 
 class Queue(list, ObservableService):
