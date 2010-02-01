@@ -88,6 +88,62 @@ class ObservableService(object):
         return rtn_value
 
 
+class ForwardingObservableService(ObservableService):
+    """ An object that builds on ObservableService which provides a simple
+        way to forward/proxy a bunch of signals through an object of this
+        type. Ie: This object will call it's notify() method whenever a 
+        forwarded signal from another object is emitted. """
+    
+    def forward( self, from_object, signal_names, caller=None ):
+        """ Register signals to be forwarded
+              from_object: the object from which the signals will be emitted
+              signal_names: a string, list, or dict of signal names
+              caller: the caller to be passed to notify()
+            
+            To forward a single signal, signal_names can just be a string
+            containing the name of the signal.
+            
+            To forward many signals, signal_names can be a list of strings.
+            
+            If you wish to change the name of the emitted signal (ie. if the
+            original object's signal is named "foo-bar" but you want this
+            object to emit "foo") you can do so by passing a dict to
+            signal_names. This dict must contain string pairs:
+            { "from-object-name" : "new name" }
+        """
+        
+        # bail if the from object isn't an ObservableService
+        if not isinstance( from_object, ObservableService ):
+            self.__log.error( "Can't forward signals for "
+                              "non-ObservableService type objects")
+            return
+        
+        signals = {} # final list of signals to registered
+        
+        if isinstance( signal_names, str ):
+            signals[signal_names] = signal_names
+        
+        elif isinstance( signal_names, list ):
+            for name in signal_names:
+                signals[name] = name
+        
+        elif isinstance( signal_names, dict ):
+            signals = signal_names
+        
+        for from_name, to_name in signals.iteritems():
+            from_object.register( from_name, self._forward( to_name, caller ))
+    
+    def _forward( self, emitted_signal_name, caller ):
+        """ Returns a function which calls notify() with the appropriate
+            parameters. """
+    
+        def _callback( *args, **kwargs ):
+            kwargs["caller"] = caller
+            self.notify( emitted_signal_name, *args, **kwargs )
+        
+        return _callback
+
+
 HEADPHONE_SYS = "/sys/devices/platform/gpio-switch/headphone/state"
 
 class __headphone_watcher(ObservableService):

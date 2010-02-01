@@ -21,14 +21,14 @@ import logging
 
 from playlist import Playlist
 from settings import settings
-from services import ObservableService
+from services import ForwardingObservableService
 from dbusinterface import interface
 from backends import osso, gstplaybin
 
 import util
 
 
-class PanucciPlayer(ObservableService):
+class PanucciPlayer(ForwardingObservableService):
     """
     A proxy object which adds a layer of abstraction between all the different
     backends. It picks the right backend for the job and forwards signals from
@@ -38,14 +38,14 @@ class PanucciPlayer(ObservableService):
     
     def __init__(self, player):
         self.__log = logging.getLogger('panucci.player.PanucciPlayer')
-        ObservableService.__init__(self, self.signals, self.__log)
+        ForwardingObservableService.__init__(self, self.signals, self.__log)
         self.__player = player
         self.__initialized = False
         
         # Forward the following signals
-        def n(sig): return lambda *y: self.notify(sig, caller=PanucciPlayer, *y) 
-        for signal in [ "playing", "paused", "stopped", "eof" ]:
-            self.__player.register( signal, n(signal) )
+        self.forward( self.__player,
+                      [ "playing", "paused", "stopped", "eof" ],
+                      PanucciPlayer )
         
         self.__player.register( "playing", self.on_playing )
         self.__player.register( "error", self.on_player_error )
