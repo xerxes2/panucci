@@ -1,0 +1,217 @@
+# Panucci translation template.
+# Copyright (C) 2009 Panucci Contributors
+# This file is distributed under the same license as the Panucci package.
+# Nick Nobody <me@nikosapi.org>, 2009.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Panucci 0.4\n"
+"Report-Msgid-Bugs-To: gpodder-panucci@lists.berlios.de\n"
+"POT-Creation-Date: 2009-12-30 11:13-0500\n"
+"PO-Revision-Date: 2010-01-27 00:57+0100\n"
+"Last-Translator: Martin <martinkjellqvist@gmail.com>\n"
+"Language-Team: Martin <martinkjellqvist@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: swedish\n"
+"X-Poedit-Country: sweden\n"
+
+#: bin/panucci:100
+msgid "Found panucci instance already running, will try to use it..."
+msgstr "En panucciprocess är igång, kommer försöka använda den..."
+
+#: src/panucci/panucci.py:56
+msgid "Resuming audiobook and podcast player"
+msgstr "Ljudboks- och poddsändningsspelare som minns var du slutade"
+
+#: src/panucci/panucci.py:154
+msgid "Select file to save playlist to"
+msgstr "Välj fil att spara spellista på"
+
+#: src/panucci/panucci.py:159
+msgid "Select podcast or audiobook"
+msgstr "Välj poddsänding eller ljudbok"
+
+#: src/panucci/panucci.py:242
+msgid "Player"
+msgstr "Spelare"
+
+#: src/panucci/panucci.py:248
+msgid "Playlist"
+msgstr "Spellista"
+
+#: src/panucci/panucci.py:285
+msgid "Open playlist"
+msgstr "Öppna spellista"
+
+#: src/panucci/panucci.py:292
+msgid "Open recent playlist"
+msgstr "Öppna senast använda spellista"
+
+#: src/panucci/panucci.py:298
+#: src/panucci/panucci.py:381
+msgid "Save current playlist"
+msgstr "Spara nuvarande spellista"
+
+#: src/panucci/panucci.py:307
+msgid "Settings"
+msgstr "Inställningar"
+
+#: src/panucci/panucci.py:314
+msgid "Enable dual-action buttons"
+msgstr "Aktivera knappar med dubbelfunktionsknappar"
+
+#: src/panucci/panucci.py:321
+msgid "Enable hardware decoding"
+msgstr "Aktivera hårdvaruavkodning"
+
+#: src/panucci/panucci.py:326
+msgid "Lock Progress Bar"
+msgstr "Lås förloppsraden"
+
+#: src/panucci/panucci.py:361
+msgid "No recent files available."
+msgstr "Det finns inga senast använda filer."
+
+#: src/panucci/panucci.py:382
+msgid "Current playlist has been modified"
+msgstr "Nuvarande spellista har blivit ändrad"
+
+#: src/panucci/panucci.py:383
+msgid "Opening a new file will replace the current playlist. "
+msgstr "Om du öppnar en ny fil kommer den ersätta nuvarande spellista."
+
+#: src/panucci/panucci.py:384
+msgid "Do you want to save it before creating a new one?"
+msgstr "Vill du spara innan du skapar en ny?"
+
+#: src/panucci/panucci.py:386
+msgid "Discard changes"
+msgstr "Ångra ändringar"
+
+#: src/panucci/panucci.py:419
+#: src/panucci/panucci.py:420
+msgid "File already exists"
+msgstr "Filen finns redan"
+
+#: src/panucci/panucci.py:421
+#, python-format
+msgid "The file %s already exists. You can choose another name or overwrite the existing file."
+msgstr "Filen %s finns redan. Du kan välja ett annat namn eller ersätta den redan existrerande filen."
+
+#: src/panucci/panucci.py:424
+msgid "Rename file"
+msgstr "Byt namn på fil"
+
+#: src/panucci/panucci.py:436
+msgid "Error saving playlist..."
+msgstr "Fel vid sparande av spellista..."
+
+#: src/panucci/panucci.py:520
+msgid "Converting old pickle format to SQLite."
+msgstr "Konverterar gammalt pickle-format till SQLite."
+
+#: src/panucci/panucci.py:521
+msgid "This may take a while..."
+msgstr "Detta kan ta en stund..."
+
+#: src/panucci/panucci.py:525
+msgid "Pickle file converted successfully."
+msgstr "Pickle-filen konverterades framgångsrikt."
+
+#: src/panucci/panucci.py:528
+msgid "Error converting pickle file, check your log..."
+msgstr "Fel vid filkonvertering, läs mer i din logg..."
+
+#: src/panucci/panucci.py:951
+msgid "Name"
+msgstr "Namn"
+
+#: src/panucci/panucci.py:960
+msgid "Position"
+msgstr "Position"
+
+#: src/panucci/panucci.py:989
+msgid "Add File"
+msgstr "Lägg till fil"
+
+#: src/panucci/panucci.py:995
+msgid "Add Directory"
+msgstr "Lägg till mapp"
+
+#: src/panucci/panucci.py:1121
+#, python-format
+msgid "Bookmark added: %s"
+msgstr "Bokmärke tillagt: %s"
+
+#: src/panucci/panucci.py:1203
+msgid "Playlist item details"
+msgstr "Detaljer om spellisteobjekt"
+
+#: src/panucci/panucci.py:1221
+msgid "Custom title:"
+msgstr "Egen titel:"
+
+#: src/panucci/panucci.py:1222
+msgid "ID:"
+msgstr "ID:"
+
+#: src/panucci/panucci.py:1223
+msgid "Playlist ID:"
+msgstr "Spelliste ID:"
+
+#: src/panucci/panucci.py:1224
+msgid "Filepath:"
+msgstr "Sökväg:"
+
+#: src/panucci/panucci.py:1236
+msgid "<not modified>"
+msgstr "<inte ändrad>"
+
+#: src/panucci/panucci.py:1247
+msgid "<not set>"
+msgstr "<inte bestämd>"
+
+#: src/panucci/panucci.py:1262
+msgid "Title"
+msgstr "Titel"
+
+#: src/panucci/panucci.py:1265
+msgid "Time"
+msgstr "Tid"
+
+#: src/panucci/panucci.py:1276
+msgid "Bookmarks"
+msgstr "Bokmärken"
+
+#: src/panucci/pickle_converter.py:55
+#: src/panucci/pickle_converter.py:66
+#: src/panucci/playlist.py:470
+msgid "Auto Bookmark"
+msgstr "Automatisk bokmärke"
+
+#: src/panucci/backends/base.py:27
+msgid "No media selected"
+msgstr "Inget media är valt"
+
+#: src/panucci/backends/base.py:28
+msgid "Unsupported filetype."
+msgstr "Filtypen stöds inte."
+
+#: src/panucci/backends/base.py:29
+msgid "Something wrong with the backend"
+msgstr "Något är fel i systemet."
+
+#: src/panucci/backends/base.py:30
+msgid "Hardware blocked/in-use"
+msgstr "Hårdvaran är inte tillgänglig / används redan"
+
+#: src/panucci/backends/base.py:31
+msgid "File is corrupted/incomplete"
+msgstr "Filen är trasig / ofullständig"
+
+#: src/panucci/backends/base.py:32
+msgid "File not found, make sure the file still exists."
+msgstr "Filen hittades inte. Kontrollera att filen finns kvar."
+
