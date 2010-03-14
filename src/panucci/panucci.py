@@ -1155,7 +1155,7 @@ class PlaylistTab(gtk.VBox):
 
             yield model, bookmark_id, bookmark_iter, item_id, item_iter
 
-    def remove_bookmark(self, w):
+    def remove_bookmark(self, w=None):
         for model, bkmk_id, bkmk_iter, item_id, item_iter in self.__cur_selection():
             player.playlist.remove_bookmark( item_id, bkmk_id )
             if bkmk_iter is not None:
