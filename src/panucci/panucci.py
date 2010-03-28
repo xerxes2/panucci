@@ -191,8 +191,6 @@ def set_stock_button_text( button, text ):
 class PanucciGUI(object):
     """ The object that holds the entire panucci gui """
     
-    PLAYER_TAB, PLAYLIST_TAB = range(2)
-    
     def __init__(self, filename=None):
         self.__log = logging.getLogger('panucci.panucci.PanucciGUI')  
         interface.register_gui(self)      
@@ -213,13 +211,21 @@ class PanucciGUI(object):
         window.set_default_size(400, -1)
         window.set_border_width(0)
         window.connect("destroy", self.destroy)
-        
-        self.notebook = gtk.Notebook()
-        self.notebook.unset_flags(gtk.CAN_FOCUS)
-        
+
+        # Add the tabs (they are private to prevent us from trying to do
+        # something like gui_root.player_tab.some_function() from inside
+        # playlist_tab or vice-versa)
+        self.__player_tab = PlayerTab(self)
+        self.__playlist_tab = PlaylistTab(self)
+
+        self.playlist_window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.playlist_window.set_title(_('Panucci playlist'))
+        self.playlist_window.set_transient_for(self.main_window)
+        self.playlist_window.add(self.__playlist_tab)
+
         if util.platform.MAEMO:
             window.set_menu(self.create_menu())
-            window.add(self.notebook)
+            window.add(self.__player_tab)
         else:
             menu_vbox = gtk.VBox()
             menu_vbox.set_spacing(0)
@@ -230,25 +236,7 @@ class PanucciGUI(object):
             menu_bar.append(root_menu)
             menu_vbox.pack_start(menu_bar, False, False, 0)
             menu_bar.show()
-            menu_vbox.pack_end(self.notebook, True, True, 6)
-        
-        # Add the tabs (they are private to prevent us from trying to do
-        # something like gui_root.player_tab.some_function() from inside 
-        # playlist_tab or vice-versa)
-        self.__player_tab = PlayerTab(self)
-        self.__playlist_tab = PlaylistTab(self)
-        
-        self.notebook.insert_page( self.__player_tab,
-                                   gtk.Label(_('Player')),
-                                   self.PLAYER_TAB )
-        self.notebook.set_tab_label_packing( self.__player_tab, True, True, 
-                                             gtk.PACK_START)
-        
-        self.notebook.insert_page( self.__playlist_tab,
-                                   gtk.Label(_('Playlist')),
-                                   self.PLAYLIST_TAB )
-        self.notebook.set_tab_label_packing( self.__playlist_tab, True, True,
-                                             gtk.PACK_START )
+            menu_vbox.pack_end(self.__player_tab, True, True, 6)
 
         # Tie it all together!
         self.__ignore_queue_check = False
@@ -274,7 +262,6 @@ class PanucciGUI(object):
         self.main_window.show_all()
         
         # this should be done when the gui is ready
-        self.notebook.set_current_page(self.PLAYER_TAB)
         self.pickle_file_conversion()
         player.init(filepath=filename)
         
@@ -508,8 +495,8 @@ class PanucciGUI(object):
     def __select_current_item( self ):
         # Select the currently playing track in the playlist tab
         # and switch to it (so we can edit bookmarks, etc.. there)
-        self.notebook.set_current_page(self.PLAYLIST_TAB)
         self.__playlist_tab.select_current_item()
+        self.playlist_window.show()
     
     def pickle_file_conversion(self):
         pickle_file = os.path.expanduser('~/.rmp-bookmarks')
