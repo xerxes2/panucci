@@ -41,6 +41,8 @@ class PanucciPlayer(ForwardingObservableService):
         ForwardingObservableService.__init__(self, self.signals, self.__log)
         self.__player = player
         self.__initialized = False
+        self._start_position = 0
+        self._is_playing = False
         
         # Forward the following signals
         self.forward( self.__player,
@@ -48,6 +50,9 @@ class PanucciPlayer(ForwardingObservableService):
                       PanucciPlayer )
         
         self.__player.register( "playing", self.on_playing )
+        self.__player.register( "paused", self.on_stopped )
+        self.__player.register( "stopped", self.on_stopped )
+        self.__player.register( "eof", self.on_stopped )
         self.__player.register( "error", self.on_player_error )
         self._set_volume_level( settings.volume )
         
@@ -122,17 +127,48 @@ class PanucciPlayer(ForwardingObservableService):
 
         self.__initialized = True
     
+    def do_seek(self, from_beginning=None, from_current=None, percent=None):
+        pos, dur = self.get_position_duration()
+        pos_sec = pos / 10**9
+        dur_sec = dur / 10**9
+
+        if self._is_playing and self.current_file:
+            interface.PlaybackStopped(self._start_position, pos_sec, dur_sec, self.current_file)
+            self._is_playing = False
+
+        # Hand over the seek command to the backend
+        self.__player.do_seek(from_beginning, from_current, percent)
+
     def on_playing(self):
         """ 
         Used to seek to the correct position once the file has started
         playing. This has to be done once the player is ready because
         certain player backends can't seek in any state except playing.
         """
-        
         seek = self.playlist.play()
         if seek > 0:
             self._seek(seek)
-    
+
+        pos, dur = self.get_position_duration()
+        pos_sec = pos / 10**9
+        dur_sec = dur / 10**9
+
+        interface.PlaybackStarted(pos_sec, self.current_file)
+        self._start_position = pos_sec
+        self._is_playing = True
+
+    def on_stopped(self, *args):
+        pos, dur = self.get_position_duration()
+        pos_sec = pos / 10**9 or 0
+        dur_sec = dur / 10**9 or 0
+        if self.current_file is not None:
+            interface.PlaybackStopped(self._start_position, pos_sec, dur_sec, self.current_file)
+        self._is_playing = False
+
+    @property
+    def current_file(self):
+        return self.playlist.current_filepath
+
     def on_stop_requested(self):
         self.playlist.stop( self.get_position_duration()[0] )
         self.stop()

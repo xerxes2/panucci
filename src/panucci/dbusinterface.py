@@ -107,6 +107,25 @@ class panucciInterface(dbus.service.Object):
         self.__log.debug('show_main_window() called')
         if self.gui is not None: self.gui.show_main_window()
 
+    # Signals for gPodder's media player integration
+    @dbus.service.signal(dbus_interface='org.gpodder.player', signature='us')
+    def PlaybackStarted(self, position, file_uri):
+        pass
+
+    @dbus.service.signal(dbus_interface='org.gpodder.player', signature='uuus')
+    def PlaybackStopped(self, start_position, end_position, total_time, \
+            file_uri):
+        pass
+
+    @dbus.service.signal(dbus_interface='org.gpodder.player', signature='uussb')
+    def ChapterAdded(self, start_position, end_position, file_uri, name, \
+            advertising):
+        pass
+
+    @dbus.service.signal(dbus_interface='org.gpodder.player', signature='uus')
+    def ChapterRemoved(self, start_position, end_position, file_uri):
+        pass
+
 interface = panucciInterface(
     dbus.service.BusName('org.panucci.panucciInterface', session_bus) )
 
