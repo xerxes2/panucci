@@ -137,7 +137,7 @@ class PanucciPlayer(ForwardingObservableService):
             self._is_playing = False
 
         # Hand over the seek command to the backend
-        self.__player.do_seek(from_beginning, from_current, percent)
+        return self.__player.do_seek(from_beginning, from_current, percent)
 
     def on_playing(self):
         """ 
