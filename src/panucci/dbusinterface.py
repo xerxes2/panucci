@@ -17,13 +17,15 @@
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import logging
 import dbus
 import dbus.service
 
 session_bus = dbus.SessionBus()
 
-import util
+from panucci import util
 
 class panucciInterface(dbus.service.Object):
     """ Panucci's d-bus interface """

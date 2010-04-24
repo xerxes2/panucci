@@ -17,9 +17,12 @@
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import gst
 import logging
-import gstbase
+
+from panucci.backends import gstbase
 
 class GstPlaybinPlayer(gstbase.GstBasePlayer):
     """  """

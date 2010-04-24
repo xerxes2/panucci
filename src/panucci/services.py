@@ -22,10 +22,12 @@
 #  2009-02-13 - nikosapi: made ObservableService more Panucci-esque
 #
 
+from __future__ import absolute_import
+
 from logging import getLogger
 
 # the following are only needed for __headphone_watcher
-import util
+from panucci import util
 import gobject
 
 class ObservableService(object):

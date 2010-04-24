@@ -17,10 +17,13 @@
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import gst
 import logging
 
-import base
+from panucci.backends import base
+
 import panucci
 from panucci.settings import settings
 from panucci import util

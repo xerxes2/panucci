@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 
 """
 Public API for Panucci
@@ -7,11 +7,13 @@ This module provides enough functionality to create a frontend to control
 Panucci as well as exporting a large portion of the Panucci API over D-Bus.
 """
 
+from __future__ import absolute_import
+
 import dbus
 import logging
 
-import player
-import services
+from panucci import player
+from panucci import services
 
 
 class PanucciAPI(services.ForwardingObservableService, dbus.service.Object):

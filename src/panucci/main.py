@@ -22,6 +22,8 @@
 #  (based on http://pygstdocs.berlios.de/pygst-tutorial/seeking.html)
 #
 
+from __future__ import absolute_import
+
 
 import logging
 import sys
@@ -32,9 +34,9 @@ import gtk
 import gobject
 import pango
 
-import widgets
-import util
-import ossohelper
+from panucci import widgets
+from panucci import util
+from panucci import ossohelper
 
 log = logging.getLogger('panucci.panucci')
 
@@ -46,11 +48,11 @@ except:
         log.critical( 'Using GTK widgets, install "python2.5-hildon" '
             'for this to work properly.' )
 
-from simplegconf import gconf
-from settings import settings
-from player import player
-from dbusinterface import interface
-from services import ObservableService
+from panucci.simplegconf import gconf
+from panucci.settings import settings
+from panucci.player import player
+from panucci.dbusinterface import interface
+from panucci.services import ObservableService
 
 about_name = 'Panucci'
 about_text = _('Resuming audiobook and podcast player')

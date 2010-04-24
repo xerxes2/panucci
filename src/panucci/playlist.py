@@ -17,6 +17,8 @@
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import gobject, gtk
 import time
 import os.path
@@ -26,12 +28,12 @@ import logging
 from hashlib import md5
 from xml.sax.saxutils import escape
 
-import util
-from dbsqlite import db
-from settings import settings
-from simplegconf import gconf
-from services import ObservableService
+from panucci.dbsqlite import db
+from panucci.settings import settings
+from panucci.simplegconf import gconf
+from panucci.services import ObservableService
 
+from panucci import util
 
 def is_supported( filename ):
     if settings.supported_extensions:

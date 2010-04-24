@@ -19,6 +19,8 @@
 # _Heavily_ inspired by gPodder's dbsqlite
 #
 
+from __future__ import absolute_import
+
 import os.path
 import logging
 import string
@@ -31,8 +33,8 @@ try:
 except ImportError:
     log.critical('Error importing sqlite, FAIL!')
 
-from settings import settings
-from simplegconf import gconf
+from panucci.settings import settings
+from panucci.simplegconf import gconf
 
 class Storage(object):
     def __init__(self, db_file):

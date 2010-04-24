@@ -17,14 +17,16 @@
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import os.path
 import pickle
 import shutil
 import time
 import logging
 
-from dbsqlite import db
-from playlist import Bookmark
+from panucci.dbsqlite import db
+from panucci.playlist import Bookmark
 
 log = logging.getLogger('panucci.pickle_converter')
 

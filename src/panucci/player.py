@@ -17,15 +17,17 @@
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import logging
 
-from playlist import Playlist
-from settings import settings
-from services import ForwardingObservableService
-from dbusinterface import interface
-from backends import osso, gstplaybin
+from panucci.playlist import Playlist
+from panucci.settings import settings
+from panucci.services import ForwardingObservableService
+from panucci.dbusinterface import interface
+from panucci.backends import osso, gstplaybin
 
-import util
+from panucci import util
 
 
 class PanucciPlayer(ForwardingObservableService):

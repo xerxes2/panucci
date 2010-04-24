@@ -22,10 +22,12 @@
 # the nokia media player and watching dbus-monitor.
 #
 
+from __future__ import absolute_import
+
 import dbus
 import logging
 
-import base
+from panucci.backends import base
 
 class ossoPlayer(base.BasePlayer):
     """

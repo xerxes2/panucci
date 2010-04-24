@@ -17,11 +17,13 @@
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import logging
 import os.path
 
-from simplegconf import gconf
-from services import ObservableService
+from panucci.simplegconf import gconf
+from panucci.services import ObservableService
 
 SIGNAL_NAME_SUFFIX = '_changed'
 

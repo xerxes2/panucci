@@ -17,6 +17,8 @@
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 app_version = '0.4'
 
 import dbus
@@ -106,9 +108,9 @@ if remote_object is None:
     # configure logging
     init_logging( logging.DEBUG if opts.debug else logging.ERROR )
     
-    from panucci import panucci
-    panucci.app_version = app_version
-    panucci.run( filename=filepath ) 
+    from panucci import main
+    main.app_version = app_version
+    main.run(filename=filepath)
 else:
     if filepath is not None:
         if opts.queue_filename is not None:
