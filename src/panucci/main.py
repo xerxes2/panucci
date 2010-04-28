@@ -319,7 +319,7 @@ class PanucciGUI(object):
         menu_settings_sub.append(menu_settings_lock_progress)
         
         menu_about = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
-        menu_about.connect("activate", self.show_about, self.main_window)
+        menu_about.connect("activate", self.about_callback)
         menu.append(menu_about)
 
         menu.append(gtk.SeparatorMenuItem())
@@ -461,7 +461,7 @@ class PanucciGUI(object):
                 self.__log.error(
                     util.notify( 'Error adding %s to the queue.' % filename))
 
-    def show_about(self, w, win):
+    def about_callback(self, widget):
         dialog = gtk.AboutDialog()
         dialog.set_website(about_website)
         dialog.set_website_label(about_website)
