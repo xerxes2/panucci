@@ -221,6 +221,7 @@ class PanucciGUI(object):
         self.__playlist_tab = PlaylistTab(self)
 
         self.playlist_window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.playlist_window.connect('delete-event', gtk.Widget.hide_on_delete)
         self.playlist_window.set_title(_('Panucci playlist'))
         self.playlist_window.set_transient_for(self.main_window)
         self.playlist_window.add(self.__playlist_tab)
