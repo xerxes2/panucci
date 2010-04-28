@@ -34,6 +34,8 @@ import gtk
 import gobject
 import pango
 
+import panucci
+
 from panucci import widgets
 from panucci import util
 from panucci import ossohelper
@@ -58,7 +60,6 @@ about_name = 'Panucci'
 about_text = _('Resuming audiobook and podcast player')
 about_authors = ['Thomas Perl', 'Nick (nikosapi)', 'Matthew Taylor']
 about_website = 'http://panucci.garage.maemo.org/'
-app_version = ''
 
 coverart_sizes = {
     'normal'            : 110,
@@ -502,7 +503,7 @@ class PanucciGUI(object):
         dialog.set_name(about_name)
         dialog.set_authors(about_authors)
         dialog.set_comments(about_text)
-        dialog.set_version(app_version)
+        dialog.set_version(panucci.__version__)
         dialog.run()
         dialog.destroy()
     
@@ -1303,7 +1304,7 @@ class PlaylistItemDetails(gtk.Dialog):
 
 
 def run(filename=None):
-    ossohelper.application_init('org.panucci', '0.4')
+    ossohelper.application_init('org.panucci', panucci.__version__)
     PanucciGUI( filename )
     gtk.main()
     ossohelper.application_exit()

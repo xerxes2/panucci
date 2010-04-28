@@ -22,6 +22,9 @@ from glob import glob
 import os
 import sys
 
+sys.path.insert(0, 'src')
+import panucci
+
 running_on_tablet = os.path.exists('/etc/osso_software_version')
 
 applications_dir = 'share/applications'
@@ -46,10 +49,10 @@ if not len(translation_files) and not 'clean' in sys.argv:
     """
 
 setup(name='Panucci',
-      version='0.4',
+      version=panucci.__version__,
       description='A Resuming Media Player',
       author='Thomas Perl',
-      author_email='thp@perli.net',
+      author_email='thp@gpodder.org',
       url='http://panucci.garage.maemo.org/',
       packages=['panucci', 'panucci.backends'],
       package_dir={ '':'src' },

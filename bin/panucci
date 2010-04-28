@@ -19,8 +19,6 @@
 
 from __future__ import absolute_import
 
-app_version = '0.4'
-
 import dbus
 import dbus.glib
 import logging
@@ -46,7 +44,7 @@ gettext.install( 'panucci', locale_dir )
 
 # Set up the command line option parser
 usage = 'usage: %prog [options] FILE'
-parser = OptionParser(usage=usage, version='%prog ' + app_version)
+parser = OptionParser(usage=usage)
 parser.add_option('-q', '--queue', action='store', type='string',
     dest='queue_filename', help='Add FILE to the queue', metavar='FILE')
 parser.add_option('-d', '--debug', action='store_true', default=False,
@@ -109,7 +107,6 @@ if remote_object is None:
     init_logging( logging.DEBUG if opts.debug else logging.ERROR )
     
     from panucci import main
-    main.app_version = app_version
     main.run(filename=filepath)
 else:
     if filepath is not None:
