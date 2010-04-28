@@ -97,7 +97,7 @@ session_bus = dbus.SessionBus()
 try:
     remote_object = session_bus.get_object(
         'org.panucci.panucciInterface', '/panucciInterface' )
-    print _('Found panucci instance already running, will try to use it...')
+    print 'Found panucci instance already running, will try to use it...'
 except dbus.exceptions.DBusException:
     remote_object = None
 

@@ -18,44 +18,42 @@
 #
 
 from distutils.core import setup
-from glob import glob
+
+import glob
 import os
 import sys
 
-sys.path.insert(0, 'src')
-import panucci
+SRC_DIR = 'src/'
 
-running_on_tablet = os.path.exists('/etc/osso_software_version')
+d2p = lambda d: d[len(SRC_DIR):].replace('/', '.')
+PACKAGES = [d2p(d) for d, dd, ff in os.walk(SRC_DIR) if '__init__.py' in ff]
 
-applications_dir = 'share/applications'
-if running_on_tablet:
-    applications_dir += '/hildon'
+SCRIPTS = glob.glob('bin/*')
 
-data_files = [
-    ('share/panucci', glob('icons/*.png')),
-    (applications_dir, ['data/panucci.desktop']),
+DATA_FILES = [
+    ('share/panucci', glob.glob('icons/*.png')),
+    ('share/applications', ['data/panucci.desktop']),
     ('share/icons/hicolor/scalable/apps', ['data/panucci.png']),
+    ('share/dbus-1/services', ['data/panucci.service']),
 ]
 
-# search for translations and repare to install
-translation_files = []
-for mofile in glob('data/locale/*/LC_MESSAGES/panucci.mo'):
+for mofile in glob.glob('data/locale/*/LC_MESSAGES/panucci.mo'):
     modir = os.path.dirname(mofile).replace('data', 'share')
-    translation_files.append((modir, [mofile]))
+    DATA_FILES.append((modir, [mofile]))
 
-if not len(translation_files) and not 'clean' in sys.argv:
-    print >>sys.stderr, """
-    Warning: No translation files. (Did you forget to run "make gen_gettext"?)
-    """
+sys.path.insert(0, SRC_DIR)
+import panucci
 
-setup(name='Panucci',
-      version=panucci.__version__,
-      description='A Resuming Media Player',
-      author='Thomas Perl',
-      author_email='thp@gpodder.org',
-      url='http://panucci.garage.maemo.org/',
-      packages=['panucci', 'panucci.backends'],
-      package_dir={ '':'src' },
-      scripts=['bin/panucci'],
-      data_files=data_files + translation_files,
-     )
+setup(
+        name='Panucci',
+        version=panucci.__version__,
+        description='Resuming audibook and podcast player',
+        author='Thomas Perl',
+        author_email='thp@gpodder.org',
+        url='http://panucci.garage.maemo.org/',
+        packages=PACKAGES,
+        package_dir={ '': SRC_DIR },
+        scripts=SCRIPTS,
+        data_files=DATA_FILES,
+)
+
