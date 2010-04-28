@@ -226,6 +226,8 @@ class PanucciGUI(object):
         self.playlist_window.set_transient_for(self.main_window)
         self.playlist_window.add(self.__playlist_tab)
 
+        self.create_actions()
+
         if util.platform.MAEMO:
             window.set_menu(self.create_menu())
             window.add(self.__player_tab)
@@ -234,9 +236,7 @@ class PanucciGUI(object):
             menu_vbox.set_spacing(0)
             window.add(menu_vbox)
             menu_bar = gtk.MenuBar()
-            root_menu = gtk.MenuItem('Panucci')
-            root_menu.set_submenu(self.create_menu())
-            menu_bar.append(root_menu)
+            self.create_desktop_menu(menu_bar)
             menu_vbox.pack_start(menu_bar, False, False, 0)
             menu_bar.show()
             menu_vbox.pack_end(self.__player_tab, True, True, 6)
@@ -267,7 +267,41 @@ class PanucciGUI(object):
         # this should be done when the gui is ready
         self.pickle_file_conversion()
         player.init(filepath=filename)
-        
+
+    def create_actions(self):
+        self.action_open = gtk.Action('open', _('Open'), _('Open a file or playlist'), gtk.STOCK_OPEN)
+        self.action_open.connect('activate', self.open_file_callback)
+        self.action_save = gtk.Action('save', _('Save playlist'), _('Save current playlist to file'), gtk.STOCK_SAVE_AS)
+        self.action_save.connect('activate', self.save_to_playlist_callback)
+        self.action_playlist = gtk.Action('playlist', _('Playlist'), _('Open the current playlist'), None)
+        self.action_playlist.connect('activate', lambda a: self.playlist_window.show())
+        self.action_about = gtk.Action('about', _('About Panucci'), _('Show application version'), gtk.STOCK_ABOUT)
+        self.action_about.connect('activate', self.about_callback)
+        self.action_quit = gtk.Action('quit', _('Quit'), _('Close Panucci'), gtk.STOCK_QUIT)
+        self.action_quit.connect('activate', self.destroy)
+
+    def create_desktop_menu(self, menu_bar):
+        file_menu_item = gtk.MenuItem(_('File'))
+        file_menu = gtk.Menu()
+        file_menu.append(self.action_open.create_menu_item())
+        file_menu.append(self.action_save.create_menu_item())
+        file_menu.append(gtk.SeparatorMenuItem())
+        file_menu.append(self.action_quit.create_menu_item())
+        file_menu_item.set_submenu(file_menu)
+        menu_bar.append(file_menu_item)
+
+        tools_menu_item = gtk.MenuItem(_('Tools'))
+        tools_menu = gtk.Menu()
+        tools_menu.append(self.action_playlist.create_menu_item())
+        tools_menu_item.set_submenu(tools_menu)
+        menu_bar.append(tools_menu_item)
+
+        help_menu_item = gtk.MenuItem(_('Help'))
+        help_menu = gtk.Menu()
+        help_menu.append(self.action_about.create_menu_item())
+        help_menu_item.set_submenu(help_menu)
+        menu_bar.append(help_menu_item)
+
     def create_menu(self):
         # the main menu
         menu = gtk.Menu()
