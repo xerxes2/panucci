@@ -38,7 +38,6 @@ import panucci
 
 from panucci import widgets
 from panucci import util
-from panucci import ossohelper
 
 log = logging.getLogger('panucci.panucci')
 
@@ -1313,10 +1312,8 @@ class PlaylistItemDetails(gtk.Dialog):
 
 
 def run(filename=None):
-    ossohelper.application_init('org.panucci', panucci.__version__)
     PanucciGUI( filename )
     gtk.main()
-    ossohelper.application_exit()
 
 if __name__ == '__main__':
     log.error( 'Use the "panucci" executable to run this program.' )
