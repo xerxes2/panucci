@@ -22,27 +22,11 @@ from __future__ import absolute_import
 import logging
 
 import panucci
-from panucci.settings import settings
-from panucci.services import ObservableService
+
+from panucci import services
 
 
-class BASE_ERROR:
-    pass
-class BASE_ERROR_NO_MEDIA(BASE_ERROR):
-    error = _("No media selected")
-class BASE_ERROR_UNSUPPORTED(BASE_ERROR):
-    error = _("Unsupported filetype.")
-class BASE_ERROR_BACKEND(BASE_ERROR):
-    error = _("Something wrong with the backend")
-class BASE_ERROR_HARDWARE(BASE_ERROR):
-    error = _("Hardware blocked/in-use")
-class BASE_ERROR_BAD_FILE(BASE_ERROR):
-    error = _("File is corrupted/incomplete")
-class BASE_ERROR_FILE_NOT_FOUND(BASE_ERROR):
-    error = _("File not found, make sure the file still exists.")
-
-
-class BasePlayer(ObservableService):
+class BasePlayer(services.ObservableService):
     """ The player base class, this can't be used directly because most of
         the important functions need to be filled in by subclasses.
     """
@@ -67,7 +51,7 @@ class BasePlayer(ObservableService):
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.backends.BasePlayer')
-        ObservableService.__init__(self, self.signals, self.__log)
+        services.ObservableService.__init__(self, self.signals, self.__log)
 
         # Cached copies of position and duration
         self.__position, self.__duration = 0, 0

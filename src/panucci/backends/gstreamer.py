@@ -22,17 +22,19 @@ from __future__ import absolute_import
 import gst
 import logging
 
-from panucci.backends import base
-
 import panucci
+
 from panucci import util
 
-class GstBasePlayer(base.BasePlayer):
+from panucci.backends import base
+
+
+class GStreamerPlayer(base.BasePlayer):
     """ A player that uses Gstreamer for playback """
 
     def __init__(self):
         base.BasePlayer.__init__(self)
-        self.__log = logging.getLogger('panucci.backends.GstPlayer')
+        self.__log = logging.getLogger('panucci.backends.GStreamerPlayer')
 
         # have we preformed the initial seek?
         self.__initial_seek_completed = False
@@ -111,7 +113,11 @@ class GstBasePlayer(base.BasePlayer):
         return False
 
     def _setup_player(self, filetype=None):
-        pass
+        self.__log.debug("Creating playbin-based gstreamer player")
+        self._player = gst.element_factory_make('playbin2', 'player')
+        self._filesrc = self._player
+        self._filesrc_property = 'uri'
+        return True
 
     def _on_decoder_pad_added(self, decoder, src_pad, sink_pad):
         # link the decoder's new "src_pad" to "sink_pad"
