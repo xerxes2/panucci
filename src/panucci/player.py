@@ -176,7 +176,7 @@ class PanucciPlayer(ForwardingObservableService):
         self.stop()
 
     def on_player_error(self, msg):
-        self.__log.error("Error from %s: %s", msg.__name__, msg.error)
+        self.__log.error("Error: %s", msg)
 
     def quit(self):
         """ Called when the application exits """
