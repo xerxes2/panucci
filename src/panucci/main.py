@@ -507,6 +507,7 @@ class PanucciGUI(object):
 
     def about_callback(self, widget):
         dialog = gtk.AboutDialog()
+        dialog.set_transient_for(self.main_window)
         dialog.set_website(about_website)
         dialog.set_website_label(about_website)
         dialog.set_name(about_name)
