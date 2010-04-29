@@ -27,7 +27,6 @@ DEFAULTS = {
     'allow_blanking'            : True,
     'dual_action_button_delay'  : 0.5,
     'enable_dual_action_btn'    : True,
-    'enable_hardware_decoding'  : False,
     'last_folder'               : '~',
     'max_recent_files'          : 10,
     'progress_locked'           : False,
