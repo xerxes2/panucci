@@ -42,6 +42,12 @@ from panucci import platform
 
 log = logging.getLogger('panucci.panucci')
 
+try:
+    import pynotify
+    pynotify.init('Panucci')
+    have_pynotify = True
+except:
+    have_pynotify = False
 
 try:
     import hildon
@@ -373,6 +379,17 @@ class PanucciGUI(object):
 
         self.menu_recent.set_submenu(menu_recent_sub)
 
+    def notify(self, message):
+        """ Sends a notification using pynotify, returns message """
+        if platform.DESKTOP and have_pynotify:
+            icon = util.find_image('panucci_64x64.png')
+            notification = pynotify.Notification(self.main_window.get_title(), message, icon)
+            notification.show()
+        elif platform.MAEMO:
+            # Note: This won't work if we're not in the gtk main loop
+            markup = '<b>%s</b>\n<small>%s</small>' % (title, message)
+            hildon.hildon_banner_show_information_with_markup(self.main_window, None, markup)
+
     def destroy(self, widget):
         player.quit()
         gtk.main_quit()
@@ -442,7 +459,7 @@ class PanucciGUI(object):
 
         ext = util.detect_filetype(filename)
         if not player.playlist.save_to_new_playlist(filename, ext):
-            util.notify(_('Error saving playlist...'))
+            self.notify(_('Error saving playlist...'))
             return False
 
         return True
@@ -475,10 +492,10 @@ class PanucciGUI(object):
             filename = os.path.basename(filepath)
             if success:
                 self.__log.info(
-                    util.notify( '%s added successfully.' % filename ))
+                    self.notify( '%s added successfully.' % filename ))
             else:
                 self.__log.error(
-                    util.notify( 'Error adding %s to the queue.' % filename))
+                    self.notify( 'Error adding %s to the queue.' % filename))
 
     def about_callback(self, widget):
         dialog = gtk.AboutDialog()
@@ -1107,7 +1124,7 @@ class PlaylistTab(gtk.VBox):
             self.__model.set_value(iter, 1, old_text)
 
     def on_bookmark_added(self, parent_id, bookmark_name, position):
-        util.notify(_('Bookmark added: %s') % bookmark_name)
+        self.main.notify(_('Bookmark added: %s') % bookmark_name)
         self.update_model()
 
     def add_file(self, widget):

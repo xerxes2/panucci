@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # This file is part of Panucci.
 # Copyright (c) 2008-2010 The Panucci Audiobook and Podcast Player Project
@@ -25,8 +25,6 @@ import os.path
 import sys
 import traceback
 import logging
-
-from panucci import platform
 
 __log = logging.getLogger('panucci.util')
 
@@ -78,27 +76,4 @@ def find_image(filename):
     for location in locations:
         if os.path.exists(location+filename):
             return os.path.abspath(location+filename)
-
-try:
-    import pynotify
-    pynotify.init('Panucci')
-    have_pynotify = True
-except:
-    have_pynotify = False
-
-def notify( msg, title='Panucci' ):
-    """ Sends a notification using pynotify, returns msg """
-    if platform.DESKTOP and have_pynotify:
-        icon = find_image('panucci_64x64.png')
-        args = ( title, msg ) if icon is None else ( title, msg, icon )
-        notification = pynotify.Notification(*args)
-        notification.show()
-    elif platform.MAEMO:
-        # Note: This won't work if we're not in the gtk main loop
-        markup = '<b>%s</b>\n<small>%s</small>' % (title, msg)
-        import hildon
-        hildon.hildon_banner_show_information_with_markup(
-            gtk.Label(''), None, markup )
-
-    return msg
 
