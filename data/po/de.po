@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Panucci 0.4\n"
-"Report-Msgid-Bugs-To: gpodder-panucci@lists.berlios.de\n"
-"POT-Creation-Date: 2010-04-28 17:26+0200\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-04-30 00:39+0200\n"
 "PO-Revision-Date: 2009-12-30 17:32+0100\n"
 "Last-Translator: Thomas Perl <thp@thpinfo.com>\n"
 "Language-Team: German <de@li.org>\n"
@@ -15,138 +15,130 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: bin/panucci:100
-msgid "Found panucci instance already running, will try to use it..."
-msgstr "Panucci-Instanz gefunden, werde versuchen, sie zu benutzen..."
-
-#: src/panucci/main.py:60
+#: src/panucci/main.py:65
 msgid "Resuming audiobook and podcast player"
 msgstr "Fortsetzender Audiobook- und Podcast-Player"
 
-#: src/panucci/main.py:157
+#: src/panucci/main.py:176
 msgid "Select file to save playlist to"
 msgstr "Datei zum Speichern der Playliste wählen"
 
-#: src/panucci/main.py:162
+#: src/panucci/main.py:181
 msgid "Select podcast or audiobook"
 msgstr "Podcast oder Audiobook auswählen"
 
-#: src/panucci/main.py:226
+#: src/panucci/main.py:245
 #, fuzzy
 msgid "Panucci playlist"
 msgstr "Playliste öffnen"
 
-#: src/panucci/main.py:273
+#: src/panucci/main.py:292
 msgid "Open"
 msgstr ""
 
-#: src/panucci/main.py:273
+#: src/panucci/main.py:292
 #, fuzzy
 msgid "Open a file or playlist"
 msgstr "Playliste öffnen"
 
-#: src/panucci/main.py:275
+#: src/panucci/main.py:294
 #, fuzzy
 msgid "Save playlist"
 msgstr "Playliste öffnen"
 
-#: src/panucci/main.py:275
+#: src/panucci/main.py:294
 #, fuzzy
 msgid "Save current playlist to file"
 msgstr "Aktuelle Playliste speichern"
 
-#: src/panucci/main.py:277
+#: src/panucci/main.py:296
 msgid "Playlist"
 msgstr "Wiedergabeliste"
 
-#: src/panucci/main.py:277
+#: src/panucci/main.py:296
 #, fuzzy
 msgid "Open the current playlist"
 msgstr "Letzte Playliste öffnen"
 
-#: src/panucci/main.py:279
+#: src/panucci/main.py:298
 msgid "About Panucci"
 msgstr ""
 
-#: src/panucci/main.py:279
+#: src/panucci/main.py:298
 msgid "Show application version"
 msgstr ""
 
-#: src/panucci/main.py:281
+#: src/panucci/main.py:300
 msgid "Quit"
 msgstr ""
 
-#: src/panucci/main.py:281
+#: src/panucci/main.py:300
 msgid "Close Panucci"
 msgstr ""
 
-#: src/panucci/main.py:285
+#: src/panucci/main.py:304
 #, fuzzy
 msgid "File"
 msgstr "Datei hinzufügen"
 
-#: src/panucci/main.py:294
+#: src/panucci/main.py:313
 msgid "Tools"
 msgstr ""
 
-#: src/panucci/main.py:300
+#: src/panucci/main.py:319
 msgid "Help"
 msgstr ""
 
-#: src/panucci/main.py:310
+#: src/panucci/main.py:329
 msgid "Open playlist"
 msgstr "Playliste öffnen"
 
-#: src/panucci/main.py:317
+#: src/panucci/main.py:336
 msgid "Open recent playlist"
 msgstr "Letzte Playliste öffnen"
 
-#: src/panucci/main.py:323 src/panucci/main.py:406
+#: src/panucci/main.py:342 src/panucci/main.py:430
 msgid "Save current playlist"
 msgstr "Aktuelle Playliste speichern"
 
-#: src/panucci/main.py:332
+#: src/panucci/main.py:351
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: src/panucci/main.py:339
+#: src/panucci/main.py:358
 msgid "Enable dual-action buttons"
 msgstr "Zweitfunktionen der Buttons aktivieren"
 
-#: src/panucci/main.py:346
-msgid "Enable hardware decoding"
-msgstr "Hardware-Decoding aktivieren"
-
-#: src/panucci/main.py:351
+#: src/panucci/main.py:363
 msgid "Lock Progress Bar"
 msgstr "Fortschrittsbalken sperren"
 
-#: src/panucci/main.py:386
+#: src/panucci/main.py:396
 msgid "No recent files available."
 msgstr "Keine letzten Dateien verfügbar."
 
-#: src/panucci/main.py:407
+#: src/panucci/main.py:431
 msgid "Current playlist has been modified"
 msgstr "Aktuelle Wiedergabeliste wurde verändert"
 
-#: src/panucci/main.py:408
+#: src/panucci/main.py:432
 msgid "Opening a new file will replace the current playlist. "
 msgstr ""
 "Die aktuelle Wiedergabeliste wird durch das Öffnen einer neuen Datei ersetzt."
 
-#: src/panucci/main.py:409
+#: src/panucci/main.py:433
 msgid "Do you want to save it before creating a new one?"
 msgstr "Die aktuelle Liste speichern, bevor eine neue erstellt wird?"
 
-#: src/panucci/main.py:411
+#: src/panucci/main.py:435
 msgid "Discard changes"
 msgstr "Änderungen verwerfen"
 
-#: src/panucci/main.py:444 src/panucci/main.py:445
+#: src/panucci/main.py:468 src/panucci/main.py:469
 msgid "File already exists"
 msgstr "Datei existiert bereits"
 
-#: src/panucci/main.py:446
+#: src/panucci/main.py:470
 #, python-format
 msgid ""
 "The file %s already exists. You can choose another name or overwrite the "
@@ -155,119 +147,114 @@ msgstr ""
 "Die Datei %s existiert bereits. Sie können einen anderen Namen auswählen "
 "oder die existierende Datei  überschreiben."
 
-#: src/panucci/main.py:449
+#: src/panucci/main.py:473
 msgid "Rename file"
 msgstr "Datei umbenennen"
 
-#: src/panucci/main.py:461
+#: src/panucci/main.py:485
 msgid "Error saving playlist..."
 msgstr "Fehler beim Speichern der Wiedergabeliste..."
 
-#: src/panucci/main.py:545
-msgid "Converting old pickle format to SQLite."
-msgstr "Konvertiere altes Pickle-Format zu SQLite."
-
-#: src/panucci/main.py:546
-msgid "This may take a while..."
-msgstr "Das kann dauern..."
-
-#: src/panucci/main.py:550
-msgid "Pickle file converted successfully."
-msgstr "Pickle-Datei erfolgreich konvertiert."
-
-#: src/panucci/main.py:553
-msgid "Error converting pickle file, check your log..."
-msgstr "Fehler beim Umwandeln der Picke-Datei, schau in die Log-Datei."
-
-#: src/panucci/main.py:976
+#: src/panucci/main.py:892
 msgid "Name"
 msgstr "Name"
 
-#: src/panucci/main.py:985
+#: src/panucci/main.py:901
 msgid "Position"
 msgstr "Position"
 
-#: src/panucci/main.py:1014
+#: src/panucci/main.py:930
 msgid "Add File"
 msgstr "Datei hinzufügen"
 
-#: src/panucci/main.py:1020
+#: src/panucci/main.py:936
 msgid "Add Directory"
 msgstr "Ordner hinzufügen"
 
-#: src/panucci/main.py:1146
+#: src/panucci/main.py:1062
 #, python-format
 msgid "Bookmark added: %s"
 msgstr "Lesezeichen hinzugefügt: %s"
 
-#: src/panucci/main.py:1228
+#: src/panucci/main.py:1144
 msgid "Playlist item details"
 msgstr "Wiedergabelisten-Eintrag-Details"
 
-#: src/panucci/main.py:1246
+#: src/panucci/main.py:1162
 msgid "Custom title:"
 msgstr "Benutzerdefinierter Titel:"
 
-#: src/panucci/main.py:1247
+#: src/panucci/main.py:1163
 msgid "ID:"
 msgstr "ID:"
 
-#: src/panucci/main.py:1248
+#: src/panucci/main.py:1164
 msgid "Playlist ID:"
 msgstr "Wiedergabelisten-ID:"
 
-#: src/panucci/main.py:1249
+#: src/panucci/main.py:1165
 msgid "Filepath:"
 msgstr "Dateipfad:"
 
-#: src/panucci/main.py:1261
+#: src/panucci/main.py:1177
 msgid "<not modified>"
 msgstr "<nicht verändert>"
 
-#: src/panucci/main.py:1272
+#: src/panucci/main.py:1188
 msgid "<not set>"
 msgstr "<nicht gesetzt>"
 
-#: src/panucci/main.py:1287
+#: src/panucci/main.py:1203
 msgid "Title"
 msgstr "Titel"
 
-#: src/panucci/main.py:1290
+#: src/panucci/main.py:1206
 msgid "Time"
 msgstr "Zeit"
 
-#: src/panucci/main.py:1301
+#: src/panucci/main.py:1217
 msgid "Bookmarks"
 msgstr "Lesezeichen"
 
-#: src/panucci/pickle_converter.py:57 src/panucci/pickle_converter.py:68
-#: src/panucci/playlist.py:472
+#: src/panucci/playlist.py:471
 msgid "Auto Bookmark"
 msgstr "Automatisches Lesezeichen"
 
-#: src/panucci/backends/base.py:32
-msgid "No media selected"
-msgstr "Keine Medien ausgewählt"
+#~ msgid "Found panucci instance already running, will try to use it..."
+#~ msgstr "Panucci-Instanz gefunden, werde versuchen, sie zu benutzen..."
 
-#: src/panucci/backends/base.py:34
-msgid "Unsupported filetype."
-msgstr "Nicht unterstützter Dateityp."
+#~ msgid "Enable hardware decoding"
+#~ msgstr "Hardware-Decoding aktivieren"
 
-#: src/panucci/backends/base.py:36
-msgid "Something wrong with the backend"
-msgstr "Mit dem Backend stimmt etwas nicht"
+#~ msgid "Converting old pickle format to SQLite."
+#~ msgstr "Konvertiere altes Pickle-Format zu SQLite."
 
-#: src/panucci/backends/base.py:38
-msgid "Hardware blocked/in-use"
-msgstr "Hardware blockiert/in Gebrauch"
+#~ msgid "This may take a while..."
+#~ msgstr "Das kann dauern..."
 
-#: src/panucci/backends/base.py:40
-msgid "File is corrupted/incomplete"
-msgstr "Datei ist beschädigt oder unvollständig"
+#~ msgid "Pickle file converted successfully."
+#~ msgstr "Pickle-Datei erfolgreich konvertiert."
 
-#: src/panucci/backends/base.py:42
-msgid "File not found, make sure the file still exists."
-msgstr "Datei nicht gefunden, bitte sicherstellen, ob die Datei existiert."
+#~ msgid "Error converting pickle file, check your log..."
+#~ msgstr "Fehler beim Umwandeln der Picke-Datei, schau in die Log-Datei."
+
+#~ msgid "No media selected"
+#~ msgstr "Keine Medien ausgewählt"
+
+#~ msgid "Unsupported filetype."
+#~ msgstr "Nicht unterstützter Dateityp."
+
+#~ msgid "Something wrong with the backend"
+#~ msgstr "Mit dem Backend stimmt etwas nicht"
+
+#~ msgid "Hardware blocked/in-use"
+#~ msgstr "Hardware blockiert/in Gebrauch"
+
+#~ msgid "File is corrupted/incomplete"
+#~ msgstr "Datei ist beschädigt oder unvollständig"
+
+#~ msgid "File not found, make sure the file still exists."
+#~ msgstr "Datei nicht gefunden, bitte sicherstellen, ob die Datei existiert."
 
 #~ msgid "Player"
 #~ msgstr "Player"
