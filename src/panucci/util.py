@@ -72,6 +72,6 @@ def pretty_filename(filename):
     """
     filename, extension = os.path.splitext(filename)
     basename = os.path.basename(filename)
-    return filename.replace('_', ' ')
+    return basename.replace('_', ' ')
 
 
