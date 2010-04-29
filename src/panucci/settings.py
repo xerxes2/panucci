@@ -69,8 +69,8 @@ class Settings(object):
     def attach_checkbutton(self, button, setting):
         button.connect(
             'toggled', lambda w: setattr( self, setting, w.get_active()) )
-        self.register(
-            setting + SIGNAL_NAME_SUFFIX, lambda v: button.set_active(v) )
+        #self.register(
+        #    setting + SIGNAL_NAME_SUFFIX, lambda v: button.set_active(v) )
         button.set_active( getattr(self, setting) )
 
 settings = Settings()
