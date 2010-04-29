@@ -190,13 +190,13 @@ class ScrollingLabel(gtk.DrawingArea):
     """ A simple scrolling label widget - if the text doesn't fit in the
         container, it will scroll back and forth at a pre-determined interval.
     """
-    
+
     LEFT, NO_CHANGE, RIGHT = [ -1, 0, 1 ]
-    
+
     def __init__( self, pango_markup, update_interval=100, pixel_jump=1,
                   delay_btwn_scrolls=0, delay_halfway=0 ):
         """ Creates a new ScrollingLabel widget.
-              
+
               pixel_jump: the amount of pixels the text moves in one update
               pango_markup: the markup that is displayed
               update_interval: the amount of time (in milliseconds) between
@@ -205,11 +205,11 @@ class ScrollingLabel(gtk.DrawingArea):
                 wait after a scroll has completed and the next one begins
               delay_halfway: The amount of time (in milliseconds) to wait
                 when the text reaches the far right.
-              
+
             Scrolling is controlled by the 'scrolling' property, it must be
             set to True for the text to start moving. Updating of the pango
             markup is supported by setting the 'markup' property.
-            
+
             Note: the properties can be read from to get their current status
         """
 
@@ -221,7 +221,7 @@ class ScrollingLabel(gtk.DrawingArea):
         self.__scrolling_timer_id = None
         self.__scrolling_possible = False
         self.__scrolling = False
-        
+
         # user-defined parameters (can be changed on-the-fly)
         self.update_interval = update_interval
         self.delay_btwn_scrolls = delay_btwn_scrolls
@@ -231,7 +231,7 @@ class ScrollingLabel(gtk.DrawingArea):
         self.__graphics_context = None
         self.__pango_layout = self.create_pango_layout('')
         self.markup = pango_markup
-        
+
         self.connect('expose-event', self.__on_expose_event)
         self.connect('size-allocate', lambda w,a: self.__reset_widget() )
         self.connect('map', lambda w: self.__reset_widget() )
@@ -241,77 +241,77 @@ class ScrollingLabel(gtk.DrawingArea):
             self.__start_scrolling()
         else:
             self.__stop_scrolling()
-    
+
     def set_markup(self, markup):
         """ Set the pango markup to be displayed by the widget """
         self.__pango_layout.set_markup(markup)
         self.__reset_widget()
-    
+
     def get_markup( self ):
         """ Returns the current markup contained in the widget """
         return self.__pango_layout.get_text()
-    
+
     def set_alignment(self, x, y):
         """ Set the text's alignment on the x axis when it's not possible to
             scroll. The y axis setting does nothing atm. """
-        
+
         for i in x,y:
             assert isinstance( i, (float, int) ) and 0 <= i <= 1
-        
+
         self.__x_alignment = x
         self.__y_alignment = y
-    
+
     def get_alignment( self ):
         """ Returns the current alignment settings (x, y). """
         return self.__x_alignment, self.__y_alignment
-    
+
     scrolling = property( lambda s: s.__scrolling, __set_scrolling )
     markup    = property( get_markup, set_markup )
     alignment = property( get_alignment, lambda s,i: s.set_alignment(*i) )
-    
+
     def __on_expose_event( self, widget, event ):
         """ Draws the text on the widget. This should be called indirectly by
             using self.queue_draw() """
-        
+
         if self.__graphics_context is None:
             self.__graphics_context = self.window.new_gc()
-        
+
         self.window.draw_layout( self.__graphics_context,
                                  int(self.__x_offset), 0, self.__pango_layout )
-    
+
     def __reset_widget( self ):
         """ Reset the offset and find out whether or not it's even possible
             to scroll the current text. Useful for when the window gets resized
             or when new markup is set. """
-        
+
         # if there's no window, we can ignore this reset request because
         # when the window is created this will be called again.
         if self.window is None:
             return
-        
+
         win_x, win_y = self.window.get_size()
         lbl_x, lbl_y = self.__pango_layout.get_pixel_size()
-        
+
         # If we don't request the proper height, the label might get squashed
         # down to 0px. (this could still happen on the horizontal axis but we
         # aren't affected by this problem in Panucci *yet*)
         self.set_size_request( -1, lbl_y )
-        
+
         self.__scrolling_possible = lbl_x > win_x
 
         # Remove any lingering scrolling timers
         self.__scrolling_timer = None
-        
+
         if self.__scrolling:
             self.__start_scrolling()
-        
+
         if self.__scrolling_possible:
             self.__x_offset = 0
         else:
             self.__x_offset = (win_x - lbl_x) * self.__x_alignment
-        
+
         self.queue_draw()
-    
+
     def __scroll_once(self, halfway_callback=None, finished_callback=None):
         """ Moves the text by 'self.pixel_jump' every time this is called.
             Returns False when the text has completed one scrolling period and
@@ -319,16 +319,16 @@ class ScrollingLabel(gtk.DrawingArea):
             Returns False halfway through (when the text is all the way to the
             right) if 'halfway_callback' is set after running the callback.
         """
-        
+
         # prevent an accidental scroll (there's a race-condition somewhere
         # but I'm too lazy to find out where).
         if not self.__scrolling_possible:
             return False
-        
+
         rtn = True
         win_x, win_y = self.window.get_size()
         lbl_x, lbl_y = self.__pango_layout.get_pixel_size()
-        
+
         self.__x_offset += self.pixel_jump * self.__x_direction
 
         if self.__x_direction == self.LEFT and self.__x_offset < win_x - lbl_x:
@@ -336,11 +336,11 @@ class ScrollingLabel(gtk.DrawingArea):
             # set the offset to the maximum left bound otherwise some
             # characters might get chopped off if using large pixel_jump's
             self.__x_offset = win_x - lbl_x
-            
+
             if halfway_callback is not None:
                 halfway_callback()
                 rtn = False
-        
+
         elif self.__x_direction == self.RIGHT and self.__x_offset > 0:
             # end of scroll period; reset direction
             self.__x_direction = self.LEFT
@@ -348,52 +348,52 @@ class ScrollingLabel(gtk.DrawingArea):
             self.__x_offset = 0
             if finished_callback is not None:
                 finished_callback()
-            
+
             # return False because at this point we've completed one scroll
             # period; this kills off any timers running this function
             rtn = False
-        
+
         self.queue_draw()
         return rtn
-    
+
     def __scroll_wait_callback(self, delay):
         # Waits 'delay', then calls the scroll function
         self.__scrolling_timer = gobject.timeout_add( delay, self.__scroll )
-    
+
     def __scroll(self):
         """ When called, scrolls the text back and forth indefinitely while
             waiting self.delay_btwn_scrolls between each scroll period. """
-        
+
         if self.__scrolling_possible:
-            self.__scrolling_timer = gobject.timeout_add( 
+            self.__scrolling_timer = gobject.timeout_add(
                 self.update_interval, self.__scroll_once,
                 lambda: self.__scroll_wait_callback(self.delay_halfway),
                 lambda: self.__scroll_wait_callback(self.delay_btwn_scrolls) )
         else:
             self.__scrolling_timer = None
-    
+
     def __scrolling_timer_get(self):
         return self.__scrolling_timer_id
-    
+
     def __scrolling_timer_set(self, val):
         """ When changing the scrolling timer id, make sure that only one
             timer is running at a time. This removes the previous timer
             before adding a new one. """
-        
+
         if self.__scrolling_timer_id is not None:
             gobject.source_remove( self.__scrolling_timer_id )
             self.__scrolling_timer_id = None
-        
+
         self.__scrolling_timer_id = val
-        
+
     __scrolling_timer = property( __scrolling_timer_get, __scrolling_timer_set )
-    
+
     def __start_scrolling(self):
         """ Make the text start scrolling """
         self.__scrolling = True
         if self.__scrolling_timer is None and self.__scrolling_possible:
             self.__scroll()
-    
+
     def __stop_scrolling(self):
         """ Make the text stop scrolling """
         self.__scrolling = False

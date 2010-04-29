@@ -37,7 +37,7 @@ class PanucciPlayer(ForwardingObservableService):
     them.
     """
     signals = [ "playing", "paused", "stopped", "eof" ]
-    
+
     def __init__(self, player):
         self.__log = logging.getLogger('panucci.player.PanucciPlayer')
         ForwardingObservableService.__init__(self, self.signals, self.__log)
@@ -45,82 +45,82 @@ class PanucciPlayer(ForwardingObservableService):
         self.__initialized = False
         self._start_position = 0
         self._is_playing = False
-        
+
         # Forward the following signals
         self.forward( self.__player,
                       [ "playing", "paused", "stopped", "eof" ],
                       PanucciPlayer )
-        
+
         self.__player.register( "playing", self.on_playing )
         self.__player.register( "paused", self.on_stopped )
         self.__player.register( "stopped", self.on_stopped )
         self.__player.register( "eof", self.on_stopped )
         self.__player.register( "error", self.on_player_error )
         self._set_volume_level( settings.volume )
-        
+
         self.playlist = Playlist()
         self.playlist.register( 'new-track-loaded', self.on_new_track )
         self.playlist.register( 'seek-requested', self.do_seek )
         self.playlist.register( 'stop-requested', self.on_stop_requested )
         settings.register( 'volume_changed', self._set_volume_level )
-        
+
         # Register the d-bus interface only once we're ready
         interface.register_player(self)
-    
+
     def __getattr__(self, attr):
         """ If the attribute isn't found in this object, get it from
             the player object. This makes proxying function calls simple
             and transparent.
         """
-        
+
         if self.__player is not None:
             return getattr(self.__player, attr)
         else:
             self.__log.critical("No player available")
             raise AttributeError
-    
+
     def add_bookmark_at_current_position( self, label=None ):
         """ Adds a bookmark at the current position
-            
+
             Returns: (bookmark lable string, position in nanoseconds)
         """
-        
+
         default_label, position = player.get_formatted_position()
         label = default_label if label is None else label
         self.playlist.save_bookmark( label, position )
         self.__log.info('Added bookmark: %s - %d', label, position)
         return label, position
-    
+
     def get_formatted_position(self, pos=None):
         """ Gets the current position and converts it to a human-readable str.
-            
+
             Returns: (bookmark lable string, position in nanoseconds)
         """
-        
+
         if pos is None:
             (pos, dur) = self.get_position_duration()
-        
+
         text = util.convert_ns(pos)
         return (text, pos)
-    
+
     def init(self, filepath=None):
         """ Start playing the current file in the playlist or a custom file.
-            This should be called by the UI once it has initialized. 
-            
+            This should be called by the UI once it has initialized.
+
             Params: filepath is an optional filepath to the first file that
                     should be loaded/played
-            Returns: Nothing            
+            Returns: Nothing
         """
-        
+
         if filepath is None or not self.playlist.load( filepath ):
             self.playlist.load_last_played()
-    
+
     def on_new_track(self):
         """ New track callback; stops the player and starts the new track. """
-        
+
         if self.playlist.current_filepath is not None:
             self.load_media( "file://" + self.playlist.current_filepath )
-            
+
             # This is just here to prevent the player from starting to play
             # when it is first opened. The first time this function is called it
             # doesn't run self.play(), but otherwise it will.
@@ -128,7 +128,7 @@ class PanucciPlayer(ForwardingObservableService):
                 self.play()
 
         self.__initialized = True
-    
+
     def do_seek(self, from_beginning=None, from_current=None, percent=None):
         pos, dur = self.get_position_duration()
         pos_sec = pos / 10**9
@@ -142,7 +142,7 @@ class PanucciPlayer(ForwardingObservableService):
         return self.__player.do_seek(from_beginning, from_current, percent)
 
     def on_playing(self):
-        """ 
+        """
         Used to seek to the correct position once the file has started
         playing. This has to be done once the player is ready because
         certain player backends can't seek in any state except playing.
@@ -174,15 +174,15 @@ class PanucciPlayer(ForwardingObservableService):
     def on_stop_requested(self):
         self.playlist.stop( self.get_position_duration()[0] )
         self.stop()
-    
+
     def on_player_error(self, msg):
         self.__log.error("Error from %s: %s", msg.__name__, msg.error)
-    
+
     def quit(self):
         """ Called when the application exits """
         self.on_stop_requested()
         self.playlist.quit()
-    
+
 
 if util.platform.MAEMO5 or util.platform.DESKTOP:
     backend = gstplaybin.GstPlaybinPlayer

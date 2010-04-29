@@ -30,11 +30,11 @@ from panucci import util
 
 class GstBasePlayer(base.BasePlayer):
     """ A player that uses Gstreamer for playback """
-    
+
     def __init__(self):
         base.BasePlayer.__init__(self)
         self.__log = logging.getLogger('panucci.backends.GstPlayer')
-        
+
         # have we preformed the initial seek?
         self.__initial_seek_completed = False
 
@@ -46,7 +46,7 @@ class GstBasePlayer(base.BasePlayer):
         self._volume_property = None
         self._time_format = gst.Format(gst.FORMAT_TIME)
         self._current_filetype = None
-    
+
     def _get_position_duration(self):
         try:
             pos_int = self._player.query_position(self._time_format,None)[0]
@@ -54,9 +54,9 @@ class GstBasePlayer(base.BasePlayer):
         except Exception, e:
             self.__log.exception('Error getting position...')
             pos_int = dur_int = 0
-        
+
         return pos_int, dur_int
-    
+
     def get_state(self):
         if self._player is None:
             return self.STATE_NULL
@@ -66,13 +66,13 @@ class GstBasePlayer(base.BasePlayer):
                      gst.STATE_PAUSED  : self.STATE_PAUSED,
                      gst.STATE_PLAYING : self.STATE_PLAYING
                    }.get( state, self.STATE_NULL )
-    
+
     def pause(self):
         pos, dur = self.get_position_duration()
         self.notify('paused', pos, dur, caller=self.pause)
         self._player.set_state(gst.STATE_PAUSED)
         return pos
-    
+
     def play(self):
         have_player = self._player is not None
         if have_player or self.__setup_player():
@@ -82,7 +82,7 @@ class GstBasePlayer(base.BasePlayer):
         else:
             # should something happen here? perhaps self.stop()?
             return False
-    
+
     def stop(self):
         self.notify('stopped', caller=self.stop)
 
@@ -90,7 +90,7 @@ class GstBasePlayer(base.BasePlayer):
             position, duration = self.get_position_duration()
             self._player.set_state(gst.STATE_NULL)
             self._player = None
-    
+
     def _seek(self, position):
         self.seeking = True
         error = False
@@ -101,10 +101,10 @@ class GstBasePlayer(base.BasePlayer):
         except Exception, e:
             self.__log.exception( 'Error seeking' )
             error = True
-        
+
         self.seeking = False
         return not error
-    
+
     def _set_volume_level(self, level):
         assert  0 <= level <= 1
 
@@ -115,7 +115,7 @@ class GstBasePlayer(base.BasePlayer):
         if self._volume_control is not None:
             vol = level * self._volume_multiplier
             self._volume_control.set_property( self._volume_property, vol )
-    
+
     def __setup_player(self):
         if self._setup_player(self._current_filetype):
             bus = self._player.get_bus()
@@ -125,25 +125,25 @@ class GstBasePlayer(base.BasePlayer):
             return True
 
         return False
-    
+
     def _setup_player(self, filetype=None):
         pass
-    
+
     def _on_decoder_pad_added(self, decoder, src_pad, sink_pad):
         # link the decoder's new "src_pad" to "sink_pad"
         src_pad.link( sink_pad )
-    
+
     def load_media( self, uri ):
         filetype = util.detect_filetype(uri)
-        
+
         if filetype != self._current_filetype or self._player is None:
             self.__setup_player()
-        
+
         if self._player is not None:
             self._filesrc.set_property( self._filesrc_property, uri )
-        
+
         self._current_filetype = filetype
-    
+
     def __on_message(self, bus, message):
         t = message.type
         # self.__log.debug('Got message of type %s', t)

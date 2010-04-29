@@ -33,7 +33,7 @@ gconf_dir = '/apps/panucci'
 
 class SimpleGConfClient(gconf.Client):
     """ A simplified wrapper around gconf.Client
-        GConf docs: http://library.gnome.org/devel/gconf/stable/ 
+        GConf docs: http://library.gnome.org/devel/gconf/stable/
     """
 
     __type_mapping = { int: 'int', long: 'float', float: 'float',

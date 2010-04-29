@@ -63,7 +63,7 @@ class ObservableService(object):
                     observer.__name__, signal_name )
             else:
                 self._log.warning(
-                    'Observer "%s" could not be removed from signal "%s"', 
+                    'Observer "%s" could not be removed from signal "%s"',
                     observer.__name__, signal_name )
         else:
             self._log.warning(
@@ -93,56 +93,56 @@ class ObservableService(object):
 class ForwardingObservableService(ObservableService):
     """ An object that builds on ObservableService which provides a simple
         way to forward/proxy a bunch of signals through an object of this
-        type. Ie: This object will call it's notify() method whenever a 
+        type. Ie: This object will call it's notify() method whenever a
         forwarded signal from another object is emitted. """
-    
+
     def forward( self, from_object, signal_names, caller=None ):
         """ Register signals to be forwarded
               from_object: the object from which the signals will be emitted
               signal_names: a string, list, or dict of signal names
               caller: the caller to be passed to notify()
-            
+
             To forward a single signal, signal_names can just be a string
             containing the name of the signal.
-            
+
             To forward many signals, signal_names can be a list of strings.
-            
+
             If you wish to change the name of the emitted signal (ie. if the
             original object's signal is named "foo-bar" but you want this
             object to emit "foo") you can do so by passing a dict to
             signal_names. This dict must contain string pairs:
             { "new name" : "from-object name", }
         """
-        
+
         # bail if the from object isn't an ObservableService
         if not isinstance( from_object, ObservableService ):
             self._log.error( "Can't forward signals for "
                               "non-ObservableService type objects")
             return
-        
+
         signals = {} # final list of signals to registered
-        
+
         if isinstance( signal_names, str ):
             signals[signal_names] = signal_names
-        
+
         elif isinstance( signal_names, list ):
             for name in signal_names:
                 signals[name] = name
-        
+
         elif isinstance( signal_names, dict ):
             signals = signal_names
-        
+
         for to_name, from_name in signals.iteritems():
             from_object.register( from_name, self._forward( to_name, caller ))
-    
+
     def _forward( self, emitted_signal_name, caller ):
         """ Returns a function which calls notify() with the appropriate
             parameters. """
-    
+
         def _callback( *args, **kwargs ):
             kwargs["caller"] = caller
             return self.notify( emitted_signal_name, *args, **kwargs )
-        
+
         return _callback
 
 

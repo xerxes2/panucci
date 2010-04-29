@@ -116,7 +116,7 @@ class Playlist(ObservableService):
         # copy the bookmarks over to new playlist
         db.remove_all_bookmarks(self.id)
         self.__queue.set_new_playlist_id(self.id)
-        
+
         return True
 
     def save_temp_playlist(self):
@@ -128,10 +128,10 @@ class Playlist(ObservableService):
                      caller=self.on_queue_current_item_changed )
         self.notify( 'new-metadata-available',
                      caller=self.on_queue_current_item_changed )
-    
+
     def send_metadata(self):
         self.notify( 'new-metadata-available', caller=self.send_metadata )
-    
+
     def quit(self):
         self.__log.debug('quit() called.')
         if self.__queue.modified:
@@ -195,11 +195,11 @@ class Playlist(ObservableService):
 
     def update_bookmark(self, item_id, bookmark_id, name=None, seek_pos=None):
         item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)
-        
+
         if item is None:
             self.__log.warning('No such item id (%s)', item_id)
             return False
-        
+
         if bookmark_id is not None and bookmark is None:
             self.__log.warning('No such bookmark id (%s)', bookmark_id)
             return False
@@ -278,7 +278,7 @@ class Playlist(ObservableService):
         return item
 
     def get_playlist_item_ids(self):
-        """ Returns an iterator which yields a tuple which contains the 
+        """ Returns an iterator which yields a tuple which contains the
             item's unique ID and a dict of interesting data (currently
             just the title). """
 
@@ -332,7 +332,7 @@ class Playlist(ObservableService):
             return files[:max_files]
         else:
             return files
-    
+
     ##################################
     # File importing functions
     ##################################
@@ -378,7 +378,7 @@ class Playlist(ObservableService):
 
         self.__queue.modified = os.path.expanduser(
             settings.temp_playlist ) == self.filepath
-        
+
         self.notify( 'new-track-loaded', caller=self.load )
         self.notify( 'new-metadata-available', caller=self.load )
 
@@ -413,11 +413,11 @@ class Playlist(ObservableService):
 
     def load_directory(self, directory, append=False):
         self.__log.debug('Attempting to load directory "%s"', directory)
-        
+
         if not os.path.isdir(directory):
             self.__log.warning('"%s" is not a directory.', directory)
             return False
-        
+
         if not append:
             if self.notify( 'playlist-to-be-overwritten',
                             caller=self.load_directory ):
@@ -425,10 +425,10 @@ class Playlist(ObservableService):
             else:
                 self.__log.info('Directory load aborted by user.')
                 return False
-        
+
         self.filepath = settings.temp_playlist
         self.__queue.playlist_id = self.id
-        
+
         items = []
         potential_items = os.listdir(directory)
         potential_items.sort()
@@ -441,7 +441,7 @@ class Playlist(ObservableService):
         items.sort()
         for item in items:
             self.append( item, notify=False )
-        
+
         if not append:
             self.on_queue_current_item_changed()
 
@@ -465,7 +465,7 @@ class Playlist(ObservableService):
     def stop(self, position, save_resume_point=True):
         """ This should be run when the program is closed
                 or if the user switches playlists """
-    
+
         self.remove_resume_bookmarks()
         if not self.is_empty and save_resume_point:
             self.__queue.current_item.save_bookmark(
@@ -554,7 +554,7 @@ class Queue(list, ObservableService):
 
     def __set__current_item_position(self, new_value):
 
-        # set the new position before notify()'ing 
+        # set the new position before notify()'ing
         # or else we'll end up load the old file's metadata
         old_value = self.__current_item_position
         self.__current_item_position = new_value
@@ -664,7 +664,7 @@ class Queue(list, ObservableService):
                 if i.filepath == item.filepath:
                     i.is_modified = True
                     i.duplicate_id += 1
-            
+
             # to be safe rebuild self.__mapping_dict
             self.__mapping_dict = dict([(str(i),i) for i in self])
         elif not self.__count_dupe_items(self[:position], item):
@@ -687,7 +687,7 @@ class Queue(list, ObservableService):
 
         item.duplicate_id = self.__count_dupe_items(self, item)
         item.load_bookmarks()
-        
+
         self.__mapping_dict[str(item)] = item
         list.append(self, item)
         return True
@@ -698,7 +698,7 @@ class Queue(list, ObservableService):
 
             if self.index(item) < self.current_item_position:
                 self.__current_item_position -= 1
-            
+
             del self.__mapping_dict[str(item)]
             list.remove(self, item)
 
@@ -755,7 +755,7 @@ class PlaylistItem(object):
 
     def __eq__(self, b):
         if isinstance( b, PlaylistItem ):
-            return ( self.filepath == b.filepath and 
+            return ( self.filepath == b.filepath and
                      self.duplicate_id == b.duplicate_id )
         elif isinstance( b, str ):
             return str(self) == b
@@ -791,19 +791,19 @@ class PlaylistItem(object):
             return self.__metadata.title
         else:
             return util.pretty_filename(self.filepath)
-    
+
     # For now set the "playlist_title" because it has highest priority in the
     # __get_title method. We might evenually want to create a separate
     # __custom_title to preserve the playlist_title.
     title = property(__get_title, lambda s,v: setattr(s, 'playlist_title', v))
-    
+
     @property
     def length(self):
         """ Get the lenght of the item priority is (most important first):
             1. length as reported by mutagen
             2. length found in playlist metadata
             3. otherwise -1 when unknown """
-        
+
         if self.__metadata.length:
             return self.__metadata.length
         elif self.playlist_length:
@@ -1010,7 +1010,7 @@ class FileMetadata(object):
 
     def __find_coverart(self):
         """ Find coverart in the same directory as the filepath """
-        
+
         directory = os.path.dirname(self.__filepath)
         for cover in self.__find_coverart_filepath(directory):
             self.__log.debug('Trying to load coverart from %s', cover)
@@ -1019,19 +1019,19 @@ class FileMetadata(object):
             except:
                 self.__log.exception('Could not open coverart file %s', cover )
                 continue
-            
+
             binary_coverart = f.read()
             f.close()
-            
+
             if self.__test_coverart(binary_coverart):
                 return binary_coverart
-                
+
         return None
-    
+
     def __test_coverart(self, data):
         """ tests to see if the file is a proper image file that can be loaded
             into a gtk.gdk.Pixbuf """
-        
+
         import gtk.gdk
         l = gtk.gdk.PixbufLoader()
         try:
@@ -1040,49 +1040,49 @@ class FileMetadata(object):
             rtn = True
         except:
             rtn = False
-        
+
         return rtn
-    
+
     def __find_coverart_filepath(self, directory):
         """ finds the path of potential coverart files """
         dir_filelist = []
         possible_matches = []
-        
+
         # build the filelist
         for f in os.listdir(directory):
             if os.path.isfile(os.path.join(directory,f)):
                 dir_filelist.append(os.path.splitext(f))
-        
+
         # first pass, check for known filenames
         for f,ext in dir_filelist[:]:
             if f.lower() in self.coverart_names and \
                 ext.lower() in self.coverart_extensions:
                 possible_matches.append((f,ext))
                 dir_filelist.remove((f,ext))
-        
+
         # second pass, check for known filenames without extensions
         for f,ext in dir_filelist[:]:
             if f.lower() in self.coverart_names and ext == '':
                 possible_matches.append((f,ext))
                 dir_filelist.remove((f,ext))
-        
+
         # third pass, check for any image file
         for f,ext in dir_filelist[:]:
             if ext.lower() in self.coverart_extensions:
                 possible_matches.append((f,ext))
                 dir_filelist.remove((f,ext))
-        
+
         # yield the results
         for f,ext in possible_matches:
             yield os.path.join( directory, f+ext )
-    
+
     def get_metadata(self):
         """ Returns a dict of metadata """
 
         if not self.__metadata_extracted:
             self.extract_metadata()
 
-        metadata = { 
+        metadata = {
             'title':    self.title,
             'artist':   self.artist,
             'album':    self.album,
@@ -1115,7 +1115,7 @@ class PlaylistFile(object):
 
             self.__log.exception( 'Error opening file: %s', filepath)
             return False
-    
+
         return True
 
     def __close_file(self):
@@ -1244,7 +1244,7 @@ class M3U_Playlist(PlaylistFile):
                 length = -1 if item.length is None else int(item.length)
                 title = '' if item.title is None else item.title
                 string += '#EXTINF:%d,%s\n' % ( length, title )
-                
+
             string += '%s\n' % item.filepath
             self._file.write(string)
 

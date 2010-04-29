@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-# 
+#
 # Based on http://thpinfo.com/2008/panucci/:
 #  A resuming media player for Podcasts and Audiobooks
 #  Copyright (c) 2008-05-26 Thomas Perl <thpinfo.com>
@@ -65,7 +65,7 @@ coverart_sizes = {
     'maemo'             : 200,
     'maemo fullscreen'  : 275,
 }
-        
+
 gtk.about_dialog_set_url_hook(util.open_link, None)
 gtk.icon_size_register('panucci-button', 32, 32)
 
@@ -188,15 +188,15 @@ def set_stock_button_text( button, text ):
     label.set_text(text)
 
 ##################################################
-# PanucciGUI                            
+# PanucciGUI
 ##################################################
 class PanucciGUI(object):
     """ The object that holds the entire panucci gui """
-    
+
     def __init__(self, filename=None):
-        self.__log = logging.getLogger('panucci.panucci.PanucciGUI')  
-        interface.register_gui(self)      
-        
+        self.__log = logging.getLogger('panucci.panucci.PanucciGUI')
+        interface.register_gui(self)
+
         # Build the base ui (window and menubar)
         if util.platform.MAEMO:
             self.app = hildon.Program()
@@ -249,21 +249,21 @@ class PanucciGUI(object):
             # Enable play/pause with headset button
             interface.headset_device.connect_to_signal(
                 'Condition', self.handle_headset_button )
-        
+
         self.main_window.connect('key-press-event', self.on_key_press)
         player.playlist.register( 'file_queued', self.on_file_queued )
-        
+
         self.__anti_blank_timer = None
         settings.register('allow_blanking_changed',self.__set_anti_blank_timer)
         self.__set_anti_blank_timer( settings.allow_blanking )
-        
+
         player.playlist.register( 'playlist-to-be-overwritten',
                                   self.check_queue )
-        self.__player_tab.register( 'select-current-item-request', 
+        self.__player_tab.register( 'select-current-item-request',
                                     self.__select_current_item )
-        
+
         self.main_window.show_all()
-        
+
         # this should be done when the gui is ready
         player.init(filepath=filename)
 
@@ -315,7 +315,7 @@ class PanucciGUI(object):
         self.menu_recent = gtk.MenuItem(_('Open recent playlist'))
         menu.append(self.menu_recent)
         self.create_recent_files_menu()
-        
+
         menu.append(gtk.SeparatorMenuItem())
 
         menu_save = gtk.ImageMenuItem(_('Save current playlist'))
@@ -338,19 +338,19 @@ class PanucciGUI(object):
         settings.attach_checkbutton( menu_settings_enable_dual_action,
                                      'enable_dual_action_btn' )
         menu_settings_sub.append(menu_settings_enable_dual_action)
-        
+
         if util.platform.MAEMO:
             menu_settings_enable_hw_decoding = gtk.CheckMenuItem(
                 _('Enable hardware decoding') )
             settings.attach_checkbutton( menu_settings_enable_hw_decoding,
                                         'enable_hardware_decoding' )
             menu_settings_sub.append(menu_settings_enable_hw_decoding)
-        
+
         menu_settings_lock_progress = gtk.CheckMenuItem(_('Lock Progress Bar'))
         settings.attach_checkbutton( menu_settings_lock_progress,
                                      'progress_locked' )
         menu_settings_sub.append(menu_settings_lock_progress)
-        
+
         menu_about = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
         menu_about.connect("activate", self.about_callback)
         menu.append(menu_about)
@@ -428,7 +428,7 @@ class PanucciGUI(object):
             filename = get_file_from_filechooser(self.main_window)
             if filename is not None:
                 self._play_file(filename)
-            
+
             self.__ignore_queue_check = False
 
     def save_to_playlist_callback(self, widget=None):
@@ -470,17 +470,17 @@ class PanucciGUI(object):
                 self.main_window.fullscreen()
             else:
                 self.main_window.unfullscreen()
-            
+
             self.__window_fullscreen = value
             player.playlist.send_metadata()
 
     fullscreen = property( __get_fullscreen, __set_fullscreen )
-    
+
     def on_key_press(self, widget, event):
         if util.platform.MAEMO:
             if event.keyval == gtk.keysyms.F6:
                 self.fullscreen = not self.fullscreen
-    
+
     def on_recent_file_activate(self, widget, filepath):
         self._play_file(filepath)
 
@@ -504,17 +504,17 @@ class PanucciGUI(object):
         dialog.set_version(panucci.__version__)
         dialog.run()
         dialog.destroy()
-    
+
     def _play_file(self, filename, pause_on_load=False):
         player.playlist.load( os.path.abspath(filename) )
-        
+
         if player.playlist.is_empty:
             return False
-    
+
     def handle_headset_button(self, event, button):
         if event == 'ButtonPressed' and button == 'phone':
             player.play_pause_toggle()
-    
+
     def __set_anti_blank_timer(self, allow_blanking):
         if util.platform.MAEMO:
             if allow_blanking and self.__anti_blank_timer is not None:
@@ -523,11 +523,11 @@ class PanucciGUI(object):
                 self.__anti_blank_timer = None
             elif not allow_blanking and self.__anti_blank_timer is None:
                 self.__log.info('Attempting to disable screen blanking.')
-                self.__anti_blank_timer = gobject.timeout_add( 
+                self.__anti_blank_timer = gobject.timeout_add(
                     1000 * 59, util.poke_backlight )
         else:
             self.__log.info('Blanking controls are for Maemo only.')
-    
+
     def __select_current_item( self ):
         # Select the currently playing track in the playlist tab
         # and switch to it (so we can edit bookmarks, etc.. there)
@@ -535,17 +535,17 @@ class PanucciGUI(object):
         self.playlist_window.show()
 
 ##################################################
-# PlayerTab                            
+# PlayerTab
 ##################################################
 class PlayerTab(ObservableService, gtk.HBox):
     """ The tab that holds the player elements """
-    
+
     signals = [ 'select-current-item-request', ]
-    
+
     def __init__(self, gui_root):
         self.__log = logging.getLogger('panucci.panucci.PlayerTab')
         self.__gui_root = gui_root
-        
+
         gtk.HBox.__init__(self)
         ObservableService.__init__(self, self.signals, self.__log)
 
@@ -557,21 +557,21 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.make_player_tab()
         self.has_coverart = False
         self.set_volume(settings.volume)
-        
-        settings.register( 'enable_dual_action_btn_changed', 
+
+        settings.register( 'enable_dual_action_btn_changed',
                            self.on_dual_action_setting_changed )
-        settings.register( 'dual_action_button_delay_changed', 
+        settings.register( 'dual_action_button_delay_changed',
                            self.on_dual_action_setting_changed )
         settings.register( 'volume_changed', self.set_volume )
         settings.register( 'scrolling_labels_changed', lambda v:
                            setattr( self.title_label, 'scrolling', v ) )
-        
+
         player.register( 'stopped', self.on_player_stopped )
         player.register( 'playing', self.on_player_playing )
         player.register( 'paused', self.on_player_paused )
         player.playlist.register( 'end-of-playlist',
                                   self.on_player_end_of_playlist )
-        player.playlist.register( 'new-track-loaded', 
+        player.playlist.register( 'new-track-loaded',
                                   self.on_player_new_track )
         player.playlist.register( 'new-metadata-available',
                                   self.on_player_new_metadata )
@@ -601,7 +601,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.album_label = gtk.Label('')
         self.album_label.set_ellipsize(pango.ELLIPSIZE_END)
         metadata_vbox.pack_start(self.album_label, False, False)
-        self.title_label = widgets.ScrollingLabel( '', 
+        self.title_label = widgets.ScrollingLabel( '',
                                                    update_interval=200,
                                                    pixel_jump=5,
                                                    delay_btwn_scrolls=5000,
@@ -627,12 +627,12 @@ class PlayerTab(ObservableService, gtk.HBox):
 
         # make the button box
         buttonbox = gtk.HBox()
-        
+
         # A wrapper to help create DualActionButtons with the right settings
         create_da = lambda a, b, c=None, d=None: widgets.DualActionButton(
             a, b, c, d, settings.dual_action_button_delay,
             settings.enable_dual_action_btn )
-        
+
         self.rrewind_button = create_da(
                 generate_image('media-skip-backward.png'),
                 lambda: self.do_seek(-1*settings.seek_long),
@@ -701,7 +701,7 @@ class PlayerTab(ObservableService, gtk.HBox):
             for w in (
                     self.rrewind_button, self.rewind_button,
                     self.play_pause_button, self.forward_button,
-                    self.fforward_button, self.progress, 
+                    self.fforward_button, self.progress,
                     self.bookmarks_button, self.volume_button, ):
                 w.unset_flags(gtk.CAN_FOCUS)
         else:
@@ -711,25 +711,25 @@ class PlayerTab(ObservableService, gtk.HBox):
             self.volume.show()
 
         self.set_volume(settings.volume)
-    
+
     def set_controls_sensitivity(self, sensitive):
         for button in self.forward_button, self.rewind_button, \
                       self.fforward_button, self.rrewind_button:
-            
+
             button.set_sensitive(sensitive)
-        
+
         # the play/pause button should always be available except
         # for when the player starts without a file
         self.play_pause_button.set_sensitive(True)
-    
+
     def on_dual_action_setting_changed( self, *args ):
         for button in self.forward_button, self.rewind_button, \
                       self.fforward_button, self.rrewind_button, \
                       self.bookmarks_button:
-            
+
             button.set_longpress_enabled( settings.enable_dual_action_btn )
             button.set_duration( settings.dual_action_button_delay )
-    
+
     def on_key_press(self, widget, event):
         if util.platform.MAEMO:
             if event.keyval == gtk.keysyms.F7: #plus
@@ -778,7 +778,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.volume_timer_id = None
         self.volume.hide()
         return False
-    
+
     def toggle_volumebar(self, widget=None):
         if self.volume_timer_id is None:
             self.__set_volume_hide_timer(5)
@@ -797,7 +797,7 @@ class PlayerTab(ObservableService, gtk.HBox):
             settings.volume = 0
         else:
             settings.volume = widget.get_level()/100.0
-    
+
     def on_player_stopped(self):
         self.stop_progress_timer()
         self.set_controls_sensitivity(False)
@@ -815,16 +815,16 @@ class PlayerTab(ObservableService, gtk.HBox):
 
         self.cover_art.hide()
         self.has_coverart = False
-    
+
     def on_player_new_metadata(self):
         metadata = player.playlist.get_file_metadata()
         self.set_metadata(metadata)
-        
+
         if not player.playing:
             position = player.playlist.get_current_position()
             estimated_length = metadata.get('length', 0)
             self.set_progress_callback( position, estimated_length )
-    
+
     def on_player_paused( self, position, duration ):
         self.stop_progress_timer() # This should save some power
         self.set_progress_callback( position, duration )
@@ -832,7 +832,7 @@ class PlayerTab(ObservableService, gtk.HBox):
 
     def on_player_end_of_playlist(self, loop):
         pass
-    
+
     def reset_progress(self):
         self.progress.set_fraction(0)
         self.set_progress_callback(0,0)
@@ -876,7 +876,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         if self.progress_timer_id is not None:
             gobject.source_remove( self.progress_timer_id )
             self.progress_timer_id = None
-    
+
     def get_coverart_size( self ):
         if util.platform.MAEMO:
             if self.__gui_root.fullscreen:
@@ -885,18 +885,18 @@ class PlayerTab(ObservableService, gtk.HBox):
                 size = coverart_sizes['maemo']
         else:
             size = coverart_sizes['normal']
-        
+
         return size, size
-    
+
     def set_coverart( self, pixbuf ):
         self.cover_art.set_from_pixbuf(pixbuf)
         self.cover_art.show()
         self.has_coverart = True
-    
+
     def set_metadata( self, tag_message ):
         tags = { 'title': self.title_label, 'artist': self.artist_label,
                  'album': self.album_label }
-        
+
         # set the coverart
         if tag_message.has_key('image') and tag_message['image'] is not None:
             value = tag_message['image']
@@ -905,7 +905,7 @@ class PlayerTab(ObservableService, gtk.HBox):
             try:
                 pbl.write(value)
                 pbl.close()
-                
+
                 x, y = self.get_coverart_size()
                 pixbuf = pbl.get_pixbuf()
                 pixbuf = pixbuf.scale_simple( x, y, gtk.gdk.INTERP_BILINEAR )
@@ -919,26 +919,26 @@ class PlayerTab(ObservableService, gtk.HBox):
                 tags[tag].set_markup('<big>'+value+'</big>')
                 tags[tag].set_alignment( 0.5*int(not self.has_coverart), 0.5)
                 tags[tag].show()
-            
+
             if tag == 'title':
                 # make the title bold
                 tags[tag].set_markup('<b><big>'+value+'</big></b>')
-                
+
                 if not util.platform.MAEMO:
                     value += ' - Panucci'
-                
-                self.__gui_root.main_window.set_title( value )        
-    
+
+                self.__gui_root.main_window.set_title( value )
+
     def do_seek(self, seek_amount):
         resp = player.do_seek(from_current=seek_amount*10**9)
         if resp:
             # Preemptively update the progressbar to make seeking smoother
             self.set_progress_callback( *resp )
 
-    
+
 
 ##################################################
-# PlaylistTab                            
+# PlaylistTab
 ##################################################
 class PlaylistTab(gtk.VBox):
     def __init__(self, main_window):
@@ -1012,9 +1012,9 @@ class PlaylistTab(gtk.VBox):
         self.dir_button.connect('clicked', self.add_directory)
         self.hbox.pack_start(self.dir_button, True, True)
 
-        self.remove_button = widgets.DualActionButton( 
+        self.remove_button = widgets.DualActionButton(
             generate_image(gtk.STOCK_REMOVE, True),
-            self.remove_bookmark, 
+            self.remove_bookmark,
             generate_image(gtk.STOCK_CANCEL, True),
             lambda *a: player.playlist.reset_playlist() )
         #self.remove_button.set_use_stock(True)
@@ -1093,7 +1093,7 @@ class PlaylistTab(gtk.VBox):
                 self.__log.debug('Drop not supported: %s', position)
 
             # don't do anything if we're not actually moving rows around
-            if from_row != to_row: 
+            if from_row != to_row:
                 player.playlist.move_item( from_row, to_row )
 
         else:
@@ -1109,7 +1109,7 @@ class PlaylistTab(gtk.VBox):
         # build the tree
         for item, data in plist.get_playlist_item_ids():
             parent = self.__model.append(None, (item, data.get('title'), None))
-            
+
             for bid, bname, bpos in plist.get_bookmarks_from_item_id( item ):
                 nice_bpos = util.convert_ns(bpos)
                 self.__model.append( parent, (bid, bname, nice_bpos) )
@@ -1178,7 +1178,7 @@ class PlaylistTab(gtk.VBox):
                 model.remove(bkmk_iter)
             elif item_iter is not None:
                 model.remove(item_iter)
-    
+
     def select_current_item(self):
         model = self.treeview.get_model()
         selection = self.treeview.get_selection()
@@ -1189,7 +1189,7 @@ class PlaylistTab(gtk.VBox):
                 self.treeview.set_cursor(row.path)
                 self.treeview.scroll_to_cell(row.path, use_align=True)
                 break
-    
+
     def show_playlist_item_details(self, w):
         selection = self.treeview.get_selection()
         if selection.count_selected_rows() == 1:
@@ -1205,21 +1205,21 @@ class PlaylistTab(gtk.VBox):
             # "Jump to" button when the selection count equals 1.
             model, bkmk_id, bkmk_iter, item_id, item_iter = selected.pop(0)
             player.playlist.load_from_bookmark_id(item_id, bkmk_id)
-            
+
             # FIXME: The player/playlist should be able to take care of this
             if not player.playing:
                 player.play()
 
 
 ##################################################
-# PlaylistItemDetails                            
+# PlaylistItemDetails
 ##################################################
 class PlaylistItemDetails(gtk.Dialog):
     def __init__(self, main, playlist_item):
         gtk.Dialog.__init__( self, _('Playlist item details'),
                              main.main_window, gtk.DIALOG_MODAL,
                              (gtk.STOCK_CLOSE, gtk.RESPONSE_OK))
-        
+
         self.main = main
         self.fill(playlist_item)
         self.set_has_separator(False)
@@ -1242,7 +1242,7 @@ class PlaylistItemDetails(gtk.Dialog):
         row_num = 4
         for key in metadata:
             if metadata[key] is not None:
-                t.attach( gtk.Label(key.capitalize()+':'), 
+                t.attach( gtk.Label(key.capitalize()+':'),
                           0, 1, row_num, row_num+1 )
                 row_num += 1
 

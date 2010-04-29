@@ -43,35 +43,35 @@ def string_in_file( filepath, string ):
 
 class Platform(object):
     """ A platform detection class """
-    
+
     PLATFORM_ENV_VAR = "PANUCCIPLATFORM"
-    
+
     def __init__(self):
         self.MAEMO, self.MAEMO5, self.DESKTOP = (False,)*3
-        
+
         if os.getenv(self.PLATFORM_ENV_VAR) is not None:
             self.MAEMO   = os.getenv(self.PLATFORM_ENV_VAR) == "MAEMO"
             self.MAEMO5  = os.getenv(self.PLATFORM_ENV_VAR) == "MAEMO5"
             self.DESKTOP = os.getenv(self.PLATFORM_ENV_VAR) == "DESKTOP"
-        
+
         # If no platform is forced by an environment variable, try to
         # detect what platform we're running on
         if not ( self.MAEMO or self.MAEMO5 or self.DESKTOP ):
-        
+
             # Checks for older versions of Maemo (diablo, chinook, etc)
             if ( os.path.exists('/etc/osso_software_version') or
                  os.path.exists('/proc/component_version') or
                  string_in_file('/etc/issue', 'maemo') ):
                 self.MAEMO = True
-            
+
             # Otherwise we're just using regular desktop-linux
             else:
                 self.DESKTOP = True
-            
+
             # Check for Maemo 5 (fremantle)
             if string_in_file('/etc/issue', 'Maemo 5'):
                 self.MAEMO5 = True
-                
+
         # For now MAEMO5 implies MAEMO
         self.MAEMO = self.MAEMO or self.MAEMO5
 
@@ -181,5 +181,5 @@ def get_logfile():
         f = '~/MyDocs/panucci.log'
     else:
         f = '~/.panucci.log'
-    
+
     return os.path.expanduser( f )

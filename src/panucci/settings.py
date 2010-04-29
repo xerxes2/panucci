@@ -47,9 +47,9 @@ default_settings = {
 }
 
 class Settings(ObservableService):
-    """ A settings manager for Panucci. A signal is emitted when any 
+    """ A settings manager for Panucci. A signal is emitted when any
         setting is changed; signal names are devised as follows:
-            setting_name + SIGNAL_NAME_SUFFIX 
+            setting_name + SIGNAL_NAME_SUFFIX
 
         The signal prototype is: def callback( new_value )"""
 

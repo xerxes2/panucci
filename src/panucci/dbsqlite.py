@@ -280,13 +280,13 @@ class Storage(object):
 
     def get_playlist_id(self, filepath, create_new=False, update_time=False):
         """ Get a playlist_id by it's filepath
-                create_new: if True it will create a new playlist 
+                create_new: if True it will create a new playlist
                     entry if none exists for the filepath.
                 update_time: if True it updates the timestamp for the
                     playlist entry of the filepath. """
 
         if self.playlist_exists(filepath):
-            playlist_id = self.__get__( 
+            playlist_id = self.__get__(
                 'SELECT playlist_id FROM playlists WHERE filepath = ?',
                 filepath )[0]
         elif create_new:
