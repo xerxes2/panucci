@@ -66,8 +66,7 @@ import panucci
 from panucci import platform
 platform.detect()
 
-from panucci import util
-filepath = util.build_full_path(args[0] if len(args) else opts.queue_filename)
+filepath = os.path.abspath(args[0] if len(args) else opts.queue_filename)
 
 def init_logging( log_level ):
     """ Configure the logging module for panucci """

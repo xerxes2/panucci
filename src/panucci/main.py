@@ -74,13 +74,21 @@ coverart_sizes = {
 
 gtk.icon_size_register('panucci-button', 32, 32)
 
+def find_image(filename):
+    locations = ['./icons/', '../icons/', '/usr/share/panucci/',
+        os.path.dirname(sys.argv[0])+'/../icons/']
+
+    for location in locations:
+        if os.path.exists(location+filename):
+            return os.path.abspath(location+filename)
+
 def generate_image(filename, is_stock=False):
     image = None
     if is_stock:
         image = gtk.image_new_from_stock(
             filename, gtk.icon_size_from_name('panucci-button') )
     else:
-        filename = util.find_image(filename)
+        filename = find_image(filename)
         if filename is not None:
             image = gtk.image_new_from_file(filename)
     if image is not None:
@@ -212,7 +220,7 @@ class PanucciGUI(object):
 
         self.main_window = window
         window.set_title('Panucci')
-        self.window_icon = util.find_image('panucci.png')
+        self.window_icon = find_image('panucci.png')
         if self.window_icon is not None:
             window.set_icon_from_file( self.window_icon )
         window.set_default_size(400, -1)
@@ -382,7 +390,7 @@ class PanucciGUI(object):
     def notify(self, message):
         """ Sends a notification using pynotify, returns message """
         if platform.DESKTOP and have_pynotify:
-            icon = util.find_image('panucci_64x64.png')
+            icon = find_image('panucci_64x64.png')
             notification = pynotify.Notification(self.main_window.get_title(), message, icon)
             notification.show()
         elif platform.MAEMO:

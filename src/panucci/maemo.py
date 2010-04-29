@@ -24,8 +24,6 @@ import osso
 
 import panucci
 
-from panucci import util
-
 
 class MaemoDevice(object):
     def __init__(self):
