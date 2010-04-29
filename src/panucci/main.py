@@ -283,6 +283,11 @@ class PanucciGUI(object):
         # this should be done when the gui is ready
         player.init(filepath=filename)
 
+        pos_int, dur_int = player.get_position_duration()
+        # This prevents bogus values from being set while seeking
+        if (pos_int > 10**9) and (dur_int > 10**9):
+            self.set_progress_callback(pos_int, dur_int)
+
     def create_actions(self):
         self.action_open = gtk.Action('open', _('Open'), _('Open a file or playlist'), gtk.STOCK_OPEN)
         self.action_open.connect('activate', self.open_file_callback)
