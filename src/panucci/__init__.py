@@ -15,6 +15,7 @@ if not os.path.exists(HOME):
 SETTINGS_FILE = os.path.join(HOME, 'panucci.conf')
 DATABASE_FILE = os.path.join(HOME, 'panucci.sqlite')
 PLAYLIST_FILE = os.path.join(HOME, 'panucci.m3u')
+LOGFILE = os.path.join(HOME, 'panucci.log')
 
 EXTENSIONS = ('mp2', 'mp3', 'mp4', 'ogg', 'm4a', 'wav')
 

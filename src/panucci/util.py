@@ -102,10 +102,3 @@ def notify( msg, title='Panucci' ):
 
     return msg
 
-def get_logfile():
-    if platform.MAEMO:
-        f = '~/MyDocs/panucci.log'
-    else:
-        f = '~/.panucci.log'
-
-    return os.path.expanduser( f )

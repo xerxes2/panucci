@@ -60,13 +60,14 @@ local_module_dir = os.path.join(os.path.dirname(sys.argv[0]), '..', 'src')
 if os.path.isdir(local_module_dir):
     sys.path.append(local_module_dir)
 
+import panucci
+
 # Detect the platform we're running on
 from panucci import platform
 platform.detect()
 
 from panucci import util
 filepath = util.build_full_path(args[0] if len(args) else opts.queue_filename)
-
 
 def init_logging( log_level ):
     """ Configure the logging module for panucci """
@@ -81,10 +82,9 @@ def init_logging( log_level ):
     logger.addHandler(sh)
 
     # the file handler (logging to a file)
-    from panucci import util
-    f = util.get_logfile()
-    fh = logging.handlers.RotatingFileHandler( f, backupCount=0, # 25kb should
-                                               maxBytes=25*1024 ) # be enough.
+    fh = logging.handlers.RotatingFileHandler(panucci.LOGFILE, \
+            backupCount=0, maxBytes=25*1024)
+
     fh.doRollover() # reset the logfile at startup
     fh.setLevel( logging.DEBUG ) # log everything to the file
     fmt = logging.Formatter('%(asctime)s %(levelname)s:%(name)s %(message)s')
