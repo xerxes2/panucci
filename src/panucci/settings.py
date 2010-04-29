@@ -24,7 +24,6 @@ import logging
 import panucci
 
 DEFAULTS = {
-    'allow_blanking'            : True,
     'dual_action_button_delay'  : 0.5,
     'enable_dual_action_btn'    : True,
     'last_folder'               : '~',

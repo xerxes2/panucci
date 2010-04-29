@@ -163,19 +163,6 @@ def notify( msg, title='Panucci' ):
 
     return msg
 
-def poke_backlight():
-    """ Prevents the backlight from turning off (screen blanking).
-        Note: this needs to be called once a minute to be effective """
-
-    if have_osso:
-        dev = osso.DeviceState(osso.Context('ScreenManager', '0.0.1', False))
-        dev.display_blanking_pause()
-    elif platform.MAEMO:
-        __log.info('Please install python2.5-osso for backlight ctl support.')
-        return False
-
-    return True
-
 def get_logfile():
     if platform.MAEMO:
         f = '~/MyDocs/panucci.log'

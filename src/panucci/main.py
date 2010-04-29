@@ -252,10 +252,6 @@ class PanucciGUI(object):
         self.main_window.connect('key-press-event', self.on_key_press)
         player.playlist.register( 'file_queued', self.on_file_queued )
 
-        self.__anti_blank_timer = None
-        #settings.register('allow_blanking_changed',self.__set_anti_blank_timer)
-        self.__set_anti_blank_timer( settings.allow_blanking )
-
         player.playlist.register( 'playlist-to-be-overwritten',
                                   self.check_queue )
         self.__player_tab.register( 'select-current-item-request',
@@ -504,19 +500,6 @@ class PanucciGUI(object):
     def handle_headset_button(self, event, button):
         if event == 'ButtonPressed' and button == 'phone':
             player.play_pause_toggle()
-
-    def __set_anti_blank_timer(self, allow_blanking):
-        if util.platform.MAEMO:
-            if allow_blanking and self.__anti_blank_timer is not None:
-                self.__log.info('Screen blanking enabled.')
-                gobject.source_remove(self.__anti_blank_timer)
-                self.__anti_blank_timer = None
-            elif not allow_blanking and self.__anti_blank_timer is None:
-                self.__log.info('Attempting to disable screen blanking.')
-                self.__anti_blank_timer = gobject.timeout_add(
-                    1000 * 59, util.poke_backlight )
-        else:
-            self.__log.info('Blanking controls are for Maemo only.')
 
     def __select_current_item( self ):
         # Select the currently playing track in the playlist tab
