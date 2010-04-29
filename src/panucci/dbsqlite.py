@@ -23,7 +23,6 @@ from __future__ import absolute_import
 
 import os.path
 import logging
-import string
 import time
 
 log = logging.getLogger('panucci.dbsqlite')
@@ -121,7 +120,7 @@ class Storage(object):
         if conditions:
             sql += ' WHERE '
 
-        sql += string.join(conditions, ' AND ')
+        sql += ' AND '.join(conditions)
 
         cursor = self.cursor()
         cursor.execute( sql, args )
