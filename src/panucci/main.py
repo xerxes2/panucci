@@ -49,7 +49,6 @@ except:
         log.critical( 'Using GTK widgets, install "python2.5-hildon" '
             'for this to work properly.' )
 
-from panucci.simplegconf import gconf
 from panucci.settings import settings
 from panucci.player import player
 from panucci.dbusinterface import interface

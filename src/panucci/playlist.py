@@ -30,7 +30,6 @@ from xml.sax.saxutils import escape
 
 from panucci.dbsqlite import db
 from panucci.settings import settings
-from panucci.simplegconf import gconf
 from panucci.services import ObservableService
 
 from panucci import util

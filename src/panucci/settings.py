@@ -22,7 +22,6 @@ from __future__ import absolute_import
 import logging
 import os.path
 
-from panucci.simplegconf import gconf
 from panucci.services import ObservableService
 
 SIGNAL_NAME_SUFFIX = '_changed'
@@ -58,11 +57,10 @@ class Settings(ObservableService):
         signals = [ k + SIGNAL_NAME_SUFFIX for k in default_settings.keys() ]
         ObservableService.__init__( self, signals, log=self.__log )
 
-        gconf.snotify( self.__on_directory_changed )
-
     def __getattr__(self, key):
         if default_settings.has_key(key):
-            return gconf.sget( key, default=default_settings[key] )
+            # FIXME: Load settings from somewhere
+            return default_settings[key]
         else:
             self.__log.warning('Setting "%s" doesn\'t exist.' % key)
             raise AttributeError
@@ -71,8 +69,8 @@ class Settings(ObservableService):
         if default_settings.has_key(key):
             if type(value) == type(default_settings[key]):
                 # Don't set the value if it's the same as it used to be
-                if getattr(self, key) != value:
-                    gconf.sset( key, value )
+                #if getattr(self, key) != value:
+                # FIXME: Save setting somewhere
 
                 return True
             else:
@@ -85,13 +83,6 @@ class Settings(ObservableService):
             self.__log.warning('Setting "%s" doesn\'t exist.', key)
 
         return False
-
-    def __on_directory_changed(self, client, connection_id, entry, args):
-        directory, key = os.path.split(entry.get_key())
-        new_value = getattr(self, key)
-        self.__log.debug('gconf key %s changed to: %s', key, new_value)
-        self.notify( key + SIGNAL_NAME_SUFFIX, new_value,
-            caller=self.__on_directory_changed )
 
     def attach_checkbutton(self, button, setting):
         button.connect(

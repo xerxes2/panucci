@@ -34,7 +34,6 @@ except ImportError:
     log.critical('Error importing sqlite, FAIL!')
 
 from panucci.settings import settings
-from panucci.simplegconf import gconf
 
 class Storage(object):
     def __init__(self, db_file):
