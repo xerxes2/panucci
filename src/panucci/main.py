@@ -66,7 +66,6 @@ coverart_sizes = {
     'maemo fullscreen'  : 275,
 }
 
-gtk.about_dialog_set_url_hook(util.open_link, None)
 gtk.icon_size_register('panucci-button', 32, 32)
 
 def generate_image(filename, is_stock=False):

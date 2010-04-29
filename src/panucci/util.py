@@ -24,7 +24,6 @@ import os
 import os.path
 import sys
 import traceback
-import webbrowser
 import logging
 
 from panucci import platform
@@ -71,9 +70,6 @@ def build_full_path( path ):
             return os.path.abspath(path)
         else:
             return os.path.abspath( os.path.join(os.getcwdu(), path) )
-
-def open_link(d, url, data):
-    webbrowser.open_new(url)
 
 def find_image(filename):
     locations = ['./icons/', '../icons/', '/usr/share/panucci/',
