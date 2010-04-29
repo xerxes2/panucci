@@ -38,6 +38,7 @@ import panucci
 
 from panucci import widgets
 from panucci import util
+from panucci import platform
 
 log = logging.getLogger('panucci.panucci')
 
@@ -45,7 +46,7 @@ log = logging.getLogger('panucci.panucci')
 try:
     import hildon
 except:
-    if util.platform.MAEMO:
+    if platform.MAEMO:
         log.critical( 'Using GTK widgets, install "python2.5-hildon" '
             'for this to work properly.' )
 
@@ -78,7 +79,7 @@ def generate_image(filename, is_stock=False):
         if filename is not None:
             image = gtk.image_new_from_file(filename)
     if image is not None:
-        if util.platform.MAEMO:
+        if platform.MAEMO:
             image.set_padding(20, 20)
         else:
             image.set_padding(5, 5)
@@ -143,7 +144,7 @@ def get_file_from_filechooser(
     else:
         open_action = gtk.FILE_CHOOSER_ACTION_OPEN
 
-    if util.platform.MAEMO:
+    if platform.MAEMO:
         if save_file:
             args = ( toplevel_window, gtk.FILE_CHOOSER_ACTION_SAVE )
         else:
@@ -197,7 +198,7 @@ class PanucciGUI(object):
         interface.register_gui(self)
 
         # Build the base ui (window and menubar)
-        if util.platform.MAEMO:
+        if platform.MAEMO:
             self.app = hildon.Program()
             window = hildon.Window()
             self.app.add_window(window)
@@ -227,7 +228,7 @@ class PanucciGUI(object):
 
         self.create_actions()
 
-        if util.platform.MAEMO:
+        if platform.MAEMO:
             window.set_menu(self.create_menu())
             window.add(self.__player_tab)
         else:
@@ -244,7 +245,7 @@ class PanucciGUI(object):
         self.__ignore_queue_check = False
         self.__window_fullscreen = False
 
-        if util.platform.MAEMO and interface.headset_device is not None:
+        if platform.MAEMO and interface.headset_device is not None:
             # Enable play/pause with headset button
             interface.headset_device.connect_to_signal(
                 'Condition', self.handle_headset_button )
@@ -463,7 +464,7 @@ class PanucciGUI(object):
     fullscreen = property( __get_fullscreen, __set_fullscreen )
 
     def on_key_press(self, widget, event):
-        if util.platform.MAEMO:
+        if platform.MAEMO:
             if event.keyval == gtk.keysyms.F6:
                 self.fullscreen = not self.fullscreen
 
@@ -591,9 +592,9 @@ class PlayerTab(ObservableService, gtk.HBox):
             'button-press-event', self.on_progressbar_changed )
         self.progress = gtk.ProgressBar()
         # make the progress bar more "finger-friendly"
-        if util.platform.FREMANTLE:
+        if platform.FREMANTLE:
             self.progress.set_size_request(-1, 100)
-        elif util.platform.MAEMO:
+        elif platform.MAEMO:
             self.progress.set_size_request(-1, 50)
         progress_eventbox.add(self.progress)
         main_vbox.pack_start( progress_eventbox, False, False )
@@ -646,14 +647,14 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.set_controls_sensitivity(False)
         main_vbox.pack_start(buttonbox, False, False)
 
-        if util.platform.MAEMO:
+        if platform.MAEMO:
             self.volume = hildon.VVolumebar()
             self.volume.set_property('can-focus', False)
             self.volume.connect('level_changed', self.volume_changed_hildon)
             self.volume.connect('mute_toggled', self.mute_toggled)
             self.__gui_root.main_window.connect( 'key-press-event',
                                                  self.on_key_press )
-            if not util.platform.FREMANTLE:
+            if not platform.FREMANTLE:
                 self.pack_start(self.volume, False, True)
 
             # Add a button to pop out the volume bar
@@ -664,7 +665,7 @@ class PlayerTab(ObservableService, gtk.HBox):
                 'show', lambda x: self.volume_button.set_active(True))
             self.volume.connect(
                 'hide', lambda x: self.volume_button.set_active(False))
-            if not util.platform.FREMANTLE:
+            if not platform.FREMANTLE:
                 buttonbox.add(self.volume_button)
             self.volume_button.show()
 
@@ -704,7 +705,7 @@ class PlayerTab(ObservableService, gtk.HBox):
             button.set_duration( settings.dual_action_button_delay )
 
     def on_key_press(self, widget, event):
-        if util.platform.MAEMO:
+        if platform.MAEMO:
             if event.keyval == gtk.keysyms.F7: #plus
                 self.set_volume( min( 1, self.get_volume() + 0.10 ))
             elif event.keyval == gtk.keysyms.F8: #minus
@@ -719,7 +720,7 @@ class PlayerTab(ObservableService, gtk.HBox):
     # The following two functions get and set the
     #   volume from the volume control widgets.
     def get_volume(self):
-        if util.platform.MAEMO:
+        if platform.MAEMO:
             return self.volume.get_level()/100.0
         else:
             return self.volume.get_value()
@@ -728,11 +729,11 @@ class PlayerTab(ObservableService, gtk.HBox):
         """ vol is a float from 0 to 1 """
         assert 0 <= vol <= 1
 
-        if util.platform.FREMANTLE:
+        if platform.FREMANTLE:
             # No volume setting on Maemo 5
             return
 
-        if util.platform.MAEMO:
+        if platform.MAEMO:
             self.volume.set_level(vol*100.0)
         else:
             self.volume.set_value(vol)
@@ -851,7 +852,7 @@ class PlayerTab(ObservableService, gtk.HBox):
             self.progress_timer_id = None
 
     def get_coverart_size( self ):
-        if util.platform.MAEMO:
+        if platform.MAEMO:
             if self.__gui_root.fullscreen:
                 size = coverart_sizes['maemo fullscreen']
             else:
@@ -897,7 +898,7 @@ class PlayerTab(ObservableService, gtk.HBox):
                 # make the title bold
                 tags[tag].set_markup('<b><big>'+value+'</big></b>')
 
-                if not util.platform.MAEMO:
+                if not platform.MAEMO:
                     value += ' - Panucci'
 
                 self.__gui_root.main_window.set_title( value )
@@ -933,7 +934,7 @@ class PlaylistTab(gtk.VBox):
         tree_selection.connect('changed', self.tree_selection_changed)
 
         # The tree lines look nasty on maemo
-        if util.platform.DESKTOP:
+        if platform.DESKTOP:
             self.treeview.set_enable_tree_lines(True)
         self.update_model()
 

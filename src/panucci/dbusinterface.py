@@ -25,8 +25,6 @@ import dbus.service
 
 session_bus = dbus.SessionBus()
 
-from panucci import util
-
 class panucciInterface(dbus.service.Object):
     """ Panucci's d-bus interface """
 
@@ -38,12 +36,11 @@ class panucciInterface(dbus.service.Object):
         self.gui = None
         self.headset_device = None
 
-        if util.platform.MAEMO:
-            headset_button = dbus.SystemBus().get_object(
-                'org.freedesktop.Hal', '/org/freedesktop/Hal/devices/'
-                'platform_retu_headset_logicaldev_input' )
-            self.headset_device = dbus.Interface(
-                headset_button, 'org.freedesktop.Hal.Device')
+        #    headset_button = dbus.SystemBus().get_object(
+        #        'org.freedesktop.Hal', '/org/freedesktop/Hal/devices/'
+        #        'platform_retu_headset_logicaldev_input' )
+        #    self.headset_device = dbus.Interface(
+        #        headset_button, 'org.freedesktop.Hal.Device')
 
     def register_player(self, player):
         self.__log.debug('Registered player.')

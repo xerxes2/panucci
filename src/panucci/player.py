@@ -28,7 +28,7 @@ from panucci.dbusinterface import interface
 from panucci.backends import osso, gstplaybin
 
 from panucci import util
-
+from panucci import platform
 
 class PanucciPlayer(ForwardingObservableService):
     """
@@ -184,9 +184,9 @@ class PanucciPlayer(ForwardingObservableService):
         self.playlist.quit()
 
 
-if util.platform.FREMANTLE or util.platform.DESKTOP:
+if platform.FREMANTLE or platform.DESKTOP:
     backend = gstplaybin.GstPlaybinPlayer
-elif util.platform.MAEMO:
+elif platform.MAEMO:
     backend = osso.ossoPlayer
 
 # there should only ever be one panucciPlayer object

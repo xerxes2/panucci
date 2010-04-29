@@ -60,6 +60,10 @@ local_module_dir = os.path.join(os.path.dirname(sys.argv[0]), '..', 'src')
 if os.path.isdir(local_module_dir):
     sys.path.append(local_module_dir)
 
+# Detect the platform we're running on
+from panucci import platform
+platform.detect()
+
 from panucci import util
 filepath = util.build_full_path(args[0] if len(args) else opts.queue_filename)
 

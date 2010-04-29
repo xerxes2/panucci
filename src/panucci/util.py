@@ -27,41 +27,9 @@ import traceback
 import webbrowser
 import logging
 
+from panucci import platform
+
 __log = logging.getLogger('panucci.util')
-
-
-class Platform(object):
-    """ A platform detection class """
-
-    def __init__(self):
-        self.MAEMO = False
-        self.FREMANTLE = False
-        self.DESKTOP = True
-
-        # Checks for older versions of Maemo (diablo, chinook, etc)
-        if os.path.exists('/etc/osso_software_version') or \
-                os.path.exists('/proc/component_version') or \
-                self.file_contains('/etc/issue/', 'maemo'):
-            self.MAEMO = True
-            self.DESKTOP = False
-
-        # Check for Maemo 5 (fremantle)
-        if self.file_contains('/etc/issue', 'Maemo 5'):
-            self.MAEMO = True
-            self.FREMANTLE = True
-            self.DESKTOP = False
-
-    def file_contains(self, filename, content):
-        try:
-            for line in open(filename):
-                if content in line:
-                    return True
-        except:
-            return False
-
-
-platform = Platform()
-
 
 def convert_ns(time_int):
     time_int = max( 0, int(time_int) )

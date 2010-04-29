@@ -26,8 +26,8 @@ from __future__ import absolute_import
 
 from logging import getLogger
 
-# the following are only needed for __headphone_watcher
-from panucci import util
+from panucci import platform
+
 import gobject
 
 class ObservableService(object):
@@ -162,7 +162,7 @@ class __headphone_watcher(ObservableService):
 
         self.__is_connected = None
 
-        if util.platform.MAEMO and not util.platform.FREMANTLE:
+        if platform.MAEMO and not platform.FREMANTLE:
             try:
                 self.__sys_file = open( sys_file, 'r' )
                 self.__is_connected = self.__get_state_from_fd(self.__sys_file)
