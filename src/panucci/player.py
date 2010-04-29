@@ -184,7 +184,7 @@ class PanucciPlayer(ForwardingObservableService):
         self.playlist.quit()
 
 
-if util.platform.MAEMO5 or util.platform.DESKTOP:
+if util.platform.FREMANTLE or util.platform.DESKTOP:
     backend = gstplaybin.GstPlaybinPlayer
 elif util.platform.MAEMO:
     backend = osso.ossoPlayer

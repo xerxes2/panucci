@@ -591,7 +591,7 @@ class PlayerTab(ObservableService, gtk.HBox):
             'button-press-event', self.on_progressbar_changed )
         self.progress = gtk.ProgressBar()
         # make the progress bar more "finger-friendly"
-        if util.platform.MAEMO5:
+        if util.platform.FREMANTLE:
             self.progress.set_size_request(-1, 100)
         elif util.platform.MAEMO:
             self.progress.set_size_request(-1, 50)
@@ -653,7 +653,7 @@ class PlayerTab(ObservableService, gtk.HBox):
             self.volume.connect('mute_toggled', self.mute_toggled)
             self.__gui_root.main_window.connect( 'key-press-event',
                                                  self.on_key_press )
-            if not util.platform.MAEMO5:
+            if not util.platform.FREMANTLE:
                 self.pack_start(self.volume, False, True)
 
             # Add a button to pop out the volume bar
@@ -664,7 +664,7 @@ class PlayerTab(ObservableService, gtk.HBox):
                 'show', lambda x: self.volume_button.set_active(True))
             self.volume.connect(
                 'hide', lambda x: self.volume_button.set_active(False))
-            if not util.platform.MAEMO5:
+            if not util.platform.FREMANTLE:
                 buttonbox.add(self.volume_button)
             self.volume_button.show()
 
@@ -728,7 +728,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         """ vol is a float from 0 to 1 """
         assert 0 <= vol <= 1
 
-        if util.platform.MAEMO5:
+        if util.platform.FREMANTLE:
             # No volume setting on Maemo 5
             return
 

@@ -108,7 +108,7 @@ class GstBasePlayer(base.BasePlayer):
     def _set_volume_level(self, level):
         assert  0 <= level <= 1
 
-        if util.platform.MAEMO5:
+        if util.platform.FREMANTLE:
             # No volume setting on Fremantle
             return
 
