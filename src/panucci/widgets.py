@@ -408,7 +408,7 @@ if __name__ == '__main__':
 
     # scroll 7 pixels per 0.2 seconds, wait halfway for 0.5 seconds and finally
     # wait 2 seconds after a complete scroll. wash, rinse, repeat.
-    l = ScrollingLabel('N/A', 200, 7, 2000, 500)
+    l = ScrollingLabel('N/A', 100, 1, 2000, 500)
     l.markup = 'some random text 1234'
     hb.pack_end(l)
 

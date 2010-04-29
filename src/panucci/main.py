@@ -599,11 +599,11 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.album_label = gtk.Label('')
         self.album_label.set_ellipsize(pango.ELLIPSIZE_END)
         metadata_vbox.pack_start(self.album_label, False, False)
-        self.title_label = widgets.ScrollingLabel( '',
-                                                   update_interval=200,
-                                                   pixel_jump=5,
-                                                   delay_btwn_scrolls=5000,
-                                                   delay_halfway=3000 )
+        self.title_label = widgets.ScrollingLabel('',
+                                                  update_interval=100,
+                                                  pixel_jump=1,
+                                                  delay_btwn_scrolls=5000,
+                                                  delay_halfway=3000)
         self.title_label.scrolling = settings.scrolling_labels
         metadata_vbox.pack_start(self.title_label, False, False)
         empty_label = gtk.Label()
