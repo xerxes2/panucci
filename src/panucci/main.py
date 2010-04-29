@@ -400,9 +400,12 @@ class PanucciGUI(object):
             icon = find_image('panucci_64x64.png')
             notification = pynotify.Notification(self.main_window.get_title(), message, icon)
             notification.show()
+        elif platform.FREMANTLE:
+            hildon.hildon_banner_show_information(self.main_window, \
+                    '', message)
         elif platform.MAEMO:
             # Note: This won't work if we're not in the gtk main loop
-            markup = '<b>%s</b>\n<small>%s</small>' % (title, message)
+            markup = '<b>%s</b>\n<small>%s</small>' % (self.main_window.get_title(), message)
             hildon.hildon_banner_show_information_with_markup(self.main_window, None, markup)
 
     def destroy(self, widget):
