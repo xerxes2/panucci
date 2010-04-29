@@ -23,10 +23,17 @@ import logging
 
 import panucci
 
+import os.path
+
+LAST_FOLDER_DEFAULT = os.path.join(os.path.expanduser('~'), 'MyDocs')
+
+if not os.path.exists(LAST_FOLDER_DEFAULT):
+    LAST_FOLDER_DEFAULT = os.path.expanduser('~')
+
 DEFAULTS = {
     'dual_action_button_delay'  : 0.5,
     'enable_dual_action_btn'    : True,
-    'last_folder'               : '~',
+    'last_folder'               : LAST_FOLDER_DEFAULT,
     'max_recent_files'          : 10,
     'progress_locked'           : False,
     'scrolling_labels'          : True,

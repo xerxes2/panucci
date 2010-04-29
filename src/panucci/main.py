@@ -157,7 +157,14 @@ def get_file_from_filechooser(
     else:
         open_action = gtk.FILE_CHOOSER_ACTION_OPEN
 
-    if platform.MAEMO:
+    if platform.FREMANTLE:
+        if save_file:
+            dlg = gobject.new(hildon.FileChooserDialog, \
+                    action=gtk.FILE_CHOOSER_ACTION_SAVE)
+        else:
+            dlg = gobject.new(hildon.FileChooserDialog, \
+                    action=gtk.FILE_CHOOSER_ACTION_OPEN)
+    elif platform.MAEMO:
         if save_file:
             args = ( toplevel_window, gtk.FILE_CHOOSER_ACTION_SAVE )
         else:
