@@ -636,8 +636,10 @@ class PlayerTab(ObservableService, gtk.HBox):
             'button-press-event', self.on_progressbar_changed )
         self.progress = gtk.ProgressBar()
         # make the progress bar more "finger-friendly"
-        if util.platform.MAEMO:
-            self.progress.set_size_request( -1, 50 )
+        if util.platform.MAEMO5:
+            self.progress.set_size_request(-1, 100)
+        elif util.platform.MAEMO:
+            self.progress.set_size_request(-1, 50)
         progress_eventbox.add(self.progress)
         main_vbox.pack_start( progress_eventbox, False, False )
 
@@ -696,7 +698,8 @@ class PlayerTab(ObservableService, gtk.HBox):
             self.volume.connect('mute_toggled', self.mute_toggled)
             self.__gui_root.main_window.connect( 'key-press-event',
                                                  self.on_key_press )
-            self.pack_start(self.volume, False, True)
+            if not util.platform.MAEMO5:
+                self.pack_start(self.volume, False, True)
 
             # Add a button to pop out the volume bar
             self.volume_button = gtk.ToggleButton('')
@@ -706,7 +709,8 @@ class PlayerTab(ObservableService, gtk.HBox):
                 'show', lambda x: self.volume_button.set_active(True))
             self.volume.connect(
                 'hide', lambda x: self.volume_button.set_active(False))
-            buttonbox.add(self.volume_button)
+            if not util.platform.MAEMO5:
+                buttonbox.add(self.volume_button)
             self.volume_button.show()
 
             # Disable focus for all widgets, so we can use the cursor
@@ -768,6 +772,11 @@ class PlayerTab(ObservableService, gtk.HBox):
     def set_volume(self, vol):
         """ vol is a float from 0 to 1 """
         assert 0 <= vol <= 1
+
+        if util.platform.MAEMO5:
+            # No volume setting on Maemo 5
+            return
+
         if util.platform.MAEMO:
             self.volume.set_level(vol*100.0)
         else:
