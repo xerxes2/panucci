@@ -114,6 +114,8 @@ class PanucciPlayer(ForwardingObservableService):
 
         if filepath is None or not self.playlist.load( filepath ):
             self.playlist.load_last_played()
+        else:
+            self.play()
 
     def on_new_track(self):
         """ New track callback; stops the player and starts the new track. """

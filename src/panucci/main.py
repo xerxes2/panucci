@@ -1304,7 +1304,7 @@ class PlaylistItemDetails(gtk.Dialog):
 
 
 def run(filename=None):
-    PanucciGUI( filename )
+    PanucciGUI(filename)
     gtk.main()
 
 if __name__ == '__main__':
