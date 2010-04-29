@@ -608,6 +608,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.artist_label.set_ellipsize(pango.ELLIPSIZE_END)
         metadata_vbox.pack_start(self.artist_label, False, False)
         self.album_label = gtk.Label('')
+        self.album_label.modify_font(pango.FontDescription('normal 8'))
         self.album_label.set_ellipsize(pango.ELLIPSIZE_END)
         metadata_vbox.pack_start(self.album_label, False, False)
         self.title_label = widgets.ScrollingLabel('',
