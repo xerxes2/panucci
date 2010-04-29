@@ -133,6 +133,3 @@ class ossoPlayer(base.BasePlayer):
     def _seek(self, position):
         self.audio_proxy.seek( dbus.Int32(1), dbus.Int32(position/10**6) )
 
-    def _set_volume_level(self, level):
-        self.audio_proxy.set_volume( dbus.Double(level) )
-

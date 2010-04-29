@@ -39,7 +39,6 @@ DEFAULTS = {
     'scrolling_labels'          : True,
     'seek_long'                 : 60,
     'seek_short'                : 10,
-    'volume'                    : 0.3,
 }
 
 class Settings(object):

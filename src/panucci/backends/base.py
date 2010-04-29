@@ -68,7 +68,6 @@ class BasePlayer(ObservableService):
     def __init__(self):
         self.__log = logging.getLogger('panucci.backends.BasePlayer')
         ObservableService.__init__(self, self.signals, self.__log)
-        #settings.register( 'volume_changed', self._set_volume_level )
 
         # Cached copies of position and duration
         self.__position, self.__duration = 0, 0
@@ -133,15 +132,6 @@ class BasePlayer(ObservableService):
             Params: position is the position to seek to in nanoseconds.
             Returns: True if the seek was successfull.
         """
-
-    def _set_volume_level(self, level):
-        """ Sets the volume level of the player. This should only be used in
-            conjunction with the settings manager's "volume_changed" signal.
-
-            Params: level is a float between 0 and 1.
-            Returns: Nothing
-        """
-
 
     #############################################
     # Generic Functions

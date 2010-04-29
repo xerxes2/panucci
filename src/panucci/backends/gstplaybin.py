@@ -37,8 +37,5 @@ class GstPlaybinPlayer(gstbase.GstBasePlayer):
         self._player = gst.element_factory_make('playbin2', 'player')
         self._filesrc = self._player
         self._filesrc_property = 'uri'
-        self._volume_control = self._player
-        self._volume_multiplier = 1.
-        self._volume_property = 'volume'
         return True
 

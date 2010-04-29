@@ -22,7 +22,6 @@ from __future__ import absolute_import
 import logging
 
 from panucci.playlist import Playlist
-from panucci.settings import settings
 from panucci.services import ForwardingObservableService
 from panucci.dbusinterface import interface
 from panucci.backends import osso, gstplaybin
@@ -56,13 +55,11 @@ class PanucciPlayer(ForwardingObservableService):
         self.__player.register( "stopped", self.on_stopped )
         self.__player.register( "eof", self.on_stopped )
         self.__player.register( "error", self.on_player_error )
-        self._set_volume_level( settings.volume )
 
         self.playlist = Playlist()
         self.playlist.register( 'new-track-loaded', self.on_new_track )
         self.playlist.register( 'seek-requested', self.do_seek )
         self.playlist.register( 'stop-requested', self.on_stop_requested )
-        #settings.register( 'volume_changed', self._set_volume_level )
 
         # Register the d-bus interface only once we're ready
         interface.register_player(self)

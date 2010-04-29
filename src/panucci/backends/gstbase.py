@@ -25,7 +25,6 @@ import logging
 from panucci.backends import base
 
 import panucci
-from panucci.settings import settings
 from panucci import util
 
 class GstBasePlayer(base.BasePlayer):
@@ -41,9 +40,6 @@ class GstBasePlayer(base.BasePlayer):
         self._player = None
         self._filesrc = None
         self._filesrc_property = None
-        self._volume_control = None
-        self._volume_multiplier = 1
-        self._volume_property = None
         self._time_format = gst.Format(gst.FORMAT_TIME)
         self._current_filetype = None
 
@@ -105,19 +101,11 @@ class GstBasePlayer(base.BasePlayer):
         self.seeking = False
         return not error
 
-    def _set_volume_level(self, level):
-        assert  0 <= level <= 1
-
-        if self._volume_control is not None:
-            vol = level * self._volume_multiplier
-            self._volume_control.set_property( self._volume_property, vol )
-
     def __setup_player(self):
         if self._setup_player(self._current_filetype):
             bus = self._player.get_bus()
             bus.add_signal_watch()
             bus.connect('message', self.__on_message)
-            self._set_volume_level( settings.volume )
             return True
 
         return False

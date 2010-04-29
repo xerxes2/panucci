@@ -560,18 +560,15 @@ class PlayerTab(ObservableService, gtk.HBox):
 
         # Timers
         self.progress_timer_id = None
-        self.volume_timer_id = None
 
         self.recent_files = []
         self.make_player_tab()
         self.has_coverart = False
-        self.set_volume(settings.volume)
 
         #settings.register( 'enable_dual_action_btn_changed',
         #                   self.on_dual_action_setting_changed )
         #settings.register( 'dual_action_button_delay_changed',
         #                   self.on_dual_action_setting_changed )
-        #settings.register( 'volume_changed', self.set_volume )
         #settings.register( 'scrolling_labels_changed', lambda v:
         #                   setattr( self.title_label, 'scrolling', v ) )
 
@@ -683,26 +680,8 @@ class PlayerTab(ObservableService, gtk.HBox):
         main_vbox.pack_start(buttonbox, False, False)
 
         if platform.MAEMO:
-            self.volume = hildon.VVolumebar()
-            self.volume.set_property('can-focus', False)
-            self.volume.connect('level_changed', self.volume_changed_hildon)
-            self.volume.connect('mute_toggled', self.mute_toggled)
             self.__gui_root.main_window.connect( 'key-press-event',
                                                  self.on_key_press )
-            if not platform.FREMANTLE:
-                self.pack_start(self.volume, False, True)
-
-            # Add a button to pop out the volume bar
-            self.volume_button = gtk.ToggleButton('')
-            image(self.volume_button, 'media-speaker.png')
-            self.volume_button.connect('clicked', self.toggle_volumebar)
-            self.volume.connect(
-                'show', lambda x: self.volume_button.set_active(True))
-            self.volume.connect(
-                'hide', lambda x: self.volume_button.set_active(False))
-            if not platform.FREMANTLE:
-                buttonbox.add(self.volume_button)
-            self.volume_button.show()
 
             # Disable focus for all widgets, so we can use the cursor
             # keys + enter to directly control our media player, which
@@ -711,15 +690,8 @@ class PlayerTab(ObservableService, gtk.HBox):
                     self.rrewind_button, self.rewind_button,
                     self.play_pause_button, self.forward_button,
                     self.fforward_button, self.progress,
-                    self.bookmarks_button, self.volume_button, ):
+                    self.bookmarks_button, ):
                 w.unset_flags(gtk.CAN_FOCUS)
-        else:
-            self.volume = gtk.VolumeButton()
-            self.volume.connect('value-changed', self.volume_changed_gtk)
-            buttonbox.add(self.volume)
-            self.volume.show()
-
-        self.set_volume(settings.volume)
 
     def set_controls_sensitivity(self, sensitive):
         for button in self.forward_button, self.rewind_button, \
@@ -741,71 +713,12 @@ class PlayerTab(ObservableService, gtk.HBox):
 
     def on_key_press(self, widget, event):
         if platform.MAEMO:
-            if event.keyval == gtk.keysyms.F7: #plus
-                self.set_volume( min( 1, self.get_volume() + 0.10 ))
-            elif event.keyval == gtk.keysyms.F8: #minus
-                self.set_volume( max( 0, self.get_volume() - 0.10 ))
-            elif event.keyval == gtk.keysyms.Left: # seek back
+            if event.keyval == gtk.keysyms.Left: # seek back
                 self.do_seek( -1 * settings.seek_long )
             elif event.keyval == gtk.keysyms.Right: # seek forward
                 self.do_seek( settings.seek_long )
             elif event.keyval == gtk.keysyms.Return: # play/pause
                 self.on_btn_play_pause_clicked()
-
-    # The following two functions get and set the
-    #   volume from the volume control widgets.
-    def get_volume(self):
-        if platform.MAEMO:
-            return self.volume.get_level()/100.0
-        else:
-            return self.volume.get_value()
-
-    def set_volume(self, vol):
-        """ vol is a float from 0 to 1 """
-        assert 0 <= vol <= 1
-
-        if platform.FREMANTLE:
-            # No volume setting on Maemo 5
-            return
-
-        if platform.MAEMO:
-            self.volume.set_level(vol*100.0)
-        else:
-            self.volume.set_value(vol)
-
-    def __set_volume_hide_timer(self, timeout, force_show=False):
-        if force_show or self.volume_button.get_active():
-            self.volume.show()
-            if self.volume_timer_id is not None:
-                gobject.source_remove(self.volume_timer_id)
-                self.volume_timer_id = None
-
-            self.volume_timer_id = gobject.timeout_add(
-                1000 * timeout, self.__volume_hide_callback )
-
-    def __volume_hide_callback(self):
-        self.volume_timer_id = None
-        self.volume.hide()
-        return False
-
-    def toggle_volumebar(self, widget=None):
-        if self.volume_timer_id is None:
-            self.__set_volume_hide_timer(5)
-        else:
-           self.__volume_hide_callback()
-
-    def volume_changed_gtk(self, widget, new_value=0.5):
-        settings.volume = new_value
-
-    def volume_changed_hildon(self, widget):
-        self.__set_volume_hide_timer( 4, force_show=True )
-        settings.volume = widget.get_level()/100.0
-
-    def mute_toggled(self, widget):
-        if widget.get_mute():
-            settings.volume = 0
-        else:
-            settings.volume = widget.get_level()/100.0
 
     def on_player_stopped(self):
         self.stop_progress_timer()
