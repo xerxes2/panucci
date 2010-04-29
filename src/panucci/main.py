@@ -265,7 +265,6 @@ class PanucciGUI(object):
         self.main_window.show_all()
         
         # this should be done when the gui is ready
-        self.pickle_file_conversion()
         player.init(filepath=filename)
 
     def create_actions(self):
@@ -534,22 +533,6 @@ class PanucciGUI(object):
         # and switch to it (so we can edit bookmarks, etc.. there)
         self.__playlist_tab.select_current_item()
         self.playlist_window.show()
-    
-    def pickle_file_conversion(self):
-        pickle_file = os.path.expanduser('~/.rmp-bookmarks')
-        if os.path.isfile(pickle_file):
-            import pickle_converter
-
-            self.__log.info(
-                util.notify( _('Converting old pickle format to SQLite.') ))
-            self.__log.info( util.notify( _('This may take a while...') ))
-
-            if pickle_converter.load_pickle_file(pickle_file):
-                self.__log.info(
-                    util.notify( _('Pickle file converted successfully.') ))
-            else:
-                self.__log.error( util.notify(
-                    _('Error converting pickle file, check your log...') ))
 
 ##################################################
 # PlayerTab                            
