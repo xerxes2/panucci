@@ -603,9 +603,7 @@ class PlayerTab(ObservableService, gtk.HBox):
 
         # vbox to hold metadata
         metadata_vbox = gtk.VBox()
-        metadata_vbox.set_spacing(8)
-        empty_label = gtk.Label()
-        metadata_vbox.pack_start(empty_label, True, True)
+        metadata_vbox.pack_start(gtk.Image(), True, True)
         self.artist_label = gtk.Label('')
         self.artist_label.set_ellipsize(pango.ELLIPSIZE_END)
         metadata_vbox.pack_start(self.artist_label, False, False)
@@ -619,8 +617,7 @@ class PlayerTab(ObservableService, gtk.HBox):
                                                   delay_halfway=3000)
         self.title_label.scrolling = settings.scrolling_labels
         metadata_vbox.pack_start(self.title_label, False, False)
-        empty_label = gtk.Label()
-        metadata_vbox.pack_start(empty_label, True, True)
+        metadata_vbox.pack_start(gtk.Image(), True, True)
         metadata_hbox.pack_start( metadata_vbox, True, True )
 
         progress_eventbox = gtk.EventBox()
