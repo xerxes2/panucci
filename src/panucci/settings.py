@@ -20,17 +20,11 @@
 from __future__ import absolute_import
 
 import logging
-import os.path
 
-from panucci.services import ObservableService
+import panucci
 
-SIGNAL_NAME_SUFFIX = '_changed'
-
-# If you add a setting _please_ update the schemas file
-
-default_settings = {
+DEFAULTS = {
     'allow_blanking'            : True,
-    'db_location'               : '~/.panucci.sqlite',
     'dual_action_button_delay'  : 0.5,
     'enable_dual_action_btn'    : True,
     'enable_hardware_decoding'  : False,
@@ -40,34 +34,24 @@ default_settings = {
     'scrolling_labels'          : True,
     'seek_long'                 : 60,
     'seek_short'                : 10,
-    'supported_extensions'      : 'mp2,mp3,mp4,ogg,m4a,wav',
-    'temp_playlist'             : '~/.panucci.m3u',
     'volume'                    : 0.3,
 }
 
-class Settings(ObservableService):
-    """ A settings manager for Panucci. A signal is emitted when any
-        setting is changed; signal names are devised as follows:
-            setting_name + SIGNAL_NAME_SUFFIX
-
-        The signal prototype is: def callback( new_value )"""
-
+class Settings(object):
     def __init__(self):
         self.__log = logging.getLogger('panucci.settings.Settings')
-        signals = [ k + SIGNAL_NAME_SUFFIX for k in default_settings.keys() ]
-        ObservableService.__init__( self, signals, log=self.__log )
 
     def __getattr__(self, key):
-        if default_settings.has_key(key):
+        if DEFAULTS.has_key(key):
             # FIXME: Load settings from somewhere
-            return default_settings[key]
+            return DEFAULTS[key]
         else:
             self.__log.warning('Setting "%s" doesn\'t exist.' % key)
             raise AttributeError
 
     def __setattr__(self, key, value):
-        if default_settings.has_key(key):
-            if type(value) == type(default_settings[key]):
+        if DEFAULTS.has_key(key):
+            if type(value) == type(DEFAULTS[key]):
                 # Don't set the value if it's the same as it used to be
                 #if getattr(self, key) != value:
                 # FIXME: Save setting somewhere
@@ -77,7 +61,7 @@ class Settings(ObservableService):
                 self.__log.warning(
                     'Type of "%s" (%s) does not match default type (%s)',
                     key, type(value).__name__,
-                    type(default_settings[key]).__name__ )
+                    type(DEFAULTS[key]).__name__ )
         else:
             object.__setattr__( self, key, value )
             self.__log.warning('Setting "%s" doesn\'t exist.', key)

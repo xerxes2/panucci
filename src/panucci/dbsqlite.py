@@ -33,7 +33,7 @@ try:
 except ImportError:
     log.critical('Error importing sqlite, FAIL!')
 
-from panucci.settings import settings
+import panucci
 
 class Storage(object):
     def __init__(self, db_file):
@@ -377,5 +377,5 @@ class Storage(object):
 
         return row
 
-db = Storage(os.path.expanduser(settings.db_location))
+db = Storage(os.path.expanduser(panucci.DATABASE_FILE))
 

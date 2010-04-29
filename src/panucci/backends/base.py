@@ -68,7 +68,7 @@ class BasePlayer(ObservableService):
     def __init__(self):
         self.__log = logging.getLogger('panucci.backends.BasePlayer')
         ObservableService.__init__(self, self.signals, self.__log)
-        settings.register( 'volume_changed', self._set_volume_level )
+        #settings.register( 'volume_changed', self._set_volume_level )
 
         # Cached copies of position and duration
         self.__position, self.__duration = 0, 0

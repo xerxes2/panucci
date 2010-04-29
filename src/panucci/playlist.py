@@ -28,19 +28,19 @@ import logging
 from hashlib import md5
 from xml.sax.saxutils import escape
 
+import panucci
+
 from panucci.dbsqlite import db
-from panucci.settings import settings
 from panucci.services import ObservableService
 
 from panucci import util
 
-def is_supported( filename ):
-    if settings.supported_extensions:
-        supported = settings.supported_extensions.lower().split(',')
-        filepath, extension = os.path.splitext(filename)
-        return extension.lower().replace('.','') in supported
-    else:
-        return True # if the string is empty, allow anything
+def is_supported(uri):
+    filename, extension = os.path.splitext(uri)
+    if extension.startswith('.'):
+        extension = extension[1:]
+
+    return (extension.lower() in panucci.EXTENSIONS)
 
 class Playlist(ObservableService):
     signals = [ 'new-track-loaded', 'new-metadata-available', 'file_queued',
@@ -119,8 +119,7 @@ class Playlist(ObservableService):
         return True
 
     def save_temp_playlist(self):
-        filepath = os.path.expanduser(settings.temp_playlist)
-        return self.save_to_new_playlist(filepath)
+        return self.save_to_new_playlist(panucci.PLAYLIST_FILE)
 
     def on_queue_current_item_changed(self):
         self.notify( 'new-track-loaded',
@@ -375,8 +374,7 @@ class Playlist(ObservableService):
         self.load_from_resume_bookmark()
         self.__queue.disable_notifications = False
 
-        self.__queue.modified = os.path.expanduser(
-            settings.temp_playlist ) == self.filepath
+        self.__queue.modified = (self.filepath == panucci.PLAYLIST_FILE)
 
         self.notify( 'new-track-loaded', caller=self.load )
         self.notify( 'new-metadata-available', caller=self.load )
@@ -425,7 +423,7 @@ class Playlist(ObservableService):
                 self.__log.info('Directory load aborted by user.')
                 return False
 
-        self.filepath = settings.temp_playlist
+        self.filepath = panucci.PLAYLIST_FILE
         self.__queue.playlist_id = self.id
 
         items = []

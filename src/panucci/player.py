@@ -62,7 +62,7 @@ class PanucciPlayer(ForwardingObservableService):
         self.playlist.register( 'new-track-loaded', self.on_new_track )
         self.playlist.register( 'seek-requested', self.do_seek )
         self.playlist.register( 'stop-requested', self.on_stop_requested )
-        settings.register( 'volume_changed', self._set_volume_level )
+        #settings.register( 'volume_changed', self._set_volume_level )
 
         # Register the d-bus interface only once we're ready
         interface.register_player(self)

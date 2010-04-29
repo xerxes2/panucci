@@ -253,7 +253,7 @@ class PanucciGUI(object):
         player.playlist.register( 'file_queued', self.on_file_queued )
 
         self.__anti_blank_timer = None
-        settings.register('allow_blanking_changed',self.__set_anti_blank_timer)
+        #settings.register('allow_blanking_changed',self.__set_anti_blank_timer)
         self.__set_anti_blank_timer( settings.allow_blanking )
 
         player.playlist.register( 'playlist-to-be-overwritten',
@@ -367,12 +367,10 @@ class PanucciGUI(object):
         self.recent_files = player.playlist.get_recent_files(max_files)
         menu_recent_sub = gtk.Menu()
 
-        temp_playlist = os.path.expanduser(settings.temp_playlist)
-
         if len(self.recent_files) > 0:
             for f in self.recent_files:
                 # don't include the temporary playlist in the file list
-                if f == temp_playlist: continue
+                if f == panucci.PLAYLIST_FILE: continue
                 # don't include non-existant files
                 if not os.path.exists( f ): continue
                 filename, extension = os.path.splitext(os.path.basename(f))
@@ -557,13 +555,13 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.has_coverart = False
         self.set_volume(settings.volume)
 
-        settings.register( 'enable_dual_action_btn_changed',
-                           self.on_dual_action_setting_changed )
-        settings.register( 'dual_action_button_delay_changed',
-                           self.on_dual_action_setting_changed )
-        settings.register( 'volume_changed', self.set_volume )
-        settings.register( 'scrolling_labels_changed', lambda v:
-                           setattr( self.title_label, 'scrolling', v ) )
+        #settings.register( 'enable_dual_action_btn_changed',
+        #                   self.on_dual_action_setting_changed )
+        #settings.register( 'dual_action_button_delay_changed',
+        #                   self.on_dual_action_setting_changed )
+        #settings.register( 'volume_changed', self.set_volume )
+        #settings.register( 'scrolling_labels_changed', lambda v:
+        #                   setattr( self.title_label, 'scrolling', v ) )
 
         player.register( 'stopped', self.on_player_stopped )
         player.register( 'playing', self.on_player_playing )
