@@ -30,6 +30,13 @@ PACKAGES = [d2p(d) for d, dd, ff in os.walk(SRC_DIR) if '__init__.py' in ff]
 
 SCRIPTS = glob.glob('bin/*')
 
+if not os.path.exists('data/panucci.service'):
+    print >>sys.stderr, """
+    data/panucci.service not found. Maybe you want to run
+    "make install" instead of using setup.py directly?
+    """
+    sys.exit(1)
+
 DATA_FILES = [
     ('share/panucci', glob.glob('icons/*.png')),
     ('share/applications', ['data/panucci.desktop']),
@@ -37,7 +44,15 @@ DATA_FILES = [
     ('share/dbus-1/services', ['data/panucci.service']),
 ]
 
-for mofile in glob.glob('data/locale/*/LC_MESSAGES/panucci.mo'):
+mo_files = glob.glob('data/locale/*/LC_MESSAGES/panucci.mo')
+
+if len(mo_files) == 0:
+    print >>sys.stderr, """
+    Warning: No translation files found. Maybe you want to
+    run "make install" instead of using setup.py directly?
+    """
+
+for mofile in mo_files:
     modir = os.path.dirname(mofile).replace('data', 'share')
     DATA_FILES.append((modir, [mofile]))
 
