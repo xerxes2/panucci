@@ -75,12 +75,16 @@ coverart_sizes = {
 gtk.icon_size_register('panucci-button', 32, 32)
 
 def find_image(filename):
-    locations = ['./icons/', '../icons/', '/usr/share/panucci/',
-        os.path.dirname(sys.argv[0])+'/../icons/']
+    bin_dir = os.path.dirname(sys.argv[0])
+    locations = [
+            os.path.join(bin_dir, '..', 'share', 'panucci'),
+            os.path.join(bin_dir, '..', 'icons'),
+    ]
 
     for location in locations:
-        if os.path.exists(location+filename):
-            return os.path.abspath(location+filename)
+        fn = os.path.abspath(os.path.join(location, filename))
+        if os.path.exists(fn):
+            return fn
 
 def generate_image(filename, is_stock=False):
     image = None
