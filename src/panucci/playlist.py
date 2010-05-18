@@ -24,6 +24,7 @@ import time
 import os.path
 import os
 import re
+import dbus
 import logging
 from hashlib import md5
 from xml.sax.saxutils import escape
@@ -949,8 +950,35 @@ class FileMetadata(object):
 
         self.__metadata_extracted = False
 
+    def _ask_gpodder_for_metadata(self):
+        GPO_NAME = 'org.gpodder'
+        GPO_PATH = '/podcasts'
+        GPO_INTF = 'org.gpodder.podcasts'
+
+        bus = dbus.SessionBus()
+        try:
+            if bus.name_has_owner(GPO_NAME):
+                o = bus.get_object(GPO_NAME, GPO_PATH)
+                i = dbus.Interface(o, GPO_INTF)
+                episode, podcast = i.get_episode_title(self.__filepath)
+                if episode and podcast:
+                    self.title = episode
+                    self.artist = podcast
+                    self.__metadata_extracted = True
+                    return True
+        except Exception, e:
+            self.__log.debug('Cannot get metadata from gPodder: %s', str(e))
+
+        return False
+
     def extract_metadata(self):
         self.__log.debug('Extracting metadata for %s', self.__filepath)
+
+        if self._ask_gpodder_for_metadata():
+            if self.coverart is None:
+                self.coverart = self.__find_coverart()
+            return
+
         filetype = util.detect_filetype(self.__filepath)
 
         if filetype == 'mp3':
