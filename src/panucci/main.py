@@ -65,6 +65,8 @@ about_name = 'Panucci'
 about_text = _('Resuming audiobook and podcast player')
 about_authors = ['Thomas Perl', 'Nick (nikosapi)', 'Matthew Taylor']
 about_website = 'http://panucci.garage.maemo.org/'
+about_bugtracker = 'http://bugs.maemo.org/enter_bug.cgi?product=Panucci'
+about_donate = 'http://gpodder.org/donate'
 
 coverart_sizes = {
     'normal'            : 110,
@@ -224,7 +226,10 @@ class PanucciGUI(object):
         # Build the base ui (window and menubar)
         if platform.MAEMO:
             self.app = hildon.Program()
-            window = hildon.Window()
+            if platform.FREMANTLE:
+                window = hildon.StackableWindow()
+            else:
+                window = hildon.Window()
             self.app.add_window(window)
         else:
             window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -244,7 +249,10 @@ class PanucciGUI(object):
         self.__player_tab = PlayerTab(self)
         self.__playlist_tab = PlaylistTab(self)
 
-        self.playlist_window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        if platform.FREMANTLE:
+            self.playlist_window = hildon.StackableWindow()
+        else:
+            self.playlist_window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.playlist_window.connect('delete-event', gtk.Widget.hide_on_delete)
         self.playlist_window.set_title(_('Panucci playlist'))
         self.playlist_window.set_transient_for(self.main_window)
@@ -525,16 +533,20 @@ class PanucciGUI(object):
                     self.notify( 'Error adding %s to the queue.' % filename))
 
     def about_callback(self, widget):
-        dialog = gtk.AboutDialog()
-        dialog.set_transient_for(self.main_window)
-        dialog.set_website(about_website)
-        dialog.set_website_label(about_website)
-        dialog.set_name(about_name)
-        dialog.set_authors(about_authors)
-        dialog.set_comments(about_text)
-        dialog.set_version(panucci.__version__)
-        dialog.run()
-        dialog.destroy()
+        from panucci.aboutdialog import HeAboutDialog
+
+        authors = ', '.join(about_authors[:-1])
+        authors += ' and ' + about_authors[-1]
+
+        HeAboutDialog.present(self.main_window,
+                about_name,
+                'panucci',
+                panucci.__version__,
+                about_text,
+                '(c) 2008-2010 ' + authors,
+                about_website,
+                about_bugtracker,
+                about_donate)
 
     def _play_file(self, filename, pause_on_load=False):
         player.playlist.load( os.path.abspath(filename) )
@@ -684,6 +696,12 @@ class PlayerTab(ObservableService, gtk.HBox):
                 lambda *args: self.notify('select-current-item-request'))
         buttonbox.add(self.bookmarks_button)
         self.set_controls_sensitivity(False)
+
+        for child in buttonbox.get_children():
+            if isinstance(child, gtk.Button):
+                child.set_name('HildonButton-thumb')
+        buttonbox.set_size_request(-1, 105)
+
         main_vbox.pack_start(buttonbox, False, False)
 
         if platform.MAEMO:
@@ -961,6 +979,11 @@ class PlaylistTab(gtk.VBox):
         self.info_button.connect('clicked', self.show_playlist_item_details)
         self.hbox.pack_start(self.info_button, True, True)
 
+        for child in self.hbox.get_children():
+            if isinstance(child, gtk.Button):
+                child.set_name('HildonButton-thumb')
+        self.hbox.set_size_request(-1, 105)
+
         self.pack_start(self.hbox, False, True)
 
         player.playlist.register( 'file_queued',
@@ -1145,9 +1168,11 @@ class PlaylistTab(gtk.VBox):
 ##################################################
 class PlaylistItemDetails(gtk.Dialog):
     def __init__(self, main, playlist_item):
-        gtk.Dialog.__init__( self, _('Playlist item details'),
-                             main.main_window, gtk.DIALOG_MODAL,
-                             (gtk.STOCK_CLOSE, gtk.RESPONSE_OK))
+        gtk.Dialog.__init__(self, _('Playlist item details'),
+                            main.main_window, gtk.DIALOG_MODAL)
+
+        if not platform.FREMANTLE:
+            self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_OK)
 
         self.main = main
         self.fill(playlist_item)
@@ -1220,7 +1245,8 @@ class PlaylistItemDetails(gtk.Dialog):
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         e = gtk.Expander(_('Bookmarks'))
         e.add(sw)
-        self.vbox.pack_start(e)
+        if not platform.MAEMO:
+            self.vbox.pack_start(e)
 
 
 def run(filename=None):
