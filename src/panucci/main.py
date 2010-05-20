@@ -34,6 +34,8 @@ import gtk
 import gobject
 import pango
 
+import cgi
+
 import panucci
 
 from panucci import widgets
@@ -254,14 +256,17 @@ class PanucciGUI(object):
         else:
             self.playlist_window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.playlist_window.connect('delete-event', gtk.Widget.hide_on_delete)
-        self.playlist_window.set_title(_('Panucci playlist'))
+        self.playlist_window.set_title(_('Playlist'))
         self.playlist_window.set_transient_for(self.main_window)
         self.playlist_window.add(self.__playlist_tab)
 
         self.create_actions()
 
         if platform.MAEMO:
-            window.set_menu(self.create_menu())
+            if platform.FREMANTLE:
+                window.set_app_menu(self.create_app_menu())
+            else:
+                window.set_menu(self.create_menu())
             window.add(self.__player_tab)
         else:
             menu_vbox = gtk.VBox()
@@ -333,6 +338,20 @@ class PanucciGUI(object):
         help_menu.append(self.action_about.create_menu_item())
         help_menu_item.set_submenu(help_menu)
         menu_bar.append(help_menu_item)
+
+    def create_app_menu(self):
+        menu = hildon.AppMenu()
+
+        b = gtk.Button(_('Playlist'))
+        b.connect('clicked', lambda b: self.__player_tab.notify('select-current-item-request'))
+        menu.append(b)
+
+        b = gtk.Button(_('About'))
+        b.connect('clicked', self.about_callback)
+        menu.append(b)
+
+        menu.show_all()
+        return menu
 
     def create_menu(self):
         # the main menu
@@ -624,7 +643,11 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.artist_label.set_ellipsize(pango.ELLIPSIZE_END)
         metadata_vbox.pack_start(self.artist_label, False, False)
         self.album_label = gtk.Label('')
-        self.album_label.modify_font(pango.FontDescription('normal 8'))
+        if platform.FREMANTLE:
+            hildon.hildon_helper_set_logical_font(self.album_label, 'SmallSystemFont')
+            hildon.hildon_helper_set_logical_color(self.album_label, gtk.RC_FG, gtk.STATE_NORMAL, 'SecondaryTextColor')
+        else:
+            self.album_label.modify_font(pango.FontDescription('normal 8'))
         self.album_label.set_ellipsize(pango.ELLIPSIZE_END)
         metadata_vbox.pack_start(self.album_label, False, False)
         self.title_label = widgets.ScrollingLabel('',
@@ -654,9 +677,15 @@ class PlayerTab(ObservableService, gtk.HBox):
         buttonbox = gtk.HBox()
 
         # A wrapper to help create DualActionButtons with the right settings
-        create_da = lambda a, b, c=None, d=None: widgets.DualActionButton(
-            a, b, c, d, settings.dual_action_button_delay,
-            settings.enable_dual_action_btn )
+        def create_da(widget, action, widget2=None, action2=None):
+            if platform.FREMANTLE:
+                widget2 = None
+                action2 = None
+
+            return widgets.DualActionButton(widget, action, \
+                    widget2, action2, \
+                    settings.dual_action_button_delay, \
+                    settings.enable_dual_action_btn)
 
         self.rrewind_button = create_da(
                 generate_image('media-skip-backward.png'),
@@ -864,16 +893,19 @@ class PlayerTab(ObservableService, gtk.HBox):
         # set the text metadata
         for tag,value in tag_message.iteritems():
             if tags.has_key(tag) and value is not None and value.strip():
-                tags[tag].set_markup('<big>'+value+'</big>')
+                tags[tag].set_markup('<big>'+cgi.escape(value)+'</big>')
                 tags[tag].set_alignment( 0.5*int(not self.has_coverart), 0.5)
                 tags[tag].show()
 
             if tag == 'title':
                 # make the title bold
-                tags[tag].set_markup('<b><big>'+value+'</big></b>')
+                tags[tag].set_markup('<b><big>'+cgi.escape(value)+'</big></b>')
 
                 if not platform.MAEMO:
                     value += ' - Panucci'
+
+                if platform.FREMANTLE and len(value) > 25:
+                    value = value[:24] + '...'
 
                 self.__gui_root.main_window.set_title( value )
 

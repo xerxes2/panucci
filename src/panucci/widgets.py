@@ -24,6 +24,8 @@ import gtk
 import gobject
 import pango
 
+from panucci import platform
+
 class DualActionButton(gtk.Button):
     """
     This button allows the user to carry out two different actions,
@@ -222,6 +224,13 @@ class ScrollingLabel(gtk.DrawingArea):
         self.__scrolling_possible = False
         self.__scrolling = False
 
+        if platform.FREMANTLE:
+            self._fg = gtk.gdk.color_parse('#fff')
+        else:
+            l = gtk.Label()
+            s = l.get_style()
+            self._fg = s.text[gtk.STATE_NORMAL]
+
         # user-defined parameters (can be changed on-the-fly)
         self.update_interval = update_interval
         self.delay_btwn_scrolls = delay_btwn_scrolls
@@ -276,8 +285,9 @@ class ScrollingLabel(gtk.DrawingArea):
         if self.__graphics_context is None:
             self.__graphics_context = self.window.new_gc()
 
-        self.window.draw_layout( self.__graphics_context,
-                                 int(self.__x_offset), 0, self.__pango_layout )
+        self.window.draw_layout(self.__graphics_context,
+                                int(self.__x_offset), 0, self.__pango_layout,
+                                self._fg)
 
     def __reset_widget( self ):
         """ Reset the offset and find out whether or not it's even possible
