@@ -697,10 +697,11 @@ class PlayerTab(ObservableService, gtk.HBox):
         buttonbox.add(self.bookmarks_button)
         self.set_controls_sensitivity(False)
 
-        for child in buttonbox.get_children():
-            if isinstance(child, gtk.Button):
-                child.set_name('HildonButton-thumb')
-        buttonbox.set_size_request(-1, 105)
+        if platform.FREMANTLE:
+            for child in buttonbox.get_children():
+                if isinstance(child, gtk.Button):
+                    child.set_name('HildonButton-thumb')
+            buttonbox.set_size_request(-1, 105)
 
         main_vbox.pack_start(buttonbox, False, False)
 
@@ -979,10 +980,11 @@ class PlaylistTab(gtk.VBox):
         self.info_button.connect('clicked', self.show_playlist_item_details)
         self.hbox.pack_start(self.info_button, True, True)
 
-        for child in self.hbox.get_children():
-            if isinstance(child, gtk.Button):
-                child.set_name('HildonButton-thumb')
-        self.hbox.set_size_request(-1, 105)
+        if platform.FREMANTLE:
+            for child in self.hbox.get_children():
+                if isinstance(child, gtk.Button):
+                    child.set_name('HildonButton-thumb')
+            self.hbox.set_size_request(-1, 105)
 
         self.pack_start(self.hbox, False, True)
 
