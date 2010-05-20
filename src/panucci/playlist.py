@@ -160,7 +160,7 @@ class Playlist(ObservableService):
 
     def load_from_bookmark_id( self, item_id=None, bookmark_id=None ):
         item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)
-        if self.__queue.current_item != item_id:
+        if str(self.__queue.current_item) != item_id:
             self.notify('stop-requested', caller=self.load_from_bookmark_id)
 
         if item is not None:
