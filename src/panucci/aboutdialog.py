@@ -24,6 +24,8 @@ import hildon
 import gtk
 import dbus
 
+_ = lambda x: x
+
 class HeAboutDialog(gtk.Dialog):
     RESPONSE_WEBSITE, \
     RESPONSE_BUGTRACKER, \
