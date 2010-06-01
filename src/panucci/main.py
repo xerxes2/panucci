@@ -893,7 +893,10 @@ class PlayerTab(ObservableService, gtk.HBox):
         # set the text metadata
         for tag,value in tag_message.iteritems():
             if tags.has_key(tag) and value is not None and value.strip():
-                tags[tag].set_markup('<big>'+cgi.escape(value)+'</big>')
+                try:
+                    tags[tag].set_markup('<big>'+cgi.escape(value)+'</big>')
+                except TypeError, e:
+                    self.__log.exception(str(e))
                 tags[tag].set_alignment( 0.5*int(not self.has_coverart), 0.5)
                 tags[tag].show()
 
