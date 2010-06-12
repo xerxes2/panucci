@@ -117,7 +117,10 @@ class PanucciPlayer(ForwardingObservableService):
         """ New track callback; stops the player and starts the new track. """
 
         if self.playlist.current_filepath is not None:
-            self.load_media( "file://" + self.playlist.current_filepath )
+            filepath = self.playlist.current_filepath
+            if filepath.startswith('/'):
+                filepath = 'file://' + filepath
+            self.load_media(filepath)
 
             # This is just here to prevent the player from starting to play
             # when it is first opened. The first time this function is called it
@@ -129,8 +132,8 @@ class PanucciPlayer(ForwardingObservableService):
 
     def do_seek(self, from_beginning=None, from_current=None, percent=None):
         pos, dur = self.get_position_duration()
-        pos_sec = pos / 10**9
-        dur_sec = dur / 10**9
+        pos_sec = max(0, pos / 10**9)
+        dur_sec = max(0, dur / 10**9)
 
         if self._is_playing and self.current_file:
             interface.PlaybackStopped(self._start_position, pos_sec, dur_sec, self.current_file)
@@ -159,8 +162,8 @@ class PanucciPlayer(ForwardingObservableService):
 
     def on_stopped(self, *args):
         pos, dur = self.get_position_duration()
-        pos_sec = pos / 10**9 or 0
-        dur_sec = dur / 10**9 or 0
+        pos_sec = max(0, pos / 10**9)
+        dur_sec = max(0, dur / 10**9)
         if self.current_file is not None:
             interface.PlaybackStopped(self._start_position, pos_sec, dur_sec, self.current_file)
         self._is_playing = False

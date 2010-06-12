@@ -583,7 +583,8 @@ class Queue(list, ObservableService):
         assert isinstance( item, PlaylistItem )
         item.playlist_id = self.playlist_id
 
-        if os.path.isfile(item.filepath) and is_supported(item.filepath):
+        if '://' in item.filepath or (os.path.isfile(item.filepath) and \
+                is_supported(item.filepath)):
             self.modified = True
             return True
         else:
@@ -1037,6 +1038,11 @@ class FileMetadata(object):
 
     def __find_coverart(self):
         """ Find coverart in the same directory as the filepath """
+
+        if '://' in self.__filepath and \
+                not self.__filepath.startswith('file://'):
+            # No cover art for streaming at the moment
+            return None
 
         directory = os.path.dirname(self.__filepath)
         for cover in self.__find_coverart_filepath(directory):

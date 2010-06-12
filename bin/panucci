@@ -67,7 +67,11 @@ from panucci import platform
 platform.detect()
 
 if args:
-    filepath = os.path.abspath(args[0])
+    if '://' in args[0]:
+        # Assume a URL (HTTP, HTTPs, etc...)
+        filepath = args[0]
+    else:
+        filepath = os.path.abspath(args[0])
 elif opts.queue_filename:
     filepath = os.path.abspath(opts.queue_filename)
 else:
