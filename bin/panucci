@@ -66,6 +66,11 @@ import panucci
 from panucci import platform
 platform.detect()
 
+if platform.FREMANTLE:
+    # Workaround Maemo bug 6694 (Playback in Silent mode)
+    import gobject
+    gobject.set_application_name('FMRadio')
+
 if args:
     if '://' in args[0]:
         # Assume a URL (HTTP, HTTPs, etc...)
