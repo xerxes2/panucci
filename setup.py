@@ -30,7 +30,7 @@ PACKAGES = [d2p(d) for d, dd, ff in os.walk(SRC_DIR) if '__init__.py' in ff]
 
 SCRIPTS = glob.glob('bin/*')
 
-if not os.path.exists('data/panucci.service'):
+if not os.path.exists('data/panucci.service') and 'clean' not in sys.argv:
     print >>sys.stderr, """
     data/panucci.service not found. Maybe you want to run
     "make install" instead of using setup.py directly?

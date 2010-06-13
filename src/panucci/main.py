@@ -83,6 +83,7 @@ def find_image(filename):
     locations = [
             os.path.join(bin_dir, '..', 'share', 'panucci'),
             os.path.join(bin_dir, '..', 'icons'),
+            '/opt/panucci',
     ]
 
     for location in locations:

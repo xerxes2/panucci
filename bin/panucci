@@ -60,6 +60,10 @@ local_module_dir = os.path.join(os.path.dirname(sys.argv[0]), '..', 'src')
 if os.path.isdir(local_module_dir):
     sys.path.append(local_module_dir)
 
+optified_install_path = '/opt/panucci/lib/'
+if os.path.isdir(optified_install_path):
+    sys.path.insert(0, optified_install_path)
+
 import panucci
 
 # Detect the platform we're running on
@@ -112,9 +116,12 @@ def init_logging( log_level ):
 # Attempt to contact an already-running copy of Panucci
 session_bus = dbus.SessionBus()
 try:
-    remote_object = session_bus.get_object(
-        'org.panucci.panucciInterface', '/panucciInterface' )
-    print 'Found panucci instance already running, will try to use it...'
+    if session_bus.name_has_owner('org.panucci.panucciInterface'):
+        remote_object = session_bus.get_object(
+            'org.panucci.panucciInterface', '/panucciInterface' )
+        print 'Found panucci instance already running, will try to use it...'
+    else:
+        remote_object = None
 except dbus.exceptions.DBusException:
     remote_object = None
 

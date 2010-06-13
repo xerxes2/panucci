@@ -10,5 +10,5 @@ Categories=Audio;GTK;
 StartupWMClass=panucci
 StartupNotify=true
 X-Osso-Type=application/x-executable
-X-Osso-Service=org.panucci
+X-Osso-Service=org.panucci.pannuciInterface
 X-HildonDesk-ShowInToolbar=true
