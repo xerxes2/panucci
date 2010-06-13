@@ -36,7 +36,7 @@ class MaemoDevice(object):
 
         Calling this function will keep the backlight turned on.
         """
-        self.anti_blank_timer_id is not None:
+        if self.anti_blank_timer_id is not None:
             self.anti_blank_timer_id = gobject.timeout_add(1000*59, \
                     self._blanking_timer_callback)
 
