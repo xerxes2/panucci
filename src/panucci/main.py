@@ -448,6 +448,15 @@ class PanucciGUI(object):
         player.quit()
         gtk.main_quit()
 
+    def set_progress_indicator(self, loading_title=False):
+        if platform.FREMANTLE:
+            if loading_title:
+                self.main_window.set_title(_('Loading...'))
+            hildon.hildon_gtk_window_set_progress_indicator(self.main_window, \
+                    True)
+            while gtk.events_pending():
+                gtk.main_iteration(False)
+
     def show_main_window(self):
         self.main_window.present()
 
@@ -784,6 +793,9 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.start_progress_timer()
         image(self.play_pause_button, 'media-playback-pause.png')
         self.set_controls_sensitivity(True)
+        if platform.FREMANTLE:
+            hildon.hildon_gtk_window_set_progress_indicator(\
+                    self.__gui_root.main_window, False)
 
     def on_player_new_track(self):
         for widget in [self.title_label,self.artist_label,self.album_label]:

@@ -451,6 +451,10 @@ class Playlist(ObservableService):
     # Playlist controls
     ##################################
 
+    def set_seek_to(self, position):
+        """Set the seek-to position for the current track"""
+        self.__queue.current_item.seek_to = (10**9) * position
+
     def play(self):
         """ This gets called by the player to get
                 the last time the file was paused """
