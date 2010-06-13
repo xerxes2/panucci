@@ -12,7 +12,7 @@
 CHANGELOG	= debian/changelog
 DOCS		= #AUTHORS README
 
-PYTHON		= /usr/bin/python
+PYTHON		= /usr/bin/python2.5
 SETUP		= ${PYTHON} setup.py
 
 DEBPACKAGE	= panucci
