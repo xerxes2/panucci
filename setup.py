@@ -62,10 +62,10 @@ import panucci
 setup(
         name='Panucci',
         version=panucci.__version__,
-        description='Resuming audibook and podcast player',
+        description='Resuming audiobook and podcast player',
         author='Thomas Perl',
         author_email='thp@gpodder.org',
-        url='http://panucci.garage.maemo.org/',
+        url='http://gpodder.org/panucci/',
         packages=PACKAGES,
         package_dir={ '': SRC_DIR },
         scripts=SCRIPTS,

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # This file is part of Panucci.
 # Copyright (c) 2008-2010 The Panucci Audiobook and Podcast Player Project
@@ -66,9 +67,10 @@ from panucci.services import ObservableService
 about_name = 'Panucci'
 about_text = _('Resuming audiobook and podcast player')
 about_authors = ['Thomas Perl', 'Nick (nikosapi)', 'Matthew Taylor']
-about_website = 'http://panucci.garage.maemo.org/'
+about_website = 'http://gpodder.org/panucci/'
 about_bugtracker = 'http://bugs.maemo.org/enter_bug.cgi?product=Panucci'
 about_donate = 'http://gpodder.org/donate'
+about_copyright = '© 2008-2010 Thomas Perl and the Panucci Team'
 
 coverart_sizes = {
     'normal'            : 110,
@@ -562,20 +564,31 @@ class PanucciGUI(object):
                     self.notify( 'Error adding %s to the queue.' % filename))
 
     def about_callback(self, widget):
-        from panucci.aboutdialog import HeAboutDialog
+        if platform.FREMANTLE:
+            from panucci.aboutdialog import HeAboutDialog
 
-        authors = ', '.join(about_authors[:-1])
-        authors += ' and ' + about_authors[-1]
-
-        HeAboutDialog.present(self.main_window,
-                about_name,
-                'panucci',
-                panucci.__version__,
-                about_text,
-                '(c) 2008-2010 ' + authors,
-                about_website,
-                about_bugtracker,
-                about_donate)
+            HeAboutDialog.present(self.main_window,
+                    about_name,
+                    'panucci',
+                    panucci.__version__,
+                    about_text,
+                    about_copyright,
+                    about_website,
+                    about_bugtracker,
+                    about_donate)
+        else:
+            about = gtk.AboutDialog()
+            about.set_transient_for(self.main_window)
+            about.set_name(about_name)
+            about.set_version(panucci.__version__)
+            about.set_copyright(about_copyright)
+            about.set_comments(about_text)
+            about.set_website(about_website)
+            about.set_authors(about_authors)
+            about.set_translator_credits(_('translator-credits'))
+            about.set_logo_icon_name('panucci')
+            about.run()
+            about.destroy()
 
     def _play_file(self, filename, pause_on_load=False):
         player.playlist.load( os.path.abspath(filename) )
