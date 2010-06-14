@@ -448,6 +448,7 @@ class PanucciGUI(object):
             hildon.hildon_banner_show_information_with_markup(self.main_window, None, markup)
 
     def destroy(self, widget):
+        widget.hide()
         player.quit()
         gtk.main_quit()
 
