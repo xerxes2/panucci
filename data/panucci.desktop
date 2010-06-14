@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Panucci Resuming Player
+Name=Panucci
 GenericName=Resuming audiobook and podcast player
 Comment=Resume audiobooks or podcasts from last point, or set bookmarks
 Exec=panucci
@@ -7,8 +7,3 @@ Icon=panucci
 Terminal=false
 Type=Application
 Categories=Audio;GTK;
-StartupWMClass=panucci
-StartupNotify=true
-X-Osso-Type=application/x-executable
-X-Osso-Service=org.panucci.pannuciInterface
-X-HildonDesk-ShowInToolbar=true
