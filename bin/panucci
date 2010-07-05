@@ -58,7 +58,7 @@ if len(args) > 1 or ( opts.queue_filename and len(args) ):
 # add src/ to the PYTHONPATH
 local_module_dir = os.path.join(os.path.dirname(sys.argv[0]), '..', 'src')
 if os.path.isdir(local_module_dir):
-    sys.path.append(local_module_dir)
+    sys.path.insert(0, local_module_dir)
 
 optified_install_path = '/opt/panucci/lib/'
 if os.path.isdir(optified_install_path):
