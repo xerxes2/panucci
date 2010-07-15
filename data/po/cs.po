@@ -1,0 +1,221 @@
+# Panucci translation template.
+# Copyright (C) 2009 Panucci Contributors
+# This file is distributed under the same license as the Panucci package.
+#
+# Nick Nobody <me@nikosapi.org>, 2009, 2004.
+msgid ""
+msgstr ""
+"Project-Id-Version: Panucci 0.4\n"
+"Report-Msgid-Bugs-To: gpodder-panucci@lists.berlios.de\n"
+"POT-Creation-Date: 2009-12-30 11:13-0500\n"
+"PO-Revision-Date: 2004-01-01 01:41+0100\n"
+"Last-Translator: \n"
+"Language-Team: Czech <kde-i18n-doc@kde.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 1.0\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+
+#: bin/panucci:100
+msgid "Found panucci instance already running, will try to use it..."
+msgstr ""
+"Nalezena běžící instance programu Panucci. Provede se pokus ji využít..."
+
+#: src/panucci/panucci.py:56
+msgid "Resuming audiobook and podcast player"
+msgstr ""
+"Obnovuje se přehrávač knih převedených do podoby zvuku a datových proudů"
+
+#: src/panucci/panucci.py:154
+msgid "Select file to save playlist to"
+msgstr "Vybrat soubor, do něhož se má uložit seznam skladeb"
+
+#: src/panucci/panucci.py:159
+msgid "Select podcast or audiobook"
+msgstr "Vybrat knihu převedenou do podoby zvuku a datový proud"
+
+#: src/panucci/panucci.py:242
+msgid "Player"
+msgstr "Přehrávač"
+
+#: src/panucci/panucci.py:248
+msgid "Playlist"
+msgstr "Seznam skladeb"
+
+#: src/panucci/panucci.py:285
+msgid "Open playlist"
+msgstr "Otevřít seznam skladeb"
+
+#: src/panucci/panucci.py:292
+msgid "Open recent playlist"
+msgstr "Otevřít poslední seznam skladeb"
+
+#: src/panucci/panucci.py:298 src/panucci/panucci.py:381
+msgid "Save current playlist"
+msgstr "Uložit nynější seznam skladeb"
+
+#: src/panucci/panucci.py:307
+msgid "Settings"
+msgstr "Nastavení"
+
+#: src/panucci/panucci.py:314
+msgid "Enable dual-action buttons"
+msgstr "Zapnout tlačítka umožňující provádět dvě činnosti"
+
+#: src/panucci/panucci.py:321
+msgid "Enable hardware decoding"
+msgstr "Zapnout hardwarové dekódování"
+
+#: src/panucci/panucci.py:326
+msgid "Lock Progress Bar"
+msgstr "Zamknout pruh s postupem"
+
+#: src/panucci/panucci.py:361
+msgid "No recent files available."
+msgstr "Nejsou dostupné žádné naposledy otevřené soubory."
+
+#: src/panucci/panucci.py:382
+msgid "Current playlist has been modified"
+msgstr "Nynější seznam skladeb byl upraven"
+
+#: src/panucci/panucci.py:383
+msgid "Opening a new file will replace the current playlist. "
+msgstr "Otevřením nového souboru dojde k nahrazení nynějšího seznamu skladeb. "
+
+#: src/panucci/panucci.py:384
+msgid "Do you want to save it before creating a new one?"
+msgstr "Chcete uložit současný seznam předtím, než bude vytvořen nový?"
+
+#: src/panucci/panucci.py:386
+msgid "Discard changes"
+msgstr "Zahodit změny"
+
+#: src/panucci/panucci.py:419 src/panucci/panucci.py:420
+msgid "File already exists"
+msgstr "Soubor již existuje"
+
+#: src/panucci/panucci.py:421
+#, python-format
+msgid ""
+"The file %s already exists. You can choose another name or overwrite the "
+"existing file."
+msgstr ""
+"Soubor %s již existuje. Můžete vybrat jiný název, "
+"anebo přepsat stávající soubor."
+
+#: src/panucci/panucci.py:424
+msgid "Rename file"
+msgstr "Přejmenovat soubor"
+
+#: src/panucci/panucci.py:436
+msgid "Error saving playlist..."
+msgstr "Chyba při ukládání seznamu skladeb..."
+
+#: src/panucci/panucci.py:520
+msgid "Converting old pickle format to SQLite."
+msgstr "Převádí se starý formát \"pickle\" (nálev) na SQLite."
+
+#: src/panucci/panucci.py:521
+msgid "This may take a while..."
+msgstr "Může to chvíli trvat..."
+
+#: src/panucci/panucci.py:525
+msgid "Pickle file converted successfully."
+msgstr "Soubor \"pickle\" byl úspěšně převeden."
+
+#: src/panucci/panucci.py:528
+msgid "Error converting pickle file, check your log..."
+msgstr ""
+"Chyba při převádění souboru \"pickle\". Podívejte se na soubor se zápisem..."
+
+#: src/panucci/panucci.py:951
+msgid "Name"
+msgstr "Název"
+
+#: src/panucci/panucci.py:960
+msgid "Position"
+msgstr "Poloha"
+
+#: src/panucci/panucci.py:989
+msgid "Add File"
+msgstr "Přidat soubor"
+
+#: src/panucci/panucci.py:995
+msgid "Add Directory"
+msgstr "Přidat adresář"
+
+#: src/panucci/panucci.py:1121
+#, python-format
+msgid "Bookmark added: %s"
+msgstr "Záložka přidána: %s"
+
+#: src/panucci/panucci.py:1203
+msgid "Playlist item details"
+msgstr "Podrobnosti k položce seznamu skladeb"
+
+#: src/panucci/panucci.py:1221
+msgid "Custom title:"
+msgstr "Uživatelsky stanovený název:"
+
+#: src/panucci/panucci.py:1222
+msgid "ID:"
+msgstr "ID:"
+
+#: src/panucci/panucci.py:1223
+msgid "Playlist ID:"
+msgstr "ID seznamu skladeb:"
+
+#: src/panucci/panucci.py:1224
+msgid "Filepath:"
+msgstr "Cesta k souboru:"
+
+#: src/panucci/panucci.py:1236
+msgid "<not modified>"
+msgstr "<nezměněno>"
+
+#: src/panucci/panucci.py:1247
+msgid "<not set>"
+msgstr "<nenastaveno>"
+
+#: src/panucci/panucci.py:1262
+msgid "Title"
+msgstr "Název"
+
+#: src/panucci/panucci.py:1265
+msgid "Time"
+msgstr "Čas"
+
+#: src/panucci/panucci.py:1276
+msgid "Bookmarks"
+msgstr "Záložky"
+
+#: src/panucci/pickle_converter.py:55 src/panucci/pickle_converter.py:66
+#: src/panucci/playlist.py:470
+msgid "Auto Bookmark"
+msgstr "Automatické záložky"
+
+#: src/panucci/backends/base.py:27
+msgid "No media selected"
+msgstr "Nevybrána žádná multimédia"
+
+#: src/panucci/backends/base.py:28
+msgid "Unsupported filetype."
+msgstr "Nepodporovaný souborový typ."
+
+#: src/panucci/backends/base.py:29
+msgid "Something wrong with the backend"
+msgstr "S jádrem něco není v pořádku"
+
+#: src/panucci/backends/base.py:30
+msgid "Hardware blocked/in-use"
+msgstr "Prostředky blokovány/používají se"
+
+#: src/panucci/backends/base.py:31
+msgid "File is corrupted/incomplete"
+msgstr "Soubor je poškozen nebo není úplný"
+
+#: src/panucci/backends/base.py:32
+msgid "File not found, make sure the file still exists."
+msgstr "Soubor nebyl nalezen. Ujistěte se, prosím, že soubor stále existuje."
+
