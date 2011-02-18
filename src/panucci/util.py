@@ -21,6 +21,13 @@ from __future__ import absolute_import
 
 import os.path
 
+about_name = 'Panucci'
+about_text = _('Resuming audiobook and podcast player')
+about_authors = ['Thomas Perl', 'Nick (nikosapi)', 'Matthew Taylor', 'Jens Persson']
+about_website = 'http://gpodder.org/panucci/'
+about_bugtracker = 'http://bugs.maemo.org/enter_bug.cgi?product=Panucci'
+about_donate = 'http://gpodder.org/donate'
+about_copyright = 'GPL3 © 2008-2011 The Panucci Team'
 
 def convert_ns(time_int):
     """Convert nanosecond values into strings
@@ -52,7 +59,6 @@ def convert_ns(time_int):
 
     return time_str
 
-
 def detect_filetype(filepath):
     """Return the file type (extension) of a file path
 
@@ -63,7 +69,6 @@ def detect_filetype(filepath):
         extension = extension[1:]
     return extension.lower()
 
-
 def pretty_filename(filename):
     """Return a prettified version of a filename
 
@@ -73,5 +78,3 @@ def pretty_filename(filename):
     filename, extension = os.path.splitext(filename)
     basename = os.path.basename(filename)
     return basename.replace('_', ' ')
-
-

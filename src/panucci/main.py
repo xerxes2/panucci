@@ -25,7 +25,6 @@
 
 from __future__ import absolute_import
 
-
 import logging
 import sys
 import os, os.path
@@ -63,14 +62,6 @@ from panucci.settings import settings
 from panucci.player import player
 from panucci.dbusinterface import interface
 from panucci.services import ObservableService
-
-about_name = 'Panucci'
-about_text = _('Resuming audiobook and podcast player')
-about_authors = ['Thomas Perl', 'Nick (nikosapi)', 'Matthew Taylor']
-about_website = 'http://gpodder.org/panucci/'
-about_bugtracker = 'http://bugs.maemo.org/enter_bug.cgi?product=Panucci'
-about_donate = 'http://gpodder.org/donate'
-about_copyright = '© 2008-2010 Thomas Perl and the Panucci Team'
 
 coverart_sizes = {
     'normal'            : 110,
@@ -569,23 +560,23 @@ class PanucciGUI(object):
             from panucci.aboutdialog import HeAboutDialog
 
             HeAboutDialog.present(self.main_window,
-                    about_name,
+                    util.about_name,
                     'panucci',
                     panucci.__version__,
-                    about_text,
-                    about_copyright,
-                    about_website,
-                    about_bugtracker,
-                    about_donate)
+                    util.about_text,
+                    util.about_copyright,
+                    util.about_website,
+                    util.about_bugtracker,
+                    util.about_donate)
         else:
             about = gtk.AboutDialog()
             about.set_transient_for(self.main_window)
-            about.set_name(about_name)
+            about.set_name(util.about_name)
             about.set_version(panucci.__version__)
-            about.set_copyright(about_copyright)
-            about.set_comments(about_text)
-            about.set_website(about_website)
-            about.set_authors(about_authors)
+            about.set_copyright(util.about_copyright)
+            about.set_comments(util.about_text)
+            about.set_website(util.about_website)
+            about.set_authors(util.about_authors)
             about.set_translator_credits(_('translator-credits'))
             about.set_logo_icon_name('panucci')
             about.run()
@@ -945,8 +936,6 @@ class PlayerTab(ObservableService, gtk.HBox):
             # Preemptively update the progressbar to make seeking smoother
             self.set_progress_callback( *resp )
 
-
-
 ##################################################
 # PlaylistTab
 ##################################################
@@ -1222,7 +1211,6 @@ class PlaylistTab(gtk.VBox):
             if not player.playing:
                 player.play()
 
-
 ##################################################
 # PlaylistItemDetails
 ##################################################
@@ -1308,7 +1296,6 @@ class PlaylistItemDetails(gtk.Dialog):
         if not platform.MAEMO:
             self.vbox.pack_start(e)
 
-
 def run(filename=None):
     PanucciGUI(filename)
     gtk.main()
@@ -1317,4 +1304,3 @@ if __name__ == '__main__':
     log.error( 'Use the "panucci" executable to run this program.' )
     log.error( 'Exiting...' )
     sys.exit(1)
-
