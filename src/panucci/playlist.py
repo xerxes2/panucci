@@ -516,6 +516,7 @@ class Playlist(ObservableService):
                 else:
                     skip = 0
 
+        self.notify('stop-requested', caller=self.skip)
         self.__queue.current_item_position = skip
         self.__log.debug( 'Skipping to file %d (%s)', skip,
                           self.__queue.current_item.filepath )
