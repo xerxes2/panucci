@@ -821,6 +821,7 @@ class PlayerTab(ObservableService, gtk.HBox):
             position = player.playlist.get_current_position()
             estimated_length = metadata.get('length', 0)
             self.set_progress_callback( position, estimated_length )
+            player.set_position_duration(position, 0)
 
     def on_player_paused( self, position, duration ):
         self.stop_progress_timer() # This should save some power

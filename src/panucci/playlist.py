@@ -408,8 +408,8 @@ class Playlist(ObservableService):
             self.__queue.disable_notifications = False
             self.__queue.modified = (recent[0] == panucci.PLAYLIST_FILE)
             self.notify( 'stop-requested', caller=self.load )
-            self.notify( 'new-track-loaded', caller=self.load )
-            self.notify( 'new-metadata-available', caller=self.load )
+            self.notify( 'new-track-loaded', caller=self.load_last_played )
+            self.notify( 'new-metadata-available', caller=self.load_last_played )
         return bool(recent)
 
     def __file_queued(self, filepath, successfull, notify):

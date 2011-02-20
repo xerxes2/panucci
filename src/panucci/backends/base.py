@@ -25,7 +25,6 @@ import panucci
 
 from panucci import services
 
-
 class BasePlayer(services.ObservableService):
     """ The player base class, this can't be used directly because most of
         the important functions need to be filled in by subclasses.
@@ -166,6 +165,12 @@ class BasePlayer(services.ObservableService):
         """ A cached version of _get_position_duration """
         if self.playing:
             self.__position, self.__duration = self._get_position_duration()
+
+        return self.__position, self.__duration
+
+    def set_position_duration(self, pos, dur):
+        """ used for setting pos and dur on startup"""
+        self.__position, self.__duration = pos, dur
 
         return self.__position, self.__duration
 

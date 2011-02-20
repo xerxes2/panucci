@@ -28,7 +28,6 @@ from panucci import util
 
 from panucci.backends import base
 
-
 class GStreamerPlayer(base.BasePlayer):
     """ A player that uses Gstreamer for playback """
 
