@@ -59,6 +59,7 @@ class PanucciPlayer(ForwardingObservableService):
         self.playlist.register( 'new-track-loaded', self.on_new_track )
         self.playlist.register( 'seek-requested', self.do_seek )
         self.playlist.register( 'stop-requested', self.on_stop_requested )
+        self.playlist.register( 'reset-playlist', self.on_reset_playlist )
 
         # Register the d-bus interface only once we're ready
         interface.register_player(self)
@@ -178,6 +179,11 @@ class PanucciPlayer(ForwardingObservableService):
     def on_stop_requested(self):
         self.playlist.stop( self.get_position_duration()[0] )
         self.stop()
+        self._is_playing = False
+
+    def on_reset_playlist(self):
+        self.on_stop_requested()
+        self.__player.reset_position_duration()
 
     def on_player_error(self, msg):
         self.__log.error("Error: %s", msg)
@@ -189,4 +195,3 @@ class PanucciPlayer(ForwardingObservableService):
 
 # there should only ever be one panucciPlayer object
 player = PanucciPlayer(gstreamer.GStreamerPlayer())
-

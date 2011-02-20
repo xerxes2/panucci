@@ -46,7 +46,7 @@ def is_supported(uri):
 class Playlist(ObservableService):
     signals = [ 'new-track-loaded', 'new-metadata-available', 'file_queued',
                 'bookmark_added', 'seek-requested', 'end-of-playlist',
-                'playlist-to-be-overwritten', 'stop-requested' ]
+                'playlist-to-be-overwritten', 'stop-requested', 'reset-playlist' ]
 
     def __init__(self):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
@@ -56,7 +56,9 @@ class Playlist(ObservableService):
         self.__queue.register(
             'current_item_changed', self.on_queue_current_item_changed )
 
-        self.reset_playlist()
+        #self.reset_playlist()
+        self.filepath = None
+        self._id = None
 
     def reset_playlist(self):
         """ Sets the playlist to a default "known" state """
@@ -64,6 +66,8 @@ class Playlist(ObservableService):
         self.filepath = None
         self._id = None
         self.__queue.clear()
+        self.stop(None, False)
+        self.notify('reset-playlist', caller=self.reset_playlist)
 
     @property
     def id(self):
@@ -343,19 +347,23 @@ class Playlist(ObservableService):
             the appropriate loader function """
         self.__log.debug('Attempting to load %s', filepath)
 
+        # I'm not sure this is needed anymore.
+        """
         if ( self.queue_modified and
             not self.notify( 'playlist-to-be-overwritten', caller=self.load )):
 
             self.__log.info('Loading file aborted by user.')
             return False
-
+        """
         self.notify( 'stop-requested', caller=self.load )
 
         error = False
-        self.reset_playlist()
+        #self.reset_playlist()
         self.filepath = filepath
         self.__queue.playlist_id = self.id
 
+        # Thinking of moving this
+        """
         parsers = { 'm3u': M3U_Playlist, 'pls': PLS_Playlist }
         extension = util.detect_filetype(filepath)
         if parsers.has_key(extension): # importing a playlist
@@ -369,15 +377,14 @@ class Playlist(ObservableService):
                 return False
         else:                          # importing a single file
             error = not self.append(filepath, notify=False)
-
+        """
         # if we let the queue emit a current_item_changed signal (which will
         # happen if load_from_bookmark changes the current track), the player
         # will start playing and ingore the resume point
         self.__queue.disable_notifications = True
         self.load_from_resume_bookmark()
         self.__queue.disable_notifications = False
-
-        self.__queue.modified = (self.filepath == panucci.PLAYLIST_FILE)
+        self.__queue.modified = True
 
         self.notify( 'new-track-loaded', caller=self.load )
         self.notify( 'new-metadata-available', caller=self.load )
@@ -387,8 +394,22 @@ class Playlist(ObservableService):
     def load_last_played(self):
         recent = self.get_recent_files(max_files=1)
         if recent:
-            self.load(recent[0])
+            parsers = { 'm3u': M3U_Playlist, 'pls': PLS_Playlist }
+            extension = util.detect_filetype(recent[0])
+            if parsers.has_key(extension): # importing a playlist
+                self.__log.info('Loading playlist file (%s)', extension)
+                parser = parsers[extension](recent[0], self.__queue)
 
+                if parser.parse(recent[0]):
+                    self.__queue = parser.get_queue()
+                    self.__file_queued( recent[0], True, False )
+            self.__queue.disable_notifications = True
+            self.load_from_resume_bookmark()
+            self.__queue.disable_notifications = False
+            self.__queue.modified = (recent[0] == panucci.PLAYLIST_FILE)
+            self.notify( 'stop-requested', caller=self.load )
+            self.notify( 'new-track-loaded', caller=self.load )
+            self.notify( 'new-metadata-available', caller=self.load )
         return bool(recent)
 
     def __file_queued(self, filepath, successfull, notify):
@@ -400,9 +421,11 @@ class Playlist(ObservableService):
 
     def append(self, filepath, notify=True):
         self.__log.debug('Attempting to queue file: %s', filepath)
+        _play = self.__queue.is_empty()
         success = self.__queue.append(
             PlaylistItem.create_by_filepath(filepath, filepath) )
-
+        if success and _play:
+            self.load(filepath)
         return self.__file_queued( filepath, success, notify)
 
     def insert(self, position, filepath ):
@@ -469,7 +492,6 @@ class Playlist(ObservableService):
     def stop(self, position, save_resume_point=True):
         """ This should be run when the program is closed
                 or if the user switches playlists """
-
         self.remove_resume_bookmarks()
         if not self.is_empty and save_resume_point:
             self.__queue.current_item.save_bookmark(
@@ -623,15 +645,27 @@ class Queue(list, ObservableService):
     def clear(self):
         """ Reset the the queue to a known state """
 
+        try:
+            items = self.__mapping_dict.values()
+            for item in items:
+              list.remove(self, item)
+        except:
+          pass
         self[:] = []
         self.playlist_id = None
-        self.modified = False
+        self.modified = True
         self.__current_item_position = 0
         self.__mapping_dict = {}
 
     def get_item(self, item_id):
         return self.__mapping_dict.get(item_id)
 
+    def is_empty(self):
+        if self.__mapping_dict:
+            return False
+        else:
+            return True
+  
     def get_bookmark(self, item_id, bookmark_id):
         item = self.get_item(item_id)
 
@@ -1344,5 +1378,3 @@ class PLS_Playlist(PlaylistFile):
             self._file.write('Length%d=%s\n\n' % (i+1, length))
 
         self._file.write('Version=2\n')
-
-

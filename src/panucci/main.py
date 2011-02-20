@@ -636,6 +636,8 @@ class PlayerTab(ObservableService, gtk.HBox):
                                   self.on_player_new_track )
         player.playlist.register( 'new-metadata-available',
                                   self.on_player_new_metadata )
+        player.playlist.register( 'reset-playlist',
+                                  self.on_player_reset_playlist )
 
     def make_player_tab(self):
         main_vbox = gtk.VBox()
@@ -827,6 +829,11 @@ class PlayerTab(ObservableService, gtk.HBox):
 
     def on_player_end_of_playlist(self, loop):
         pass
+
+    def on_player_reset_playlist(self):
+        self.on_player_stopped()
+        self.on_player_new_track()
+        self.reset_progress()
 
     def reset_progress(self):
         self.progress.set_fraction(0)
@@ -1027,6 +1034,12 @@ class PlaylistTab(gtk.VBox):
         self.info_button.connect('clicked', self.show_playlist_item_details)
         self.hbox.pack_start(self.info_button, True, True)
 
+        self.empty_button = gtk.Button()
+        self.empty_button.add(
+                gtk.image_new_from_stock(gtk.STOCK_DELETE, gtk.ICON_SIZE_BUTTON))
+        self.empty_button.connect('clicked', self.empty_bookmark)
+        self.hbox.pack_start(self.empty_button, True, True)
+
         if platform.FREMANTLE:
             for child in self.hbox.get_children():
                 if isinstance(child, gtk.Button):
@@ -1208,8 +1221,12 @@ class PlaylistTab(gtk.VBox):
             player.playlist.load_from_bookmark_id(item_id, bkmk_id)
 
             # FIXME: The player/playlist should be able to take care of this
-            if not player.playing:
-                player.play()
+            #if not player.playing:
+            #    player.play()
+
+    def empty_bookmark(self, w):
+        player.playlist.reset_playlist()
+        self.treeview.get_model().clear()
 
 ##################################################
 # PlaylistItemDetails

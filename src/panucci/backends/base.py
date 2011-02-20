@@ -177,3 +177,5 @@ class BasePlayer(services.ObservableService):
         """ Is the player playing? """
         return self.get_state() == self.STATE_PLAYING
 
+    def reset_position_duration(self):
+      self.__position, self.__duration = 0, 0

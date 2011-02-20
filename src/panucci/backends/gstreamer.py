@@ -154,4 +154,3 @@ class GStreamerPlayer(base.BasePlayer):
                 message.structure['new-state'] == gst.STATE_PLAYING ):
 
                 self.notify('playing', caller=self.__on_message)
-
