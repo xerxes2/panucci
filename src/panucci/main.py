@@ -814,12 +814,12 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.has_coverart = False
 
     def on_player_new_metadata(self):
-        metadata = player.playlist.get_file_metadata()
-        self.set_metadata(metadata)
+        self.metadata = player.playlist.get_file_metadata()
+        self.set_metadata(self.metadata)
 
         if not player.playing:
             position = player.playlist.get_current_position()
-            estimated_length = metadata.get('length', 0)
+            estimated_length = self.metadata.get('length', 0)
             self.set_progress_callback( position, estimated_length )
             player.set_position_duration(position, 0)
 
@@ -829,7 +829,11 @@ class PlayerTab(ObservableService, gtk.HBox):
         image(self.play_pause_button, 'media-playback-start.png')
 
     def on_player_end_of_playlist(self, loop):
-        pass
+        if not loop:
+            player.stop_end_of_playlist()
+            estimated_length = self.metadata.get('length', 0)
+            self.set_progress_callback( 0, estimated_length )
+            player.set_position_duration(0, 0)
 
     def on_player_reset_playlist(self):
         self.on_player_stopped()

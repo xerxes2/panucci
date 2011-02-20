@@ -168,7 +168,7 @@ class PanucciPlayer(ForwardingObservableService):
         if self.current_file is not None:
             interface.PlaybackStopped(self._start_position, pos_sec, dur_sec, self.current_file)
         self._is_playing = False
-    
+
     def on_eof(self, *args):
         self.playlist.next()
 

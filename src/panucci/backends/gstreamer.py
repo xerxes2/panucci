@@ -88,6 +88,13 @@ class GStreamerPlayer(base.BasePlayer):
             self._player.set_state(gst.STATE_NULL)
             self._player = None
 
+    def stop_end_of_playlist(self):
+        self.notify('stopped', caller=self.stop)
+
+        if self._player is not None:
+            #position, duration = self.get_position_duration()
+            self._player.set_state(gst.STATE_NULL)
+
     def _seek(self, position):
         self.seeking = True
         error = False
