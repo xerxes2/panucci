@@ -286,7 +286,7 @@ class Playlist(ObservableService):
         """ Returns an iterator which yields a tuple which contains the
             item's unique ID and a dict of interesting data (currently
             just the title). """
-
+        
         for item in self.__queue:
             yield str(item), { 'title' : item.title }
 

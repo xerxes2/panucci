@@ -35,12 +35,15 @@ class panucciInterface(dbus.service.Object):
         self.player = None
         self.gui = None
         self.headset_device = None
-
-        #    headset_button = dbus.SystemBus().get_object(
-        #        'org.freedesktop.Hal', '/org/freedesktop/Hal/devices/'
-        #        'platform_retu_headset_logicaldev_input' )
-        #    self.headset_device = dbus.Interface(
-        #        headset_button, 'org.freedesktop.Hal.Device')
+        
+        try:
+            headset_button = dbus.SystemBus().get_object(
+                'org.freedesktop.Hal', '/org/freedesktop/Hal/devices/'
+                'platform_retu_headset_logicaldev_input' )
+            self.headset_device = dbus.Interface(
+                headset_button, 'org.freedesktop.Hal.Device')
+        except:
+          pass
 
     def register_player(self, player):
         self.__log.debug('Registered player.')
