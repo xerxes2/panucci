@@ -72,10 +72,14 @@ class GStreamerPlayer(base.BasePlayer):
 
     def play(self):
         have_player = self._player is not None
-        if have_player or self.__setup_player():
+        
+        # Don't think this is needed
+        #if have_player or self.__setup_player():
+        if have_player:
             self._initial_seek_completed = have_player
             self._player.set_state(gst.STATE_PLAYING)
             return True
+           
         else:
             # should something happen here? perhaps self.stop()?
             return False
