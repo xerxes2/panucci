@@ -300,8 +300,10 @@ class PanucciGUI(object):
             self.set_progress_callback(pos_int, dur_int)
 
     def create_actions(self):
-        self.action_open = gtk.Action('open', _('Open'), _('Open a file or playlist'), gtk.STOCK_OPEN)
+        self.action_open = gtk.Action('open_file', _('Open file'), _('Open a file or playlist'), gtk.STOCK_OPEN)
         self.action_open.connect('activate', self.open_file_callback)
+        self.action_open_dir = gtk.Action('open_dir', _('Open directory'), _('Open a directory'), gtk.STOCK_DIRECTORY)
+        self.action_open_dir.connect('activate', self.open_dir_callback)
         self.action_save = gtk.Action('save', _('Save playlist'), _('Save current playlist to file'), gtk.STOCK_SAVE_AS)
         self.action_save.connect('activate', self.save_to_playlist_callback)
         self.action_playlist = gtk.Action('playlist', _('Playlist'), _('Open the current playlist'), None)
@@ -315,6 +317,7 @@ class PanucciGUI(object):
         file_menu_item = gtk.MenuItem(_('File'))
         file_menu = gtk.Menu()
         file_menu.append(self.action_open.create_menu_item())
+        file_menu.append(self.action_open_dir.create_menu_item())
         file_menu.append(self.action_save.create_menu_item())
         file_menu.append(gtk.SeparatorMenuItem())
         file_menu.append(self.action_quit.create_menu_item())
@@ -491,6 +494,11 @@ class PanucciGUI(object):
                 self._play_file(filename)
 
             self.__ignore_queue_check = False
+    
+    def open_dir_callback(self, widget=None):
+        filename = get_file_from_filechooser(self.main_window, folder=True)
+        if filename is not None:
+            self._play_file(filename)
 
     def save_to_playlist_callback(self, widget=None):
         filename = get_file_from_filechooser(
