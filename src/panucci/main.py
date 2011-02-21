@@ -483,7 +483,7 @@ class PanucciGUI(object):
             return True
 
     def open_file_callback(self, widget=None):
-        if self.check_queue():
+        #if self.check_queue():
             # set __ingnore__queue_check because we already did the check
             self.__ignore_queue_check = True
             filename = get_file_from_filechooser(self.main_window)
