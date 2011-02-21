@@ -1159,13 +1159,13 @@ class PlaylistTab(gtk.VBox):
     def add_file(self, widget):
         filename = get_file_from_filechooser(self.main.main_window)
         if filename is not None:
-            player.playlist.append(filename)
+            player.playlist.load(filename)
 
     def add_directory(self, widget):
         directory = get_file_from_filechooser(
             self.main.main_window, folder=True )
         if directory is not None:
-            player.playlist.load_directory(directory, append=True)
+            player.playlist.load(directory)
 
     def __cur_selection(self):
         selection = self.treeview.get_selection()
