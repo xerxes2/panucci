@@ -1075,29 +1075,30 @@ class PlaylistTab(gtk.VBox):
 
         self.dir_button = gtk.Button(gtk.STOCK_OPEN)
         self.dir_button.set_use_stock(True)
-        set_stock_button_text( self.dir_button, _('Add Directory') )
+        set_stock_button_text( self.dir_button, _('Add Folder') )
         self.dir_button.connect('clicked', self.add_directory)
         self.hbox.pack_start(self.dir_button, True, True)
 
-        self.remove_button = gtk.Button(gtk.STOCK_REMOVE)
-        self.remove_button.set_use_stock(True)
+        self.remove_button = gtk.Button(stock=gtk.STOCK_REMOVE)
         self.remove_button.connect('clicked', self.remove_bookmark)
         self.hbox.pack_start(self.remove_button, True, True)
 
-        self.jump_button = gtk.Button(gtk.STOCK_JUMP_TO)
-        self.jump_button.set_use_stock(True)
+        self.jump_button = gtk.Button(stock=gtk.STOCK_JUMP_TO)
         self.jump_button.connect('clicked', self.jump_bookmark)
         self.hbox.pack_start(self.jump_button, True, True)
 
-        self.info_button = gtk.Button()
-        self.info_button.add(
-                gtk.image_new_from_stock(gtk.STOCK_INFO, gtk.ICON_SIZE_BUTTON))
+        if platform.FREMANTLE:
+            self.info_button = gtk.Button(_('Info'))
+        else:
+            self.info_button = gtk.Button(stock=gtk.STOCK_INFO)
+
         self.info_button.connect('clicked', self.show_playlist_item_details)
         self.hbox.pack_start(self.info_button, True, True)
 
-        self.empty_button = gtk.Button()
-        self.empty_button.add(
-                gtk.image_new_from_stock(gtk.STOCK_DELETE, gtk.ICON_SIZE_BUTTON))
+        if platform.FREMANTLE:
+            self.empty_button = gtk.Button(_('Clear'))
+        else:
+            self.empty_button = gtk.Button(stock=gtk.STOCK_DELETE)
         self.empty_button.connect('clicked', self.empty_bookmark)
         self.hbox.pack_start(self.empty_button, True, True)
 

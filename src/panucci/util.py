@@ -27,7 +27,7 @@ about_authors = ['Thomas Perl', 'Nick (nikosapi)', 'Matthew Taylor', 'Jens Perss
 about_website = 'http://gpodder.org/panucci/'
 about_bugtracker = 'http://bugs.maemo.org/enter_bug.cgi?product=Panucci'
 about_donate = 'http://gpodder.org/donate'
-about_copyright = 'GPL3 © 2008-2011 The Panucci Team'
+about_copyright = 'Copyright (c) 2008-2011 The Panucci Project'
 
 def convert_ns(time_int):
     """Convert nanosecond values into strings
