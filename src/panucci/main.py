@@ -277,58 +277,40 @@ class PanucciGUI(object):
         self.__ignore_queue_check = False
         self.__window_fullscreen = False
 
-        if platform.MAEMO and interface.headset_device is not None:
-            print platform.MAEMO
-            print interface.headset_device
-            print 'Enable play/pause with headset button'  
+        if platform.MAEMO and interface.headset_device:
             # Enable play/pause with headset button
-            interface.headset_device.connect_to_signal('Condition', self.handle_headset_button)
+            interface.headset_device.connect_to_signal('Condition', \
+                    self.handle_headset_button)
+            system_bus = dbus.SystemBus()
 
             # Monitor connection state of BT headset
-            system_bus = dbus.SystemBus()
+            PATH = '/org/freedesktop/Hal/devices/computer_logicaldev_input_1'
             def handler_func(device_path):
-                if device_path == '/org/freedesktop/Hal/devices/computer_logicaldev_input_1' and settings.play_on_headset and not player.playing:
-                    player.play() 
-            system_bus.add_signal_receiver(handler_func, 'DeviceAdded', 'org.freedesktop.Hal.Manager', None,
-                                           '/org/freedesktop/Hal/Manager')
-            # End Monitor connection state of BT headset 
+                if device_path == PATH and \
+                        settings.play_on_headset and \
+                        not player.playing:
+                    player.play()
+            system_bus.add_signal_receiver(handler_func, 'DeviceAdded', \
+                    'org.freedesktop.Hal.Manager', None, \
+                    '/org/freedesktop/Hal/Manager')
+            # End Monitor connection state of BT headset
 
             # Monitor BT headset buttons
-            system_bus = dbus.SystemBus()
             def handle_bt_button(signal, button):
-                # See https://bugs.maemo.org/show_bug.cgi?id=8283 for details
+                # See http://bugs.maemo.org/8283 for details
                 if signal == 'ButtonPressed':
-                    print 'Bluetooth Button pressed'
-                    
                     if button == 'play-cd':
                         player.play_pause_toggle()
                     elif button == 'pause-cd':
                         player.pause()
                     elif button == 'next-song':
-                        #self.seekbutton_callback(None, short_seek)
-                        print 'Bluetooth Button FWD pressed'
-                        #lambda: self.do_seek(settings.seek_short)
-                        #self.do_seek(settings.seek_short)
- 
-
-                        # Helmuth Kadusch: not very elegant, but it works... 
-                        #  was this better? 
-                        # self.do_seek(settings.seek_short)
-                        # Not working for me... 
-
                         self.__player_tab.do_seek(settings.seek_short)
-
                     elif button == 'previous-song':
-                        # self.seekbutton_callback(None, -1*short_seek)
-                        print 'Bluetooth Button REW pressed'
-                        # lambda: self.do_seek(-1*settings.seek_short)
-                        # self.do_seek(-1*settings.seek_short)
                         self.__player_tab.do_seek(-1*settings.seek_short)
 
-
-            system_bus.add_signal_receiver(handle_bt_button, 'Condition', 'org.freedesktop.Hal.Device', None,
-                                           '/org/freedesktop/Hal/devices/computer_logicaldev_input_1')
-            # End Monitor BT headset buttons 
+            system_bus.add_signal_receiver(handle_bt_button, 'Condition', \
+                    'org.freedesktop.Hal.Device', None, PATH)
+            # End Monitor BT headset buttons
 
         self.main_window.connect('key-press-event', self.on_key_press)
         player.playlist.register( 'file_queued', self.on_file_queued )

@@ -27,6 +27,9 @@ session_bus = dbus.SessionBus()
 
 class panucciInterface(dbus.service.Object):
     """ Panucci's d-bus interface """
+    HEADSET_NAME = 'org.freedesktop.Hal'
+    HEADSET_PATH = '/org/freedesktop/Hal/devices/platform_retu_headset_logicaldev_input'
+    HEADSET_INTF = 'org.freedesktop.Hal.Device'
 
     def __init__(self, bus_name, path='/panucciInterface'):
         self.__log = logging.getLogger('panucci.dbusinterface.panucciInterface')
@@ -35,15 +38,13 @@ class panucciInterface(dbus.service.Object):
         self.player = None
         self.gui = None
         self.headset_device = None
-        
+
         try:
-            headset_button = dbus.SystemBus().get_object(
-                'org.freedesktop.Hal', '/org/freedesktop/Hal/devices/'
-                'platform_retu_headset_logicaldev_input' )
-            self.headset_device = dbus.Interface(
-                headset_button, 'org.freedesktop.Hal.Device')
-        except:
-          pass
+            bus = dbus.SystemBus()
+            headset = bus.get_object(self.HEADSET_NAME, self.HEADSET_PATH)
+            self.headset_device = dbus.Interface(headset, self.HEADSET_INTF)
+        except Exception, e:
+            self.__log.debug('Could not find headset object (on Maemo)')
 
     def register_player(self, player):
         self.__log.debug('Registered player.')
