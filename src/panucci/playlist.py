@@ -56,7 +56,6 @@ class Playlist(ObservableService):
         self.__queue.register(
             'current_item_changed', self.on_queue_current_item_changed )
 
-        #self.reset_playlist()
         self.filepath = None
         self._id = None
 
@@ -347,16 +346,6 @@ class Playlist(ObservableService):
             the appropriate loader function """
         self.__log.debug('Attempting to load %s', filepath)
         _play = self.__queue.is_empty()
-
-        # I'm not sure this is needed anymore.
-        """
-        if ( self.queue_modified and
-            not self.notify( 'playlist-to-be-overwritten', caller=self.load )):
-
-            self.__log.info('Loading file aborted by user.')
-            return False
-        """
-
         error = False
 
         if os.path.isdir(filepath):
@@ -407,11 +396,8 @@ class Playlist(ObservableService):
 
     def append(self, filepath, notify=True):
         self.__log.debug('Attempting to queue file: %s', filepath)
-        #_play = self.__queue.is_empty()
         success = self.__queue.append(
             PlaylistItem.create_by_filepath(filepath, filepath) )
-        #if success and _play:
-        #    self.load(filepath)
         return self.__file_queued( filepath, success, notify)
 
     def insert(self, position, filepath ):
