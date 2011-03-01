@@ -1283,8 +1283,6 @@ class PlaylistTab(gtk.VBox):
             player.playlist.load_from_bookmark_id(item_id, bkmk_id)
 
             # FIXME: The player/playlist should be able to take care of this
-            #if not player.playing:
-            #    player.play()
 
     def empty_bookmark(self, w):
         player.playlist.reset_playlist()
