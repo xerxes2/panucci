@@ -1,4 +1,29 @@
 Panucci is a resuming podcast and audiobook player with bookmark support.
 
-That's all I have to say for now.
+WEB SITE:
+        http://gpodder.org/panucci/
 
+GIT:
+        https://github.com/xerxes2/panucci
+
+MAILING LIST:
+        https://lists.berlios.de/mailman/listinfo/gpodder-panucci
+
+IRC:
+        #gpodder on irc.freenode.org
+
+BUG REPORTS:
+        https://bugs.maemo.org/enter_bug.cgi?product=Panucci
+
+AUTHOR:
+        Thomas Perl with friends
+
+REQUIREMENTS:
+        GTK (2.x with python bindings)
+        Python (2.x)
+        GStreamer (with python bindings)
+        Sqlite
+        Mutagen
+
+INSTALL:
+        $ make install
