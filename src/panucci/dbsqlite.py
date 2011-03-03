@@ -265,6 +265,13 @@ class Storage(object):
         cursor.close()
         self.commit()
 
+    def delete_all_bookmarks(self):
+        self.__log.info('Deleting all bookmarks')
+
+        cursor = self.cursor()
+        cursor.execute("DELETE FROM bookmarks")
+        cursor.close()
+        self.commit()
 
     #################################
     # Playlist-related functions

@@ -331,12 +331,14 @@ class PanucciGUI(object):
             self.set_progress_callback(pos_int, dur_int)
 
     def create_actions(self):
-        self.action_open = gtk.Action('open_file', _('Open file'), _('Open a file or playlist'), gtk.STOCK_OPEN)
+        self.action_open = gtk.Action('open_file', _('Add File'), _('Open a file or playlist'), gtk.STOCK_NEW)
         self.action_open.connect('activate', self.open_file_callback)
-        self.action_open_dir = gtk.Action('open_dir', _('Open directory'), _('Open a directory'), gtk.STOCK_DIRECTORY)
+        self.action_open_dir = gtk.Action('open_dir', _('Add Folder'), _('Open a directory'), gtk.STOCK_OPEN)
         self.action_open_dir.connect('activate', self.open_dir_callback)
-        self.action_save = gtk.Action('save', _('Save playlist'), _('Save current playlist to file'), gtk.STOCK_SAVE_AS)
+        self.action_save = gtk.Action('save', _('Save Playlist'), _('Save current playlist to file'), gtk.STOCK_SAVE_AS)
         self.action_save.connect('activate', self.save_to_playlist_callback)
+        self.action_delete_bookmarks = gtk.Action('delete_bookmarks', _('Delete All Bookmarks'), _('Deleting all bookmarks'), gtk.STOCK_DELETE)
+        self.action_delete_bookmarks.connect('activate', self.delete_all_bookmarks_callback)
         self.action_playlist = gtk.Action('playlist', _('Playlist'), _('Open the current playlist'), None)
         self.action_playlist.connect('activate', lambda a: self.playlist_window.show())
         self.action_about = gtk.Action('about', _('About Panucci'), _('Show application version'), gtk.STOCK_ABOUT)
@@ -350,6 +352,7 @@ class PanucciGUI(object):
         file_menu.append(self.action_open.create_menu_item())
         file_menu.append(self.action_open_dir.create_menu_item())
         file_menu.append(self.action_save.create_menu_item())
+        file_menu.append(self.action_delete_bookmarks.create_menu_item())
         file_menu.append(gtk.SeparatorMenuItem())
         file_menu.append(self.action_quit.create_menu_item())
         file_menu_item.set_submenu(file_menu)
@@ -559,6 +562,15 @@ class PanucciGUI(object):
             return False
 
         return True
+
+    def delete_all_bookmarks_callback(self, widget=None):
+        player.playlist.delete_all_bookmarks()
+        model = self.__playlist_tab.treeview.get_model()
+
+        for row in iter(model):
+            while model.iter_has_child(row.iter):
+                bkmk_iter = model.iter_children(row.iter)
+                model.remove(bkmk_iter)
 
     def __get_fullscreen(self):
         return self.__window_fullscreen

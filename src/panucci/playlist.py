@@ -255,6 +255,11 @@ class Playlist(ObservableService):
 
         return True
 
+    def delete_all_bookmarks(self):
+        db.delete_all_bookmarks()
+        for item in self.__queue.get_items():
+            item.delete_bookmark(None)
+
     def remove_resume_bookmarks(self):
         item_id, bookmark_id = self.find_resume_bookmark()
 
@@ -632,6 +637,9 @@ class Queue(list, ObservableService):
     def get_item(self, item_id):
         return self.__mapping_dict.get(item_id)
 
+    def get_items(self):
+        return self.__mapping_dict.values()
+
     def is_empty(self):
         if self.__mapping_dict:
             return False
@@ -851,6 +859,7 @@ class PlaylistItem(object):
 
             for bkmk in self.bookmarks:
                 bkmk.delete()
+            self.bookmarks = []
         else:
             bkmk = self.bookmarks.index(bookmark_id)
             if bkmk >= 0:
