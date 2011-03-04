@@ -20,15 +20,22 @@
 from __future__ import absolute_import
 
 import logging
-
 import panucci
+import os
+import ConfigParser
 
-import os.path
-
+CONFIG_FOLDER = os.path.join(os.path.expanduser('~'), '.config/panucci')
 LAST_FOLDER_DEFAULT = os.path.join(os.path.expanduser('~'), 'MyDocs')
 
 if not os.path.exists(LAST_FOLDER_DEFAULT):
     LAST_FOLDER_DEFAULT = os.path.expanduser('~')
+
+if not os.path.exists(CONFIG_FOLDER):
+    os.mkdir(CONFIG_FOLDER)
+
+if not os.path.exists(CONFIG_FOLDER + '/panucci.conf'):
+  import shutil
+  shutil.copy("/usr/share/panucci/panucci.conf", CONFIG_FOLDER)
 
 DEFAULTS = {
     'dual_action_button_delay'  : 0.5,
@@ -44,6 +51,8 @@ DEFAULTS = {
 class Settings(object):
     def __init__(self):
         self.__log = logging.getLogger('panucci.settings.Settings')
+        self.config = ConfigParser.SafeConfigParser()
+        self.config.read([CONFIG_FOLDER + "/panucci.conf"])
 
     def __getattr__(self, key):
         if DEFAULTS.has_key(key):
@@ -80,4 +89,3 @@ class Settings(object):
         button.set_active( getattr(self, setting) )
 
 settings = Settings()
-
