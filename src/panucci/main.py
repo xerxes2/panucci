@@ -72,26 +72,13 @@ coverart_sizes = {
 
 gtk.icon_size_register('panucci-button', 32, 32)
 
-def find_image(filename):
-    bin_dir = os.path.dirname(sys.argv[0])
-    locations = [
-            os.path.join(bin_dir, '..', 'share', 'panucci'),
-            os.path.join(bin_dir, '..', 'icons'),
-            '/opt/panucci',
-    ]
-
-    for location in locations:
-        fn = os.path.abspath(os.path.join(location, filename))
-        if os.path.exists(fn):
-            return fn
-
 def generate_image(filename, is_stock=False):
     image = None
     if is_stock:
         image = gtk.image_new_from_stock(
             filename, gtk.icon_size_from_name('panucci-button') )
     else:
-        filename = find_image(filename)
+        filename = util.find_data_file(filename)
         if filename is not None:
             image = gtk.image_new_from_file(filename)
     if image is not None:
@@ -233,7 +220,7 @@ class PanucciGUI(object):
 
         self.main_window = window
         window.set_title('Panucci')
-        self.window_icon = find_image('panucci.png')
+        self.window_icon = util.find_data_file('panucci.png')
         if self.window_icon is not None:
             window.set_icon_from_file( self.window_icon )
         window.set_default_size(400, -1)
@@ -464,7 +451,7 @@ class PanucciGUI(object):
     def notify(self, message):
         """ Sends a notification using pynotify, returns message """
         if platform.DESKTOP and have_pynotify:
-            icon = find_image('panucci_64x64.png')
+            icon = util.find_data_file('panucci_64x64.png')
             notification = pynotify.Notification(self.main_window.get_title(), message, icon)
             notification.show()
         elif platform.FREMANTLE:

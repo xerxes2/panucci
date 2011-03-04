@@ -20,6 +20,7 @@
 from __future__ import absolute_import
 
 import os.path
+from sys import argv
 
 about_name = 'Panucci'
 about_text = _('Resuming audiobook and podcast player')
@@ -78,3 +79,16 @@ def pretty_filename(filename):
     filename, extension = os.path.splitext(filename)
     basename = os.path.basename(filename)
     return basename.replace('_', ' ')
+
+def find_data_file(filename):
+    bin_dir = os.path.dirname(argv[0])
+    locations = [
+            os.path.join(bin_dir, '..', 'share', 'panucci'),
+            os.path.join(bin_dir, '..', 'icons'),
+            '/opt/panucci',
+    ]
+
+    for location in locations:
+        fn = os.path.abspath(os.path.join(location, filename))
+        if os.path.exists(fn):
+            return fn

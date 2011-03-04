@@ -21,17 +21,20 @@ from __future__ import absolute_import
 
 import logging
 import panucci
-import os
+import os.path
 import ConfigParser
+from panucci import util
 
 CONFIG_FOLDER = os.path.expanduser('~/.config/panucci')
 
 if not os.path.exists(CONFIG_FOLDER):
+    import os
     os.mkdir(CONFIG_FOLDER)
 
 if not os.path.exists(CONFIG_FOLDER + '/panucci.conf'):
-  import shutil
-  shutil.copy("/usr/share/panucci/panucci.conf", CONFIG_FOLDER)
+    import shutil
+    _filepath = util.find_data_file("panucci.conf")
+    shutil.copy(_filepath, CONFIG_FOLDER)
 
 DEFAULTS = {
     'dual_action_button_delay'  : 0.5,
