@@ -187,7 +187,7 @@ def get_file_from_filechooser(
 
         dlg = gtk.FileChooserDialog(*args)
 
-    current_folder = os.path.expanduser(settings.last_folder)
+    current_folder = os.path.expanduser(settings.config.get("options", "default_folder"))
 
     if current_folder is not None and os.path.isdir(current_folder):
         dlg.set_current_folder(current_folder)
@@ -197,7 +197,7 @@ def get_file_from_filechooser(
 
     if dlg.run() == gtk.RESPONSE_OK:
         filename = dlg.get_filename()
-        settings.last_folder = dlg.get_current_folder()
+        settings.config.set("options", "default_folder", dlg.get_current_folder())
     else:
         filename = None
 

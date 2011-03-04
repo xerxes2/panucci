@@ -24,11 +24,7 @@ import panucci
 import os
 import ConfigParser
 
-CONFIG_FOLDER = os.path.join(os.path.expanduser('~'), '.config/panucci')
-LAST_FOLDER_DEFAULT = os.path.join(os.path.expanduser('~'), 'MyDocs')
-
-if not os.path.exists(LAST_FOLDER_DEFAULT):
-    LAST_FOLDER_DEFAULT = os.path.expanduser('~')
+CONFIG_FOLDER = os.path.expanduser('~/.config/panucci')
 
 if not os.path.exists(CONFIG_FOLDER):
     os.mkdir(CONFIG_FOLDER)
@@ -40,12 +36,9 @@ if not os.path.exists(CONFIG_FOLDER + '/panucci.conf'):
 DEFAULTS = {
     'dual_action_button_delay'  : 0.5,
     'enable_dual_action_btn'    : True,
-    'last_folder'               : LAST_FOLDER_DEFAULT,
     'max_recent_files'          : 10,
     'progress_locked'           : False,
-    'scrolling_labels'          : True,
-    'seek_long'                 : 60,
-    'seek_short'                : 10,
+    'scrolling_labels'          : True
 }
 
 class Settings(object):
