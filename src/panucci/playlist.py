@@ -474,7 +474,7 @@ class Playlist(ObservableService):
             self.__queue.current_item.save_bookmark(
                 _('Auto Bookmark'), position, True )
 
-    def skip(self, skip_by=None, skip_to=None, loop=True):
+    def skip(self, loop=True, skip_by=None, skip_to=None):
         """ Skip to another track in the playlist.
             Use either skip_by or skip_to, skip_by has precedence.
                 skip_to: skip to a known playlist position
@@ -525,14 +525,14 @@ class Playlist(ObservableService):
     def get_current_item(self):
         return self.__queue.current_item
 
-    def next(self):
+    def next(self, loop=False):
         """ Move the playlist to the next track.
             False indicates end of playlist. """
-        return self.skip( skip_by=1, loop=False )
+        return self.skip( loop, skip_by=1)
 
     def prev(self):
         """ Same as next() except moves to the previous track. """
-        return self.skip( skip_by=-1, loop=False )
+        return self.skip( loop=False, skip_by=-1 )
 
 
 class Queue(list, ObservableService):

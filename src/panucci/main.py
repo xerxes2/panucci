@@ -890,9 +890,9 @@ class PlayerTab(ObservableService, gtk.HBox):
         elif settings.config.get("options", "play_mode") == "random":
             player.playlist.next()
         elif settings.config.get("options", "play_mode") == "repeat":
-            player.playlist.next()
+            player.playlist.next(True)
         else:
-            player.playlist.next()
+            player.playlist.next(False)
 
     def on_player_new_track(self):
         for widget in [self.title_label,self.artist_label,self.album_label]:
