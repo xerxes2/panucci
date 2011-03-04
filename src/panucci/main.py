@@ -430,7 +430,7 @@ class PanucciGUI(object):
         return menu
 
     def create_recent_files_menu( self ):
-        max_files = settings.max_recent_files
+        max_files = settings.config.getint("options", "max_recent_files")
         self.recent_files = player.playlist.get_recent_files(max_files)
         menu_recent_sub = gtk.Menu()
 

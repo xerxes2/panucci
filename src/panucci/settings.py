@@ -36,16 +36,12 @@ if not os.path.exists(CONFIG_FOLDER + '/panucci.conf'):
     _filepath = util.find_data_file("panucci.conf")
     shutil.copy(_filepath, CONFIG_FOLDER)
 
-DEFAULTS = {
-    'max_recent_files'          : 10
-}
-
 class Settings(object):
     def __init__(self):
         self.__log = logging.getLogger('panucci.settings.Settings')
         self.config = ConfigParser.SafeConfigParser()
         self.config.read([CONFIG_FOLDER + "/panucci.conf"])
-
+    """
     def __getattr__(self, key):
         if DEFAULTS.has_key(key):
             # FIXME: Load settings from somewhere
@@ -72,7 +68,7 @@ class Settings(object):
             self.__log.warning('Setting "%s" doesn\'t exist.', key)
 
         return False
-
+    """
     def attach_checkbutton(self, button, setting):
         button.connect(
             'toggled', lambda w: setattr( self, setting, w.get_active()) )
