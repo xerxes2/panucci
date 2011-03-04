@@ -897,7 +897,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.progress.set_fraction( fraction )
 
     def on_progressbar_changed(self, widget, event):
-        if ( not settings.progress_locked and
+        if ( not settings.config.getboolean("options", "progress_locked") and
                 event.type == gtk.gdk.BUTTON_PRESS and event.button == 1 ):
             new_fraction = event.x/float(widget.get_allocation().width)
             resp = player.do_seek(percent=new_fraction)

@@ -37,8 +37,7 @@ if not os.path.exists(CONFIG_FOLDER + '/panucci.conf'):
     shutil.copy(_filepath, CONFIG_FOLDER)
 
 DEFAULTS = {
-    'max_recent_files'          : 10,
-    'progress_locked'           : False
+    'max_recent_files'          : 10
 }
 
 class Settings(object):
