@@ -324,6 +324,8 @@ class PanucciGUI(object):
         self.action_open_dir.connect('activate', self.open_dir_callback)
         self.action_save = gtk.Action('save', _('Save Playlist'), _('Save current playlist to file'), gtk.STOCK_SAVE_AS)
         self.action_save.connect('activate', self.save_to_playlist_callback)
+        self.action_empty_playlist = gtk.Action('empty_playlist', _('Delete Playlist'), _('Delete current playlist'), gtk.STOCK_DELETE)
+        self.action_empty_playlist.connect('activate', self.empty_playlist_callback)
         self.action_delete_bookmarks = gtk.Action('delete_bookmarks', _('Delete All Bookmarks'), _('Deleting all bookmarks'), gtk.STOCK_DELETE)
         self.action_delete_bookmarks.connect('activate', self.delete_all_bookmarks_callback)
         self.action_playlist = gtk.Action('playlist', _('Playlist'), _('Open the current playlist'), None)
@@ -339,6 +341,7 @@ class PanucciGUI(object):
         file_menu.append(self.action_open.create_menu_item())
         file_menu.append(self.action_open_dir.create_menu_item())
         file_menu.append(self.action_save.create_menu_item())
+        file_menu.append(self.action_empty_playlist.create_menu_item())
         file_menu.append(self.action_delete_bookmarks.create_menu_item())
         file_menu.append(gtk.SeparatorMenuItem())
         file_menu.append(self.action_quit.create_menu_item())
@@ -549,6 +552,10 @@ class PanucciGUI(object):
             return False
 
         return True
+
+    def empty_playlist_callback(self, w):
+        player.playlist.reset_playlist()
+        self.__playlist_tab.treeview.get_model().clear()
 
     def delete_all_bookmarks_callback(self, widget=None):
         player.playlist.delete_all_bookmarks()
@@ -1080,7 +1087,7 @@ class PlaylistTab(gtk.VBox):
             self.empty_button = gtk.Button(_('Clear'))
         else:
             self.empty_button = gtk.Button(stock=gtk.STOCK_DELETE)
-        self.empty_button.connect('clicked', self.empty_bookmark)
+        self.empty_button.connect('clicked', self.empty_playlist)
         self.hbox.pack_start(self.empty_button, True, True)
 
         if platform.FREMANTLE:
@@ -1265,7 +1272,7 @@ class PlaylistTab(gtk.VBox):
 
             # FIXME: The player/playlist should be able to take care of this
 
-    def empty_bookmark(self, w):
+    def empty_playlist(self, w):
         player.playlist.reset_playlist()
         self.treeview.get_model().clear()
 
