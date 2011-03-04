@@ -716,7 +716,7 @@ class PlayerTab(ObservableService, gtk.HBox):
                                                   pixel_jump=1,
                                                   delay_btwn_scrolls=5000,
                                                   delay_halfway=3000)
-        self.title_label.scrolling = settings.scrolling_labels
+        self.title_label.scrolling = settings.config.getboolean("options", "scrolling_labels")
         metadata_vbox.pack_start(self.title_label, False, False)
         metadata_vbox.pack_start(gtk.Image(), True, True)
         metadata_hbox.pack_start( metadata_vbox, True, True )

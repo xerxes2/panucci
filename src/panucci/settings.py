@@ -38,8 +38,7 @@ if not os.path.exists(CONFIG_FOLDER + '/panucci.conf'):
 
 DEFAULTS = {
     'max_recent_files'          : 10,
-    'progress_locked'           : False,
-    'scrolling_labels'          : True
+    'progress_locked'           : False
 }
 
 class Settings(object):
