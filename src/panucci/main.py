@@ -318,6 +318,7 @@ class PanucciGUI(object):
             self.set_progress_callback(pos_int, dur_int)
 
     def create_actions(self):
+        # File menu
         self.action_open = gtk.Action('open_file', _('Add File'), _('Open a file or playlist'), gtk.STOCK_NEW)
         self.action_open.connect('activate', self.open_file_callback)
         self.action_open_dir = gtk.Action('open_dir', _('Add Folder'), _('Open a directory'), gtk.STOCK_OPEN)
@@ -328,8 +329,30 @@ class PanucciGUI(object):
         self.action_empty_playlist.connect('activate', self.empty_playlist_callback)
         self.action_delete_bookmarks = gtk.Action('delete_bookmarks', _('Delete All Bookmarks'), _('Deleting all bookmarks'), gtk.STOCK_DELETE)
         self.action_delete_bookmarks.connect('activate', self.delete_all_bookmarks_callback)
+        # Tools menu
         self.action_playlist = gtk.Action('playlist', _('Playlist'), _('Open the current playlist'), None)
         self.action_playlist.connect('activate', lambda a: self.playlist_window.show())
+        self.action_play_mode = gtk.Action('play_mode', 'Play Mode', None, None)
+        self.action_play_mode_all = gtk.RadioAction('all', 'All', None, None, 0)
+        self.action_play_mode_all.connect("activate", self.set_play_mode_callback)
+        self.action_play_mode_single = gtk.RadioAction('single', 'Single', None, None, 1)
+        self.action_play_mode_single.connect("activate", self.set_play_mode_callback)
+        self.action_play_mode_single.set_group(self.action_play_mode_all)
+        self.action_play_mode_random = gtk.RadioAction('random', 'Random', None, None, 1)
+        self.action_play_mode_random.connect("activate", self.set_play_mode_callback)
+        self.action_play_mode_random.set_group(self.action_play_mode_all)
+        self.action_play_mode_repeat = gtk.RadioAction('repeat', 'Repeat', None, None, 1)
+        self.action_play_mode_repeat.connect("activate", self.set_play_mode_callback)
+        self.action_play_mode_repeat.set_group(self.action_play_mode_all)
+        if settings.config.get("options", "play_mode") == "single":
+             self.action_play_mode_single.set_active(True)
+        elif settings.config.get("options", "play_mode") == "random":
+             self.action_play_mode_random.set_active(True)
+        elif settings.config.get("options", "play_mode") == "repeat":
+             self.action_play_mode_repeat.set_active(True)
+        else:
+             self.action_play_mode_all.set_active(True)
+        # Help menu
         self.action_about = gtk.Action('about', _('About Panucci'), _('Show application version'), gtk.STOCK_ABOUT)
         self.action_about.connect('activate', self.about_callback)
         self.action_quit = gtk.Action('quit', _('Quit'), _('Close Panucci'), gtk.STOCK_QUIT)
@@ -351,6 +374,14 @@ class PanucciGUI(object):
         tools_menu_item = gtk.MenuItem(_('Tools'))
         tools_menu = gtk.Menu()
         tools_menu.append(self.action_playlist.create_menu_item())
+        play_mode_menu_item = self.action_play_mode.create_menu_item()
+        tools_menu.append(play_mode_menu_item)
+        play_mode_menu = gtk.Menu()
+        play_mode_menu_item.set_submenu(play_mode_menu)
+        play_mode_menu.append(self.action_play_mode_all.create_menu_item())
+        play_mode_menu.append(self.action_play_mode_single.create_menu_item())
+        play_mode_menu.append(self.action_play_mode_random.create_menu_item())
+        play_mode_menu.append(self.action_play_mode_repeat.create_menu_item())
         tools_menu_item.set_submenu(tools_menu)
         menu_bar.append(tools_menu_item)
 
@@ -565,6 +596,9 @@ class PanucciGUI(object):
             while model.iter_has_child(row.iter):
                 bkmk_iter = model.iter_children(row.iter)
                 model.remove(bkmk_iter)
+
+    def set_play_mode_callback(self, w):
+        settings.config.set("options", "play_mode", w.get_name())
 
     def __get_fullscreen(self):
         return self.__window_fullscreen
