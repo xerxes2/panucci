@@ -26,6 +26,7 @@ import os
 import re
 import dbus
 import logging
+import random
 from hashlib import md5
 from xml.sax.saxutils import escape
 
@@ -534,6 +535,10 @@ class Playlist(ObservableService):
         """ Same as next() except moves to the previous track. """
         return self.skip( loop=False, skip_by=-1 )
 
+    def random(self):
+        """ Plays random file in queue. """
+        skip_to = random.choice(range(len(self.__queue.get_items())))
+        return self.skip( False, None, skip_to )
 
 class Queue(list, ObservableService):
     """ A Simple list of PlaylistItems """
@@ -566,6 +571,11 @@ class Queue(list, ObservableService):
         if old_value != new_value:
             self.__log.debug( 'Current item changed from %d to %d',
                 old_value, new_value )
+            if not self.disable_notifications:
+                self.notify( 'current_item_changed',
+                    caller=self.__set__current_item_position )
+        else:
+            self.__log.debug( 'Current item reloaded')
             if not self.disable_notifications:
                 self.notify( 'current_item_changed',
                     caller=self.__set__current_item_position )

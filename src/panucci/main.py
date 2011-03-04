@@ -885,11 +885,12 @@ class PlayerTab(ObservableService, gtk.HBox):
                     self.__gui_root.main_window, False)
 
     def on_player_eof(self):
-        if settings.config.get("options", "play_mode") == "single":
+        play_mode = settings.config.get("options", "play_mode")
+        if play_mode == "single":
             self.on_player_end_of_playlist(False)
-        elif settings.config.get("options", "play_mode") == "random":
-            player.playlist.next()
-        elif settings.config.get("options", "play_mode") == "repeat":
+        elif play_mode == "random":
+            player.playlist.random()
+        elif play_mode == "repeat":
             player.playlist.next(True)
         else:
             player.playlist.next(False)
