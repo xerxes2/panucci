@@ -37,8 +37,6 @@ if not os.path.exists(CONFIG_FOLDER + '/panucci.conf'):
     shutil.copy(_filepath, CONFIG_FOLDER)
 
 DEFAULTS = {
-    'dual_action_button_delay'  : 0.5,
-    'enable_dual_action_btn'    : True,
     'max_recent_files'          : 10,
     'progress_locked'           : False,
     'scrolling_labels'          : True

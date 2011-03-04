@@ -745,8 +745,8 @@ class PlayerTab(ObservableService, gtk.HBox):
 
             return widgets.DualActionButton(widget, action, \
                     widget2, action2, \
-                    settings.dual_action_button_delay, \
-                    settings.enable_dual_action_btn)
+                    settings.config.getfloat("options", "dual_action_button_delay"), \
+                    settings.config.getboolean("options", "enable_dual_action_btn"))
 
         self.rrewind_button = create_da(
                 generate_image('media-skip-backward.png'),
@@ -824,8 +824,8 @@ class PlayerTab(ObservableService, gtk.HBox):
                       self.fforward_button, self.rrewind_button, \
                       self.bookmarks_button:
 
-            button.set_longpress_enabled( settings.enable_dual_action_btn )
-            button.set_duration( settings.dual_action_button_delay )
+            button.set_longpress_enabled( settings.config.getboolean("options", "enable_dual_action_btn") )
+            button.set_duration( settings.config.getfloat("options", "dual_action_button_delay") )
 
     def on_key_press(self, widget, event):
         if platform.MAEMO:
