@@ -52,7 +52,7 @@ class PanucciPlayer(ForwardingObservableService):
         self.__player.register( "playing", self.on_playing )
         self.__player.register( "paused", self.on_stopped )
         self.__player.register( "stopped", self.on_stopped )
-        self.__player.register( "eof", self.on_eof )
+        #self.__player.register( "eof", self.on_eof )
         self.__player.register( "error", self.on_player_error )
 
         self.playlist = Playlist()
