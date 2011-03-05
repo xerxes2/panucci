@@ -82,6 +82,40 @@ class panucciInterface(dbus.service.Object):
         self.__log.debug('playPause() called')
         if self.player is not None: self.player.play_pause_toggle()
 
+    @dbus.service.method('org.panucci.panucciInterface')
+    def playNext(self):
+        self.__log.debug('playNext() called')
+        if self.player is not None: self.player.play_next()
+
+    @dbus.service.method('org.panucci.panucciInterface')
+    def playPrev(self):
+        self.__log.debug('playPrev() called')
+        if self.player is not None: self.player.play_prev()
+
+    @dbus.service.method('org.panucci.panucciInterface')
+    def backShort(self):
+        self.__log.debug('backShort() called')
+        seek_amount = self.gui.config.getint("options", "seek_short")
+        if self.player is not None: self.player.do_seek(from_current=-seek_amount*10**9)
+
+    @dbus.service.method('org.panucci.panucciInterface')
+    def forwardShort(self):
+        self.__log.debug('forwardShort() called')
+        seek_amount = self.gui.config.getint("options", "seek_short")
+        if self.player is not None: self.player.do_seek(from_current=seek_amount*10**9)
+
+    @dbus.service.method('org.panucci.panucciInterface')
+    def backLong(self):
+        self.__log.debug('backLong() called')
+        seek_amount = self.gui.config.getint("options", "seek_long")
+        if self.player is not None: self.player.do_seek(from_current=-seek_amount*10**9)
+
+    @dbus.service.method('org.panucci.panucciInterface')
+    def forwardLong(self):
+        self.__log.debug('forwardLong() called')
+        seek_amount = self.gui.config.getint("options", "seek_long")
+        if self.player is not None: self.player.do_seek(from_current=seek_amount*10**9)
+
     @dbus.service.method('org.panucci.panucciInterface', in_signature='s')
     def play_file(self, filepath):
         self.__log.debug('play_file() called with: ' + filepath)
@@ -157,4 +191,3 @@ class panucciInterface(dbus.service.Object):
 
 interface = panucciInterface(
     dbus.service.BusName('org.panucci.panucciInterface', session_bus) )
-

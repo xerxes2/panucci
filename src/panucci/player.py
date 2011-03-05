@@ -172,6 +172,12 @@ class PanucciPlayer(ForwardingObservableService):
     def on_eof(self, *args):
         self.playlist.next()
 
+    def play_next(self):
+        self.playlist.next()
+
+    def play_prev(self):
+        self.playlist.prev()
+
     @property
     def current_file(self):
         return self.playlist.current_filepath

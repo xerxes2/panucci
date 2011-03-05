@@ -206,6 +206,7 @@ class PanucciGUI(object):
     def __init__(self, filename=None):
         self.__log = logging.getLogger('panucci.panucci.PanucciGUI')
         interface.register_gui(self)
+        self.config = settings.config
 
         # Build the base ui (window and menubar)
         if platform.MAEMO:
