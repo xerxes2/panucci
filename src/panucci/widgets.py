@@ -187,7 +187,6 @@ class DualActionButton(gtk.Button):
                     rect, self, 'Detail', rect.x, rect.y, rect.width,
                     rect.height, gtk.ORIENTATION_HORIZONTAL)
 
-
 class ScrollingLabel(gtk.DrawingArea):
     """ A simple scrolling label widget - if the text doesn't fit in the
         container, it will scroll back and forth at a pre-determined interval.
@@ -195,7 +194,7 @@ class ScrollingLabel(gtk.DrawingArea):
 
     LEFT, NO_CHANGE, RIGHT = [ -1, 0, 1 ]
 
-    def __init__( self, pango_markup, update_interval=100, pixel_jump=1,
+    def __init__( self, pango_markup, text_color, update_interval=100, pixel_jump=1,
                   delay_btwn_scrolls=0, delay_halfway=0 ):
         """ Creates a new ScrollingLabel widget.
 
@@ -223,13 +222,7 @@ class ScrollingLabel(gtk.DrawingArea):
         self.__scrolling_timer_id = None
         self.__scrolling_possible = False
         self.__scrolling = False
-
-        if platform.FREMANTLE:
-            self._fg = gtk.gdk.color_parse('#fff')
-        else:
-            l = gtk.Label()
-            s = l.get_style()
-            self._fg = s.text[gtk.STATE_NORMAL]
+        self._fg = gtk.gdk.color_parse('#' + text_color)
 
         # user-defined parameters (can be changed on-the-fly)
         self.update_interval = update_interval
@@ -409,7 +402,6 @@ class ScrollingLabel(gtk.DrawingArea):
         self.__scrolling = False
         self.__scrolling_timer = None
 
-
 if __name__ == '__main__':
     w = gtk.Window()
     w.set_geometry_hints(w, 100, 20)
@@ -429,4 +421,3 @@ if __name__ == '__main__':
     w.connect('destroy', gtk.main_quit)
     w.show_all()
     gtk.main()
-
