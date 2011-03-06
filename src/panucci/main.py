@@ -783,7 +783,7 @@ class PlayerTab(ObservableService, gtk.HBox):
             return widgets.DualActionButton(widget, action, \
                     widget2, action2, \
                     settings.config.getfloat("options", "dual_action_button_delay"), \
-                    settings.config.getboolean("options", "enable_dual_action_btn"))
+                    settings.config.getboolean("options", "dual_action_button"))
 
         self.rrewind_button = create_da(
                 generate_image('media-skip-backward.png'),
