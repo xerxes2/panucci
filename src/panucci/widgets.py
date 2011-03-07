@@ -50,9 +50,8 @@ class DualActionButton(gtk.Button):
     """
     (DEFAULT, LONGPRESS) = range(2)
 
-    def __init__(self, default_widget, default_action,
-                       longpress_widget=None, longpress_action=None,
-                       duration=0.5, longpress_enabled=True):
+    def __init__(self, default_widget, default_action, config,
+                       longpress_widget=None, longpress_action=None):
         gtk.Button.__init__(self)
 
         default_widget.show()
@@ -62,16 +61,16 @@ class DualActionButton(gtk.Button):
         if longpress_widget is None or longpress_action is None:
             longpress_enabled = False
 
+        self.__config = config
         self.__default_widget = default_widget
         self.__longpress_widget = longpress_widget
         self.__default_action = default_action
         self.__longpress_action = longpress_action
-        self.__duration = duration
+        self.__duration = self.__config.getfloat("options", "dual_action_button_delay")
         self.__current_state = -1
         self.__timeout_id = None
         self.__pressed_state = False
         self.__inside = False
-        self.__longpress_enabled = longpress_enabled
 
         self.connect('pressed', self.__pressed)
         self.connect('released', self.__released)
@@ -85,7 +84,7 @@ class DualActionButton(gtk.Button):
         self.__longpress_enabled = longpress_enabled
 
     def get_longpress_enabled(self):
-        return self.__longpress_enabled
+        return self.__config.getboolean("options", "dual_action_button")
 
     def set_duration(self, duration):
         self.__duration = duration
@@ -95,7 +94,7 @@ class DualActionButton(gtk.Button):
 
     def set_state(self, state):
         if state != self.__current_state:
-            if not self.__longpress_enabled and state == self.LONGPRESS:
+            if not self.get_longpress_enabled() and state == self.LONGPRESS:
                 return False
             self.__current_state = state
             child = self.get_child()
@@ -182,7 +181,7 @@ class DualActionButton(gtk.Button):
     def __expose_event(self, widget, event):
         style = self.get_style()
         rect = self.__get_draw_rect()
-        if self.__longpress_enabled:
+        if self.get_longpress_enabled():
             style.paint_handle(self.window, gtk.STATE_NORMAL, gtk.SHADOW_NONE,
                     rect, self, 'Detail', rect.x, rect.y, rect.width,
                     rect.height, gtk.ORIENTATION_HORIZONTAL)

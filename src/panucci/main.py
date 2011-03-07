@@ -336,6 +336,9 @@ class PanucciGUI(object):
         self.action_lock_progress = gtk.ToggleAction('lock_progress', 'Lock Progress Bar', None, None)
         self.action_lock_progress.connect("activate", self.lock_progress_callback)
         self.action_lock_progress.set_active(settings.config.getboolean("options", "lock_progress"))
+        self.action_dual_action_button = gtk.ToggleAction('dual_action_button', 'Dual Action Button', None, None)
+        self.action_dual_action_button.connect("activate", self.dual_action_button_callback)
+        self.action_dual_action_button.set_active(settings.config.getboolean("options", "dual_action_button"))
         self.action_play_mode = gtk.Action('play_mode', 'Play Mode', None, None)
         self.action_play_mode_all = gtk.RadioAction('all', 'All', None, None, 0)
         self.action_play_mode_all.connect("activate", self.set_play_mode_callback)
@@ -379,6 +382,7 @@ class PanucciGUI(object):
         tools_menu = gtk.Menu()
         tools_menu.append(self.action_playlist.create_menu_item())
         tools_menu.append(self.action_lock_progress.create_menu_item())
+        tools_menu.append(self.action_dual_action_button.create_menu_item())
         play_mode_menu_item = self.action_play_mode.create_menu_item()
         tools_menu.append(play_mode_menu_item)
         play_mode_menu = gtk.Menu()
@@ -625,6 +629,12 @@ class PanucciGUI(object):
         else:
             settings.config.set("options", "lock_progress", "false")
 
+    def dual_action_button_callback(self, w):
+        if w.get_active():
+            settings.config.set("options", "dual_action_button", "true")
+        else:
+            settings.config.set("options", "dual_action_button", "false")
+
     def set_play_mode_callback(self, w):
         settings.config.set("options", "play_mode", w.get_name())
 
@@ -807,10 +817,7 @@ class PlayerTab(ObservableService, gtk.HBox):
                 widget2 = None
                 action2 = None
 
-            return widgets.DualActionButton(widget, action, \
-                    widget2, action2, \
-                    settings.config.getfloat("options", "dual_action_button_delay"), \
-                    settings.config.getboolean("options", "dual_action_button"))
+            return widgets.DualActionButton(widget, action, settings.config, widget2, action2)
 
         self.rrewind_button = create_da(
                 generate_image('media-skip-backward.png'),
