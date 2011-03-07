@@ -333,6 +333,9 @@ class PanucciGUI(object):
         # Tools menu
         self.action_playlist = gtk.Action('playlist', _('Playlist'), _('Open the current playlist'), None)
         self.action_playlist.connect('activate', lambda a: self.playlist_window.show())
+        self.action_lock_progress = gtk.ToggleAction('lock_progress', 'Lock Progress', None, None)
+        self.action_lock_progress.connect("activate", self.lock_progress_callback)
+        self.action_lock_progress.set_active(settings.config.getboolean("options", "lock_progress"))
         self.action_play_mode = gtk.Action('play_mode', 'Play Mode', None, None)
         self.action_play_mode_all = gtk.RadioAction('all', 'All', None, None, 0)
         self.action_play_mode_all.connect("activate", self.set_play_mode_callback)
@@ -375,6 +378,7 @@ class PanucciGUI(object):
         tools_menu_item = gtk.MenuItem(_('Tools'))
         tools_menu = gtk.Menu()
         tools_menu.append(self.action_playlist.create_menu_item())
+        tools_menu.append(self.action_lock_progress.create_menu_item())
         play_mode_menu_item = self.action_play_mode.create_menu_item()
         tools_menu.append(play_mode_menu_item)
         play_mode_menu = gtk.Menu()
@@ -597,6 +601,12 @@ class PanucciGUI(object):
             while model.iter_has_child(row.iter):
                 bkmk_iter = model.iter_children(row.iter)
                 model.remove(bkmk_iter)
+
+    def lock_progress_callback(self, w):
+        if w.get_active():
+            settings.config.set("options", "lock_progress", "true")
+        else:
+            settings.config.set("options", "lock_progress", "false")
 
     def set_play_mode_callback(self, w):
         settings.config.set("options", "play_mode", w.get_name())
@@ -945,7 +955,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.progress.set_fraction( fraction )
 
     def on_progressbar_changed(self, widget, event):
-        if ( not settings.config.getboolean("options", "progress_locked") and
+        if ( not settings.config.getboolean("options", "lock_progress") and
                 event.type == gtk.gdk.BUTTON_PRESS and event.button == 1 ):
             new_fraction = event.x/float(widget.get_allocation().width)
             resp = player.do_seek(percent=new_fraction)
