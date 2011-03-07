@@ -333,7 +333,7 @@ class PanucciGUI(object):
         # Tools menu
         self.action_playlist = gtk.Action('playlist', _('Playlist'), _('Open the current playlist'), None)
         self.action_playlist.connect('activate', lambda a: self.playlist_window.show())
-        self.action_lock_progress = gtk.ToggleAction('lock_progress', 'Lock Progress', None, None)
+        self.action_lock_progress = gtk.ToggleAction('lock_progress', 'Lock Progress Bar', None, None)
         self.action_lock_progress.connect("activate", self.lock_progress_callback)
         self.action_lock_progress.set_active(settings.config.getboolean("options", "lock_progress"))
         self.action_play_mode = gtk.Action('play_mode', 'Play Mode', None, None)
@@ -414,10 +414,16 @@ class PanucciGUI(object):
         # the main menu
         menu = gtk.Menu()
 
-        menu_open = gtk.ImageMenuItem(_('Open playlist'))
+        menu_open = gtk.ImageMenuItem(_('Add File'))
+        menu_open.set_image(
+            gtk.image_new_from_stock(gtk.STOCK_NEW, gtk.ICON_SIZE_MENU))
+        menu_open.connect("activate", self.open_file_callback)
+        menu.append(menu_open)
+
+        menu_open = gtk.ImageMenuItem(_('Add Folder'))
         menu_open.set_image(
             gtk.image_new_from_stock(gtk.STOCK_OPEN, gtk.ICON_SIZE_MENU))
-        menu_open.connect("activate", self.open_file_callback)
+        menu_open.connect("activate", self.open_dir_callback)
         menu.append(menu_open)
 
         # the recent files menu
@@ -433,6 +439,18 @@ class PanucciGUI(object):
         menu_save.connect("activate", self.save_to_playlist_callback)
         menu.append(menu_save)
 
+        menu_save = gtk.ImageMenuItem(_('Delete Playlist'))
+        menu_save.set_image(
+            gtk.image_new_from_stock(gtk.STOCK_DELETE, gtk.ICON_SIZE_MENU))
+        menu_save.connect("activate", self.empty_playlist_callback)
+        menu.append(menu_save)
+
+        menu_save = gtk.ImageMenuItem(_('Delete All Bookmarks'))
+        menu_save.set_image(
+            gtk.image_new_from_stock(gtk.STOCK_DELETE, gtk.ICON_SIZE_MENU))
+        menu_save.connect("activate", self.delete_all_bookmarks_callback)
+        menu.append(menu_save)
+
         menu.append(gtk.SeparatorMenuItem())
 
         # the settings sub-menu
@@ -442,15 +460,14 @@ class PanucciGUI(object):
         menu_settings_sub = gtk.Menu()
         menu_settings.set_submenu(menu_settings_sub)
 
-        menu_settings_enable_dual_action = gtk.CheckMenuItem(
-            _('Enable dual-action buttons') )
-        settings.attach_checkbutton( menu_settings_enable_dual_action,
-                                     'enable_dual_action_btn' )
+        menu_settings_enable_dual_action = gtk.CheckMenuItem(_('Enable dual-action buttons') )
+        menu_settings_enable_dual_action.connect('toggled', self.set_dual_action_button_callback)
+        menu_settings_enable_dual_action.set_active(settings.config.getboolean("options", "dual_action_button"))
         menu_settings_sub.append(menu_settings_enable_dual_action)
 
         menu_settings_lock_progress = gtk.CheckMenuItem(_('Lock Progress Bar'))
-        settings.attach_checkbutton( menu_settings_lock_progress,
-                                     'progress_locked' )
+        menu_settings_lock_progress.connect('toggled', self.lock_progress_callback)
+        menu_settings_lock_progress.set_active(settings.config.getboolean("options", "lock_progress"))
         menu_settings_sub.append(menu_settings_lock_progress)
 
         menu_about = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
