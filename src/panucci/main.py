@@ -334,11 +334,14 @@ class PanucciGUI(object):
         self.action_playlist = gtk.Action('playlist', _('Playlist'), _('Open the current playlist'), None)
         self.action_playlist.connect('activate', lambda a: self.playlist_window.show())
         self.action_lock_progress = gtk.ToggleAction('lock_progress', 'Lock Progress Bar', None, None)
-        self.action_lock_progress.connect("activate", self.lock_progress_callback)
+        self.action_lock_progress.connect("activate", self.set_boolean_config_callback)
         self.action_lock_progress.set_active(settings.config.getboolean("options", "lock_progress"))
         self.action_dual_action_button = gtk.ToggleAction('dual_action_button', 'Dual Action Button', None, None)
-        self.action_dual_action_button.connect("activate", self.dual_action_button_callback)
+        self.action_dual_action_button.connect("activate", self.set_boolean_config_callback)
         self.action_dual_action_button.set_active(settings.config.getboolean("options", "dual_action_button"))
+        self.action_stay_at_end = gtk.ToggleAction('stay_at_end', 'Stay at End', None, None)
+        self.action_stay_at_end.connect("activate", self.set_boolean_config_callback)
+        self.action_stay_at_end.set_active(settings.config.getboolean("options", "stay_at_end"))
         self.action_play_mode = gtk.Action('play_mode', 'Play Mode', None, None)
         self.action_play_mode_all = gtk.RadioAction('all', 'All', None, None, 0)
         self.action_play_mode_all.connect("activate", self.set_play_mode_callback)
@@ -383,6 +386,7 @@ class PanucciGUI(object):
         tools_menu.append(self.action_playlist.create_menu_item())
         tools_menu.append(self.action_lock_progress.create_menu_item())
         tools_menu.append(self.action_dual_action_button.create_menu_item())
+        tools_menu.append(self.action_stay_at_end.create_menu_item())
         play_mode_menu_item = self.action_play_mode.create_menu_item()
         tools_menu.append(play_mode_menu_item)
         play_mode_menu = gtk.Menu()
@@ -623,17 +627,11 @@ class PanucciGUI(object):
                 bkmk_iter = model.iter_children(row.iter)
                 model.remove(bkmk_iter)
 
-    def lock_progress_callback(self, w):
+    def set_boolean_config_callback(self, w):
         if w.get_active():
-            settings.config.set("options", "lock_progress", "true")
+            settings.config.set("options", w.get_name(), "true")
         else:
-            settings.config.set("options", "lock_progress", "false")
-
-    def dual_action_button_callback(self, w):
-        if w.get_active():
-            settings.config.set("options", "dual_action_button", "true")
-        else:
-            settings.config.set("options", "dual_action_button", "false")
+            settings.config.set("options", w.get_name(), "false")
 
     def set_play_mode_callback(self, w):
         settings.config.set("options", "play_mode", w.get_name())
@@ -923,13 +921,18 @@ class PlayerTab(ObservableService, gtk.HBox):
     def on_player_eof(self):
         play_mode = settings.config.get("options", "play_mode")
         if play_mode == "single":
-            self.on_player_end_of_playlist(False)
+            if not settings.config.getboolean("options", "stay_at_end"):
+                self.on_player_end_of_playlist(False)
         elif play_mode == "random":
             player.playlist.random()
         elif play_mode == "repeat":
             player.playlist.next(True)
         else:
-            player.playlist.next(False)
+            if player.playlist.end_of_playlist():
+                if not settings.config.getboolean("options", "stay_at_end"):
+                   player.playlist.next(False)
+            else:
+              player.playlist.next(False)
 
     def on_player_new_track(self):
         for widget in [self.title_label,self.artist_label,self.album_label]:

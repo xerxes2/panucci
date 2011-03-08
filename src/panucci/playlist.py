@@ -135,6 +135,11 @@ class Playlist(ObservableService):
     def send_metadata(self):
         self.notify( 'new-metadata-available', caller=self.send_metadata )
 
+    def end_of_playlist(self):
+        """Checks if the currently played item is the last"""
+        if len(self.__queue.get_items()) - 1 == self.__queue.current_item_position:
+            return True 
+
     def quit(self):
         self.__log.debug('quit() called.')
         if self.__queue.modified:
