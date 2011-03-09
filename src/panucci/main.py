@@ -1072,7 +1072,18 @@ class PlayerTab(ObservableService, gtk.HBox):
                 self.__gui_root.main_window.set_title( value )
 
     def do_seek(self, seek_amount):
-        resp = player.do_seek(from_current=seek_amount*10**9)
+        seek_amount = seek_amount*10**9
+        resp = None
+        if not settings.config.getboolean("options", "seek_back") or player.playlist.start_of_playlist() or seek_amount > 0:
+            resp = player.do_seek(from_current=seek_amount)
+        else:
+            pos_int, dur_int = player.get_position_duration()
+            if pos_int + seek_amount >= 0:
+                resp = player.do_seek(from_current=seek_amount)
+            else:
+                player.playlist.prev()
+                pos_int, dur_int = player.get_position_duration()
+                resp = player.do_seek(from_beginning=dur_int+seek_amount)
         if resp:
             # Preemptively update the progressbar to make seeking smoother
             self.set_progress_callback( *resp )
