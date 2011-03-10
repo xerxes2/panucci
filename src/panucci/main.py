@@ -416,7 +416,7 @@ class PanucciGUI(object):
         menu.append(b)
 
         b = gtk.Button(_('About'))
-        b.connect('clicked', self.about_callback)
+        self.action_about.connect_proxy(b)
         menu.append(b)
 
         menu.show_all()
