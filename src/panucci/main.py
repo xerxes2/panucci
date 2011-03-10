@@ -421,12 +421,32 @@ class PanucciGUI(object):
     def create_app_menu(self):
         menu = hildon.AppMenu()
 
-        b = gtk.Button(_('Playlist'))
-        b.connect('clicked', lambda b: self.__player_tab.notify('select-current-item-request'))
+        b = gtk.Button()
+        self.action_open.connect_proxy(b)
         menu.append(b)
 
-        b = gtk.Button(_('About'))
-        self.action_about.connect_proxy(b)
+        b = gtk.Button()
+        self.action_open_dir.connect_proxy(b)
+        menu.append(b)
+
+        # - Save Playlist
+        # what about placing this inside the playlist?
+        b = gtk.Button()
+        self.action_save.connect_proxy(b)
+        menu.append(b)
+
+        # - Empty Playlist
+        #   (it's already at the Playlist menu)
+
+        # - Delete Bookmarks
+        #   (you're able to delete individual Bookmarks at the playlist)
+
+        b = gtk.Button()
+        self.action_playlist.connect_proxy(b)
+        menu.append(b)
+
+        b = gtk.Button()
+        self.action_about.connect_proxy(b)     
         menu.append(b)
 
         menu.show_all()
