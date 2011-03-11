@@ -335,6 +335,8 @@ class PanucciGUI(object):
         # Tools menu
         self.action_playlist = gtk.Action('playlist', _('Playlist'), _('Open the current playlist'), None)
         self.action_playlist.connect('activate', lambda a: self.playlist_window.show())
+        self.action_settings = gtk.Action('settings', _('Settings'), _('Open the settings dialog'), None)
+        self.action_settings.connect('activate', self.create_settings_dialog)
         # Settings menu
         self.action_lock_progress = gtk.ToggleAction('lock_progress', 'Lock Progress Bar', None, None)
         self.action_lock_progress.connect("activate", self.set_boolean_config_callback)
@@ -364,13 +366,13 @@ class PanucciGUI(object):
         self.action_play_mode_repeat.connect("activate", self.set_play_mode_callback)
         self.action_play_mode_repeat.set_group(self.action_play_mode_all)
         if settings.config.get("options", "play_mode") == "single":
-             self.action_play_mode_single.set_active(True)
+            self.action_play_mode_single.set_active(True)
         elif settings.config.get("options", "play_mode") == "random":
-             self.action_play_mode_random.set_active(True)
+            self.action_play_mode_random.set_active(True)
         elif settings.config.get("options", "play_mode") == "repeat":
-             self.action_play_mode_repeat.set_active(True)
+            self.action_play_mode_repeat.set_active(True)
         else:
-             self.action_play_mode_all.set_active(True)
+            self.action_play_mode_all.set_active(True)
         # Help menu
         self.action_about = gtk.Action('about', _('About Panucci'), _('Show application version'), gtk.STOCK_ABOUT)
         self.action_about.connect('activate', self.about_callback)
@@ -391,6 +393,7 @@ class PanucciGUI(object):
         tools_menu_item = gtk.MenuItem(_('Tools'))
         tools_menu = gtk.Menu()
         tools_menu.append(self.action_playlist.create_menu_item())
+        #tools_menu.append(self.action_settings.create_menu_item())
         tools_menu_item.set_submenu(tools_menu)
         menu_bar.append(tools_menu_item)
 
@@ -443,6 +446,10 @@ class PanucciGUI(object):
 
         b = gtk.Button()
         self.action_playlist.connect_proxy(b)
+        menu.append(b)
+
+        b = gtk.Button()
+        self.action_settings.connect_proxy(b)
         menu.append(b)
 
         b = gtk.Button()
@@ -545,6 +552,53 @@ class PanucciGUI(object):
             menu_recent_sub.append(menu_item)
 
         self.menu_recent.set_submenu(menu_recent_sub)
+
+    def create_settings_dialog(self, w):
+        dialog = gtk.Dialog("Settings",
+                   None,
+                   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                   (gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT))
+        b = gtk.CheckButton()
+        self.action_lock_progress.connect_proxy(b)
+        dialog.action_area.pack_start(b)
+        b = gtk.CheckButton()
+        self.action_dual_action_button.connect_proxy(b)
+        dialog.action_area.pack_start(b)
+        b = gtk.CheckButton()
+        self.action_stay_at_end.connect_proxy(b)
+        dialog.action_area.pack_start(b)
+        b = gtk.CheckButton()
+        self.action_seek_back.connect_proxy(b)
+        dialog.action_area.pack_start(b)
+        b = gtk.CheckButton()
+        self.action_scrolling_labels.connect_proxy(b)
+        dialog.action_area.pack_start(b)
+        ra = gtk.RadioButton()
+        dialog.action_area.pack_start(ra)
+        rb = gtk.RadioButton()
+        rb.set_group(ra)
+        dialog.action_area.pack_start(rb)
+        rc = gtk.RadioButton()
+        rc.set_group(ra)
+        dialog.action_area.pack_start(rc)
+        rd = gtk.RadioButton()
+        rd.set_group(ra)
+        dialog.action_area.pack_start(rd)
+        if settings.config.get("options", "play_mode") == "single":
+            rb.set_active(True)
+        elif settings.config.get("options", "play_mode") == "random":
+            rc.set_active(True)
+        elif settings.config.get("options", "play_mode") == "repeat":
+            rd.set_active(True)
+        else:
+            ra.set_active(True)
+        self.action_play_mode_all.connect_proxy(ra)
+        self.action_play_mode_single.connect_proxy(rb)
+        self.action_play_mode_random.connect_proxy(rc)
+        self.action_play_mode_repeat.connect_proxy(rd)
+        dialog.show_all()
+        response = dialog.run()
+        dialog.destroy()
 
     def notify(self, message):
         """ Sends a notification using pynotify, returns message """
