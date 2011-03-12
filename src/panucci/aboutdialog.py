@@ -20,9 +20,15 @@
 # Python implementation of HeAboutDialog from hildon-extras
 # Copyright (c) 2010-04-11 Thomas Perl <thp@thpinfo.com>
 
-import hildon
 import gtk
 import dbus
+from panucci import platform
+from panucci import about
+
+try:
+    import hildon
+except:
+    pass
 
 _ = lambda x: x
 
@@ -117,32 +123,32 @@ class HeAboutDialog(gtk.Dialog):
         proxy.load_url(url, dbus_interface='com.nokia.osso_browser')
 
     @classmethod
-    def present(cls, parent=None, app_name=None, icon_name=None, \
-            version=None, description=None, copyright=None, \
-            website_url=None, bugtracker_url=None, donate_url=None):
+    def present(cls, parent, version):
         ad = cls()
-
-        if parent is not None:
-            ad.set_transient_for(parent)
-            ad.set_destroy_with_parent(True)
-
-        if app_name is not None:
-            ad.set_app_name(app_name)
-
-        ad.set_icon_name(icon_name)
+        ad.set_transient_for(parent)
+        ad.set_destroy_with_parent(True)
+        ad.set_app_name(about.about_name)
+        ad.set_icon_name("panucci")
         ad.set_version(version)
-        ad.set_description(description)
-        ad.set_copyright(copyright)
-
-        if website_url is not None:
-            ad.set_website(website_url)
-
-        if bugtracker_url is not None:
-            ad.set_bugtracker(bugtracker_url)
-
-        if donate_url is not None:
-            ad.set_donate_url(donate_url)
-
+        ad.set_description(about.about_text)
+        ad.set_copyright(about.about_copyright)
+        ad.set_website(about.about_website)
+        ad.set_bugtracker(about.about_bugtracker)
+        ad.set_donate_url(about.about_donate)
         ad.run()
         ad.destroy()
 
+class AboutDialog:
+    def __init__(self, parent, version):
+        ad = gtk.AboutDialog()
+        ad.set_transient_for(parent)
+        ad.set_name(about.about_name)
+        ad.set_version(version)
+        ad.set_copyright(about.about_copyright)
+        ad.set_comments(about.about_text)
+        ad.set_website(about.about_website)
+        ad.set_authors(about.about_authors)
+        ad.set_translator_credits(_('translator-credits'))
+        ad.set_logo_icon_name('panucci')
+        ad.run()
+        ad.destroy()

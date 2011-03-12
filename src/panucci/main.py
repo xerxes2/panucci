@@ -764,29 +764,10 @@ class PanucciGUI(object):
     def about_callback(self, widget):
         if platform.FREMANTLE:
             from panucci.aboutdialog import HeAboutDialog
-
-            HeAboutDialog.present(self.main_window,
-                    util.about_name,
-                    'panucci',
-                    panucci.__version__,
-                    util.about_text,
-                    util.about_copyright,
-                    util.about_website,
-                    util.about_bugtracker,
-                    util.about_donate)
+            HeAboutDialog.present(self.main_window, panucci.__version__)
         else:
-            about = gtk.AboutDialog()
-            about.set_transient_for(self.main_window)
-            about.set_name(util.about_name)
-            about.set_version(panucci.__version__)
-            about.set_copyright(util.about_copyright)
-            about.set_comments(util.about_text)
-            about.set_website(util.about_website)
-            about.set_authors(util.about_authors)
-            about.set_translator_credits(_('translator-credits'))
-            about.set_logo_icon_name('panucci')
-            about.run()
-            about.destroy()
+            from panucci.aboutdialog import AboutDialog
+            AboutDialog(self.main_window, panucci.__version__)
 
     def _play_file(self, filename, pause_on_load=False):
         player.playlist.load( os.path.abspath(filename) )
