@@ -19,7 +19,6 @@
 
 from __future__ import absolute_import
 
-import gobject, gtk
 import time
 import os.path
 import os
@@ -1104,7 +1103,8 @@ class FileMetadata(object):
     def __test_coverart(self, data):
         """ tests to see if the file is a proper image file that can be loaded
             into a gtk.gdk.Pixbuf """
-
+        # I don't this is needed
+        """
         import gtk.gdk
         l = gtk.gdk.PixbufLoader()
         try:
@@ -1113,8 +1113,9 @@ class FileMetadata(object):
             rtn = True
         except:
             rtn = False
+        """
 
-        return rtn
+        return True
 
     def __find_coverart_filepath(self, directory):
         """ finds the path of potential coverart files """
