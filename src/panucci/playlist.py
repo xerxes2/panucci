@@ -1103,17 +1103,6 @@ class FileMetadata(object):
     def __test_coverart(self, data):
         """ tests to see if the file is a proper image file that can be loaded
             into a gtk.gdk.Pixbuf """
-        # I don't this is needed
-        """
-        import gtk.gdk
-        l = gtk.gdk.PixbufLoader()
-        try:
-            l.write(data)
-            l.close()
-            rtn = True
-        except:
-            rtn = False
-        """
 
         return True
 
