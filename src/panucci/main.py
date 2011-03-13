@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # This file is part of Panucci.
@@ -21,15 +20,92 @@
 #  A resuming media player for Podcasts and Audiobooks
 #  Copyright (c) 2008-05-26 Thomas Perl <thpinfo.com>
 #  (based on http://pygstdocs.berlios.de/pygst-tutorial/seeking.html)
-#
 
 from __future__ import absolute_import
 
-def run(filename=None):
-    from panucci.gtkui.gtkmain import PanucciGUI
-    PanucciGUI(filename)
+import dbus
+import dbus.glib
+import logging
+import logging.handlers
+import os.path
+import sys
+
+import panucci
+
+# Detect the platform we're running on
+from panucci import platform
+platform.detect()
+
+def run(opts, args):
+    if args:
+        if '://' in args[0]:
+            # Assume a URL (HTTP, HTTPs, etc...)
+            filepath = args[0]
+        else:
+            filepath = os.path.abspath(args[0])
+    elif opts.queue_filename:
+        filepath = os.path.abspath(opts.queue_filename)
+    else:
+        filepath = None
+
+    # Attempt to contact an already-running copy of Panucci
+    session_bus = dbus.SessionBus()
+    try:
+        if session_bus.name_has_owner('org.panucci.panucciInterface'):
+            remote_object = session_bus.get_object(
+                'org.panucci.panucciInterface', '/panucciInterface' )
+            print 'Found panucci instance already running, will try to use it...'
+        else:
+            remote_object = None
+    except dbus.exceptions.DBusException:
+        remote_object = None
+
+    if remote_object is None:
+        # configure logging
+        init_logging( logging.DEBUG if opts.debug else logging.ERROR )
+
+        if opts.qt:
+            from panucci.qtui.qtmain import PanucciGUI
+        else:
+            from panucci.gtkui.gtkmain import PanucciGUI
+        PanucciGUI(filepath)
+    else:
+        if filepath is not None:
+            if opts.queue_filename is not None:
+                remote_object.queue_file( filepath )
+            else:
+                remote_object.play_file( filepath )
+
+        remote_object.show_main_window()
+
+def init_logging( log_level ):
+    """ Configure the logging module for panucci """
+    logger = logging.getLogger('panucci')
+    logger.setLevel( logging.DEBUG )
+
+    # the stream handler (logging to the console)
+    sh = logging.StreamHandler()
+    sh.setLevel( log_level )
+    fmt = logging.Formatter('%(levelname)s:%(name)s %(message)s')
+    sh.setFormatter(fmt)
+    logger.addHandler(sh)
+
+    # the file handler (logging to a file)
+    fh = logging.handlers.RotatingFileHandler(panucci.LOGFILE, \
+            backupCount=0, maxBytes=25*1024)
+
+    fh.doRollover() # reset the logfile at startup
+    fh.setLevel( logging.DEBUG ) # log everything to the file
+    fmt = logging.Formatter('%(asctime)s %(levelname)s:%(name)s %(message)s')
+    fh.setFormatter(fmt)
+    logger.addHandler(fh)
+
+    # force all exceptions to pass through the logger
+    sys.excepthook = lambda *args: logger.critical( 'Exception caught:',
+                                                    exc_info=args )
 
 if __name__ == '__main__':
+    log = logging.getLogger('panucci.panucci')
     log.error( 'Use the "panucci" executable to run this program.' )
     log.error( 'Exiting...' )
     sys.exit(1)

@@ -15,18 +15,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-#
 
 from __future__ import absolute_import
 
-import dbus
-import dbus.glib
-import logging
-import logging.handlers
 import os.path
 import sys
 from optparse import OptionParser
-
 
 # Set up gettext support
 import locale
@@ -49,6 +43,8 @@ parser.add_option('-q', '--queue', action='store', type='string',
     dest='queue_filename', help='Add FILE to the queue', metavar='FILE')
 parser.add_option('-d', '--debug', action='store_true', default=False,
     dest='debug', help='Enable verbose logging')
+parser.add_option("--gtk", action="store_true")
+parser.add_option("--qt", action="store_true")
 opts, args = parser.parse_args()
 
 if len(args) > 1 or ( opts.queue_filename and len(args) ):
@@ -64,80 +60,5 @@ optified_install_path = '/opt/panucci/lib/'
 if os.path.isdir(optified_install_path):
     sys.path.insert(0, optified_install_path)
 
-import panucci
-
-# Detect the platform we're running on
-from panucci import platform
-platform.detect()
-
-if platform.FREMANTLE:
-    # Workaround Maemo bug 6694 (Playback in Silent mode)
-    import gobject
-    gobject.set_application_name('FMRadio')
-
-if args:
-    if '://' in args[0]:
-        # Assume a URL (HTTP, HTTPs, etc...)
-        filepath = args[0]
-    else:
-        filepath = os.path.abspath(args[0])
-elif opts.queue_filename:
-    filepath = os.path.abspath(opts.queue_filename)
-else:
-    filepath = None
-
-def init_logging( log_level ):
-    """ Configure the logging module for panucci """
-    logger = logging.getLogger('panucci')
-    logger.setLevel( logging.DEBUG )
-
-    # the stream handler (logging to the console)
-    sh = logging.StreamHandler()
-    sh.setLevel( log_level )
-    fmt = logging.Formatter('%(levelname)s:%(name)s %(message)s')
-    sh.setFormatter(fmt)
-    logger.addHandler(sh)
-
-    # the file handler (logging to a file)
-    fh = logging.handlers.RotatingFileHandler(panucci.LOGFILE, \
-            backupCount=0, maxBytes=25*1024)
-
-    fh.doRollover() # reset the logfile at startup
-    fh.setLevel( logging.DEBUG ) # log everything to the file
-    fmt = logging.Formatter('%(asctime)s %(levelname)s:%(name)s %(message)s')
-    fh.setFormatter(fmt)
-    logger.addHandler(fh)
-
-    # force all exceptions to pass through the logger
-    sys.excepthook = lambda *args: logger.critical( 'Exception caught:',
-                                                    exc_info=args )
-
-
-# Attempt to contact an already-running copy of Panucci
-session_bus = dbus.SessionBus()
-try:
-    if session_bus.name_has_owner('org.panucci.panucciInterface'):
-        remote_object = session_bus.get_object(
-            'org.panucci.panucciInterface', '/panucciInterface' )
-        print 'Found panucci instance already running, will try to use it...'
-    else:
-        remote_object = None
-except dbus.exceptions.DBusException:
-    remote_object = None
-
-
-if remote_object is None:
-    # configure logging
-    init_logging( logging.DEBUG if opts.debug else logging.ERROR )
-
-    from panucci import main
-    main.run(filename=filepath)
-else:
-    if filepath is not None:
-        if opts.queue_filename is not None:
-            remote_object.queue_file( filepath )
-        else:
-            remote_object.play_file( filepath )
-
-    remote_object.show_main_window()
-
+from panucci import main
+main.run(opts, args)

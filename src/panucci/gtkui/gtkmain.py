@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # This file is part of Panucci.
@@ -21,7 +20,6 @@
 #  A resuming media player for Podcasts and Audiobooks
 #  Copyright (c) 2008-05-26 Thomas Perl <thpinfo.com>
 #  (based on http://pygstdocs.berlios.de/pygst-tutorial/seeking.html)
-#
 
 from __future__ import absolute_import
 
@@ -60,6 +58,10 @@ except:
     if platform.MAEMO:
         log.critical( 'Using GTK widgets, install "python2.5-hildon" '
             'for this to work properly.' )
+
+if platform.FREMANTLE:
+    # Workaround Maemo bug 6694 (Playback in Silent mode)
+    gobject.set_application_name('FMRadio')
 
 from panucci.settings import settings
 from panucci.player import player
