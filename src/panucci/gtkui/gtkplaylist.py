@@ -136,6 +136,7 @@ class PlaylistTab(gtk.VBox):
             self.empty_button = gtk.Button(_('Clear'))
         else:
             self.empty_button = gtk.Button(stock=gtk.STOCK_DELETE)
+            gtkutil.set_stock_button_text( self.empty_button, _('Clear'),  )
         self.empty_button.connect('clicked', self.empty_playlist)
         self.hbox.pack_start(self.empty_button, True, True)
 

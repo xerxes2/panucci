@@ -201,7 +201,7 @@ class PanucciGUI(object):
         self.action_open_dir.connect('activate', self.open_dir_callback)
         self.action_save = gtk.Action('save', _('Save Playlist'), _('Save current playlist to file'), gtk.STOCK_SAVE_AS)
         self.action_save.connect('activate', self.save_to_playlist_callback)
-        self.action_empty_playlist = gtk.Action('empty_playlist', _('Delete Playlist'), _('Delete current playlist'), gtk.STOCK_DELETE)
+        self.action_empty_playlist = gtk.Action('empty_playlist', _('Clear Playlist'), _('Clear current playlist'), gtk.STOCK_DELETE)
         self.action_empty_playlist.connect('activate', self.empty_playlist_callback)
         self.action_delete_bookmarks = gtk.Action('delete_bookmarks', _('Delete All Bookmarks'), _('Deleting all bookmarks'), gtk.STOCK_DELETE)
         self.action_delete_bookmarks.connect('activate', self.delete_all_bookmarks_callback)
@@ -268,7 +268,7 @@ class PanucciGUI(object):
         tools_menu_item = gtk.MenuItem(_('Tools'))
         tools_menu = gtk.Menu()
         tools_menu.append(self.action_playlist.create_menu_item())
-        #tools_menu.append(self.action_settings.create_menu_item())
+        tools_menu.append(self.action_settings.create_menu_item())
         tools_menu_item.set_submenu(tools_menu)
         menu_bar.append(tools_menu_item)
 
