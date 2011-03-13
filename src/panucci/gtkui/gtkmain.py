@@ -434,7 +434,7 @@ class PanucciGUI(object):
                    gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                    (gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT))
         table = gtk.Table(5, 2, True)
-        dialog.action_area.add(table)
+        dialog.vbox.add(table)
         b = gtk.CheckButton()
         self.action_lock_progress.connect_proxy(b)
         table.attach(b, 0, 1, 0, 1)
