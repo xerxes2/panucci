@@ -15,11 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Based on http://thpinfo.com/2008/panucci/:
-#  A resuming media player for Podcasts and Audiobooks
-#  Copyright (c) 2008-05-26 Thomas Perl <thpinfo.com>
-#  (based on http://pygstdocs.berlios.de/pygst-tutorial/seeking.html)
 
 from __future__ import absolute_import
 
@@ -268,7 +263,7 @@ class PanucciGUI(object):
         tools_menu_item = gtk.MenuItem(_('Tools'))
         tools_menu = gtk.Menu()
         tools_menu.append(self.action_playlist.create_menu_item())
-        tools_menu.append(self.action_settings.create_menu_item())
+        #tools_menu.append(self.action_settings.create_menu_item())
         tools_menu_item.set_submenu(tools_menu)
         menu_bar.append(tools_menu_item)
 
@@ -313,11 +308,13 @@ class PanucciGUI(object):
         self.action_save.connect_proxy(b)
         menu.append(b)
 
-        # - Empty Playlist
-        #   (it's already at the Playlist menu)
+        b = gtk.Button()
+        self.action_empty_playlist.connect_proxy(b)
+        menu.append(b)
 
-        # - Delete Bookmarks
-        #   (you're able to delete individual Bookmarks at the playlist)
+        b = gtk.Button()
+        self.action_delete_bookmarks.connect_proxy(b)
+        menu.append(b)
 
         b = gtk.Button()
         self.action_playlist.connect_proxy(b)
@@ -328,7 +325,7 @@ class PanucciGUI(object):
         menu.append(b)
 
         b = gtk.Button()
-        self.action_about.connect_proxy(b)     
+        self.action_about.connect_proxy(b)
         menu.append(b)
 
         menu.show_all()
