@@ -140,11 +140,10 @@ class PanucciGUI(object):
             system_bus = dbus.SystemBus()
 
             # Monitor connection state of BT headset
+            # I haven't seen this option before "settings.play_on_headset"
             PATH = '/org/freedesktop/Hal/devices/computer_logicaldev_input_1'
             def handler_func(device_path):
-                if device_path == PATH and \
-                        settings.play_on_headset and \
-                        not player.playing:
+                if device_path == PATH and not player.playing:
                     player.play()
             system_bus.add_signal_receiver(handler_func, 'DeviceAdded', \
                     'org.freedesktop.Hal.Manager', None, \
@@ -160,9 +159,9 @@ class PanucciGUI(object):
                     elif button == 'pause-cd':
                         player.pause()
                     elif button == 'next-song':
-                        self.__player_tab.do_seek(settings.seek_short)
+                        self.__player_tab.do_seek(settings.config.getint("options", "seek_short"))
                     elif button == 'previous-song':
-                        self.__player_tab.do_seek(-1*settings.seek_short)
+                        self.__player_tab.do_seek(-1*settings.config.getint("options", "seek_short"))
 
             system_bus.add_signal_receiver(handle_bt_button, 'Condition', \
                     'org.freedesktop.Hal.Device', None, PATH)
