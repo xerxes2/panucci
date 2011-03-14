@@ -583,13 +583,22 @@ class PanucciGUI(object):
         self.__playlist_tab.treeview.get_model().clear()
 
     def delete_all_bookmarks_callback(self, widget=None):
-        player.playlist.delete_all_bookmarks()
-        model = self.__playlist_tab.treeview.get_model()
+        response = gtkutil.dialog(
+                self.main_window, _('Delete All Bookmarks'),
+                _('Would you like to delete all bookmarks?'),
+                _('By accepting all bookmarks in the database will be deleted.'),
+                negative_button=None)
 
-        for row in iter(model):
-            while model.iter_has_child(row.iter):
-                bkmk_iter = model.iter_children(row.iter)
-                model.remove(bkmk_iter)
+        self.__log.debug('Response to "Delete all bookmarks?": %s', response)
+
+        if response:
+            player.playlist.delete_all_bookmarks()
+            model = self.__playlist_tab.treeview.get_model()
+
+            for row in iter(model):
+                while model.iter_has_child(row.iter):
+                    bkmk_iter = model.iter_children(row.iter)
+                    model.remove(bkmk_iter)
 
     def set_boolean_config_callback(self, w):
         if w.get_active():
