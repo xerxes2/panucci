@@ -15,17 +15,18 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Based on http://thpinfo.com/2008/panucci/:
-#  A resuming media player for Podcasts and Audiobooks
-#  Copyright (c) 2008-05-26 Thomas Perl <thpinfo.com>
-#  (based on http://pygstdocs.berlios.de/pygst-tutorial/seeking.html)
 
 import gtk
 import gobject
 import os.path
+
 from panucci import platform
 from panucci import util
+
+try:
+    import hildon
+except:
+    pass
 
 coverart_sizes = {
     'normal'            : 110,
