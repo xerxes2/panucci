@@ -426,7 +426,7 @@ class PanucciGUI(object):
         self.menu_recent.set_submenu(menu_recent_sub)
 
     def create_settings_dialog(self, w):
-        dialog = gtk.Dialog("Settings",
+        dialog = gtk.Dialog(_("Settings"),
                    None,
                    gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                    (gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT))
@@ -447,7 +447,7 @@ class PanucciGUI(object):
         b = gtk.CheckButton()
         self.action_scrolling_labels.connect_proxy(b)
         table.attach(b, 0, 1, 4, 5)
-        label = gtk.Label("Play Mode")
+        label = gtk.Label(_("Play Mode"))
         table.attach(label, 1, 2, 0, 1)
         ra = gtk.RadioButton()
         table.attach(ra, 1, 2, 1, 2)
