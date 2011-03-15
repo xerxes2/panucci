@@ -968,6 +968,7 @@ class PlayerTab(ObservableService, gtk.HBox):
     def reset_progress(self):
         self.progress.set_fraction(0)
         self.set_progress_callback(0,0)
+        self.__gui_root.main_window.set_title("Panucci")
 
     def set_progress_callback(self, time_elapsed, total_time):
         """ times must be in nanoseconds """
