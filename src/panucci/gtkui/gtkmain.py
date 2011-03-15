@@ -973,11 +973,11 @@ class PlayerTab(ObservableService, gtk.HBox):
     def get_coverart_size( self ):
         if platform.MAEMO:
             if self.__gui_root.fullscreen:
-                size = gtkutil.coverart_sizes['maemo fullscreen']
+                size = util.coverart_sizes['maemo fullscreen']
             else:
-                size = gtkutil.coverart_sizes['maemo']
+                size = util.coverart_sizes['maemo']
         else:
-            size = gtkutil.coverart_sizes['normal']
+            size = util.coverart_sizes['normal']
 
         return size, size
 

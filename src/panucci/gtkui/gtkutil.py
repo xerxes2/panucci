@@ -28,12 +28,6 @@ try:
 except:
     pass
 
-coverart_sizes = {
-    'normal'            : 110,
-    'maemo'             : 200,
-    'maemo fullscreen'  : 275,
-}
-
 def generate_image(filename, is_stock=False):
     image = None
     if is_stock:
