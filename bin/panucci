@@ -58,7 +58,7 @@ if os.path.isdir(local_module_dir):
 
 optified_install_path = '/opt/panucci/lib/'
 if os.path.isdir(optified_install_path):
-    sys.path.insert(0, optified_install_path)
+    sys.path.append(optified_install_path)
 
 from panucci import main
 main.run(opts, args)

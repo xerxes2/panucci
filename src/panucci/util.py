@@ -82,6 +82,7 @@ def find_data_file(filename):
     locations = [
             os.path.join(bin_dir, '..', 'share', 'panucci'),
             os.path.join(bin_dir, '..', 'icons'),
+            os.path.join(bin_dir, '..', 'data'),
             '/opt/panucci',
     ]
 
