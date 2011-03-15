@@ -415,9 +415,13 @@ class PanucciGUI(object):
 
     def create_settings_dialog(self, w):
         dialog = gtk.Dialog(_("Settings"),
-                   None,
-                   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                   (gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT))
+                   self.main_window,
+                   gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT)
+
+        # Maemo 5 has an implicit "close" button (tap outside of dialog)
+        if not platform.FREMANTLE:
+            dialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
+
         table = gtk.Table(5, 2, True)
         dialog.vbox.add(table)
         b = gtk.CheckButton()
