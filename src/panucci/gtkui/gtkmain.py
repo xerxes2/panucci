@@ -102,16 +102,17 @@ class PanucciGUI(object):
         self.__player_tab = PlayerTab(self)
         self.__playlist_tab = gtkplaylist.PlaylistTab(self, player)
 
+        self.create_actions()
+
         if platform.FREMANTLE:
             self.playlist_window = hildon.StackableWindow()
+            self.playlist_window.set_app_menu(self.create_playlist_app_menu())
         else:
             self.playlist_window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.playlist_window.connect('delete-event', gtk.Widget.hide_on_delete)
         self.playlist_window.set_title(_('Playlist'))
         self.playlist_window.set_transient_for(self.main_window)
         self.playlist_window.add(self.__playlist_tab)
-
-        self.create_actions()
 
         if platform.MAEMO:
             if platform.FREMANTLE:
@@ -243,7 +244,7 @@ class PanucciGUI(object):
         else:
             self.action_play_mode_all.set_active(True)
         # Help menu
-        self.action_about = gtk.Action('about', _('About Panucci'), _('Show application version'), gtk.STOCK_ABOUT)
+        self.action_about = gtk.Action('about', _('About'), _('Show application version'), gtk.STOCK_ABOUT)
         self.action_about.connect('activate', self.about_callback)
 
     def create_desktop_menu(self, menu_bar):
@@ -290,42 +291,30 @@ class PanucciGUI(object):
         help_menu_item.set_submenu(help_menu)
         menu_bar.append(help_menu_item)
 
+    def create_playlist_app_menu(self):
+        menu = hildon.AppMenu()
+
+        for action in (self.action_save,
+                self.action_empty_playlist,
+                self.action_delete_bookmarks):
+            b = gtk.Button()
+            action.connect_proxy(b)
+            menu.append(b)
+
+        menu.show_all()
+        return menu
+
     def create_app_menu(self):
         menu = hildon.AppMenu()
 
-        b = gtk.Button()
-        self.action_open.connect_proxy(b)
-        menu.append(b)
-
-        b = gtk.Button()
-        self.action_open_dir.connect_proxy(b)
-        menu.append(b)
-
-        # - Save Playlist
-        # what about placing this inside the playlist?
-        b = gtk.Button()
-        self.action_save.connect_proxy(b)
-        menu.append(b)
-
-        b = gtk.Button()
-        self.action_empty_playlist.connect_proxy(b)
-        menu.append(b)
-
-        b = gtk.Button()
-        self.action_delete_bookmarks.connect_proxy(b)
-        menu.append(b)
-
-        b = gtk.Button()
-        self.action_playlist.connect_proxy(b)
-        menu.append(b)
-
-        b = gtk.Button()
-        self.action_settings.connect_proxy(b)
-        menu.append(b)
-
-        b = gtk.Button()
-        self.action_about.connect_proxy(b)
-        menu.append(b)
+        for action in (self.action_settings,
+                self.action_playlist,
+                self.action_open,
+                self.action_open_dir,
+                self.action_about):
+            b = gtk.Button()
+            action.connect_proxy(b)
+            menu.append(b)
 
         menu.show_all()
         return menu
