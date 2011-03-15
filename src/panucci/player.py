@@ -118,9 +118,11 @@ class PanucciPlayer(ForwardingObservableService):
         """ New track callback; stops the player and starts the new track. """
 
         if self.playlist.current_filepath is not None:
+            
             filepath = self.playlist.current_filepath
             if filepath.startswith('/'):
                 filepath = 'file://' + filepath
+            
             self.load_media(filepath)
 
             # This is just here to prevent the player from starting to play

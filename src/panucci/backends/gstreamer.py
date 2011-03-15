@@ -15,18 +15,18 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-#
 
 from __future__ import absolute_import
 
+import gobject
 import gst
 import logging
 
 import panucci
-
 from panucci import util
-
 from panucci.backends import base
+
+gobject.threads_init()
 
 class GStreamerPlayer(base.BasePlayer):
     """ A player that uses Gstreamer for playback """
@@ -72,14 +72,13 @@ class GStreamerPlayer(base.BasePlayer):
 
     def play(self):
         have_player = self._player is not None
-        
+
         # Don't think this is needed
         #if have_player or self.__setup_player():
         if have_player:
             self._initial_seek_completed = have_player
             self._player.set_state(gst.STATE_PLAYING)
             return True
-           
         else:
             # should something happen here? perhaps self.stop()?
             return False
@@ -130,6 +129,7 @@ class GStreamerPlayer(base.BasePlayer):
             self._player = gst.element_factory_make('playbin', 'player')
         self._filesrc = self._player
         self._filesrc_property = 'uri'
+
         return True
 
     def _on_decoder_pad_added(self, decoder, src_pad, sink_pad):
@@ -162,5 +162,4 @@ class GStreamerPlayer(base.BasePlayer):
         elif t == gst.MESSAGE_STATE_CHANGED:
             if ( message.src == self._player and
                 message.structure['new-state'] == gst.STATE_PLAYING ):
-
                 self.notify('playing', caller=self.__on_message)
