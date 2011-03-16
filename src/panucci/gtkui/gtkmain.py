@@ -144,7 +144,7 @@ class PanucciGUI(object):
             # I haven't seen this option before "settings.play_on_headset"
             PATH = '/org/freedesktop/Hal/devices/computer_logicaldev_input_1'
             def handler_func(device_path):
-                if device_path == PATH and not player.playing:
+                if device_path == PATH and settings.play_on_headset and not player.playing:
                     player.play()
             system_bus.add_signal_receiver(handler_func, 'DeviceAdded', \
                     'org.freedesktop.Hal.Manager', None, \
