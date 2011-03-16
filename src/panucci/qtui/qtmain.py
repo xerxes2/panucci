@@ -174,6 +174,8 @@ class PanucciGUI(object):
         self.menu_help.addAction(self.action_about)
 
     def quit_panucci(self):
+        self.main_window.hide()
+        player.quit()
         self.main_window.close()
 
     def add_file_callback(self):
@@ -218,7 +220,6 @@ class PanucciGUI(object):
                 _('By accepting all bookmarks in the database will be deleted.'), True, False, True, False)
         if response == QtGui.QMessageBox.Ok:
             player.playlist.delete_all_bookmarks()
-            print 1
 
     def playlist_callback(self):
         pass
@@ -316,23 +317,26 @@ class PlayerTab(ObservableService):
         self.progress.setFormat("00:00 / 00:00")
         self.progress.setValue(0)
         self.progress.mousePressEvent = self.on_progress_clicked
-        if platform.FREMANTLE:
-            self.progress.setFixedHeight(100)
-        elif platform.MAEMO:
-            self.progress.setFixedHeight(50)
+        self.progress.setFixedHeight(settings.config.getint("options", "progress_height"))
 
         self.button_rrewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-skip-backward.png')), "")
         self.button_rrewind.clicked.connect(self.button_rrewind_callback)
+        self.button_rrewind.setFixedHeight(settings.config.getint("options", "button_height"))
         self.button_rewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-seek-backward.png')), "")
         self.button_rewind.clicked.connect(self.button_rewind_callback)
+        self.button_rewind.setFixedHeight(settings.config.getint("options", "button_height"))
         self.button_play = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-playback-start.png')), "")
         self.button_play.clicked.connect(self.button_play_callback)
+        self.button_play.setFixedHeight(settings.config.getint("options", "button_height"))
         self.button_forward = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-seek-forward.png')), "")
         self.button_forward.clicked.connect(self.button_forward_callback)
+        self.button_forward.setFixedHeight(settings.config.getint("options", "button_height"))
         self.button_fforward = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-skip-forward.png')), "")
         self.button_fforward.clicked.connect(self.button_fforward_callback)
+        self.button_fforward.setFixedHeight(settings.config.getint("options", "button_height"))
         self.button_bookmark = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('bookmark-new.png')), "")
         self.button_bookmark.clicked.connect(self.button_bookmark_callback)
+        self.button_bookmark.setFixedHeight(settings.config.getint("options", "button_height"))
 
         layout = QtGui.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -490,8 +494,8 @@ class PlayerTab(ObservableService):
             try:
                 pixmap = QtGui.QPixmap()
                 pixmap.loadFromData(value)
-                x, y = self.get_coverart_size()
-                pixmap = pixmap.scaled(x, y, mode=QtCore.Qt.SmoothTransformation)
+                pixmap = pixmap.scaled(settings.config.getint("options", "cover_height"),
+                    settings.config.getint("options", "cover_height"), mode=QtCore.Qt.SmoothTransformation)
                 self.set_coverart(pixmap)
             except Exception, e:
                 self.__log.exception('Error setting coverart...')

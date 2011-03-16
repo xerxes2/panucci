@@ -794,11 +794,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         progress_eventbox.connect(
             'button-press-event', self.on_progressbar_changed )
         self.progress = gtk.ProgressBar()
-        # make the progress bar more "finger-friendly"
-        if platform.FREMANTLE:
-            self.progress.set_size_request(-1, 100)
-        elif platform.MAEMO:
-            self.progress.set_size_request(-1, 50)
+        self.progress.set_size_request(-1, settings.config.getint("options", "progress_height"))
         progress_eventbox.add(self.progress)
         main_vbox.pack_start( progress_eventbox, False, False )
 
@@ -856,8 +852,8 @@ class PlayerTab(ObservableService, gtk.HBox):
             for child in buttonbox.get_children():
                 if isinstance(child, gtk.Button):
                     child.set_name('HildonButton-thumb')
-            buttonbox.set_size_request(-1, 105)
 
+        buttonbox.set_size_request(-1, settings.config.getint("options", "button_height"))
         main_vbox.pack_start(buttonbox, False, False)
 
         if platform.MAEMO:
@@ -889,7 +885,7 @@ class PlayerTab(ObservableService, gtk.HBox):
                       self.fforward_button, self.rrewind_button, \
                       self.bookmarks_button:
 
-            button.set_longpress_enabled( settings.config.getboolean("options", "enable_dual_action_btn") )
+            button.set_longpress_enabled( settings.config.getboolean("options", "dual_action_button") )
             button.set_duration( settings.config.getfloat("options", "dual_action_button_delay") )
 
     def on_key_press(self, widget, event):
@@ -1038,10 +1034,9 @@ class PlayerTab(ObservableService, gtk.HBox):
             try:
                 pbl.write(value)
                 pbl.close()
-
-                x, y = self.get_coverart_size()
                 pixbuf = pbl.get_pixbuf()
-                pixbuf = pixbuf.scale_simple( x, y, gtk.gdk.INTERP_BILINEAR )
+                pixbuf = pixbuf.scale_simple(settings.config.getint("options", "cover_height"),
+                    settings.config.getint("options", "cover_height"), gtk.gdk.INTERP_BILINEAR )
                 self.set_coverart(pixbuf)
             except Exception, e:
                 self.__log.exception('Error setting coverart...')
