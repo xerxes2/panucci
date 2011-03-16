@@ -57,6 +57,7 @@ class PanucciGUI(object):
         self.config = settings.config
         
         app = QtGui.QApplication(["Panucci"])
+        app.setWindowIcon(QtGui.QIcon(util.find_data_file('panucci.png')))
         self.main_window = QtGui.QMainWindow(None)
         self.create_actions()
         self.create_menus()
