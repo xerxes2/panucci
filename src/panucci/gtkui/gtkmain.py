@@ -770,6 +770,9 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.artist_label = gtk.Label('')
         self.artist_label.set_ellipsize(pango.ELLIPSIZE_END)
         metadata_vbox.pack_start(self.artist_label, False, False)
+        separator = gtk.Label("")
+        separator.set_size_request(-1, 10)
+        metadata_vbox.pack_start(separator, False, False)
         self.album_label = gtk.Label('')
         if platform.FREMANTLE:
             hildon.hildon_helper_set_logical_font(self.album_label, 'SmallSystemFont')
@@ -778,6 +781,9 @@ class PlayerTab(ObservableService, gtk.HBox):
             self.album_label.modify_font(pango.FontDescription('normal 8'))
         self.album_label.set_ellipsize(pango.ELLIPSIZE_END)
         metadata_vbox.pack_start(self.album_label, False, False)
+        separator = gtk.Label("")
+        separator.set_size_request(-1, 10)
+        metadata_vbox.pack_start(separator, False, False)
         self.title_label = widgets.ScrollingLabel('',
                                                   settings.config.get("options", "scrolling_color"),
                                                   update_interval=100,
