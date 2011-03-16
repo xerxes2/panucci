@@ -531,6 +531,7 @@ class PanucciGUI(object):
     def destroy(self, widget):
         self.main_window.hide()
         player.quit()
+        self.write_config()
         gtk.main_quit()
 
     def set_progress_indicator(self, loading_title=False):
@@ -643,7 +644,6 @@ class PanucciGUI(object):
             settings.config.set("options", w.get_name(), "true")
         else:
             settings.config.set("options", w.get_name(), "false")
-        self.write_config()
 
     def scrolling_labels_callback(self, w):
         self.set_boolean_config_callback(w)
@@ -651,7 +651,6 @@ class PanucciGUI(object):
 
     def set_play_mode_callback(self, w):
         settings.config.set("options", "play_mode", w.get_name())
-        self.write_config()
 
     def write_config(self):
         _file = open(os.path.expanduser("~/.config/panucci/panucci-noedit.conf"), "w")
