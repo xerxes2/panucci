@@ -56,9 +56,10 @@ class PanucciGUI(object):
         interface.register_gui(self)
         self.config = settings.config
         
-        app = QtGui.QApplication(["Panucci"])
-        app.setWindowIcon(QtGui.QIcon(util.find_data_file('panucci.png')))
+        self.app = QtGui.QApplication(["Panucci"])
+        self.app.setWindowIcon(QtGui.QIcon(util.find_data_file('panucci.png')))
         self.main_window = QtGui.QMainWindow(None)
+        self.main_window.closeEvent = self.close_main_window_callback
         self.create_actions()
         self.create_menus()
         self.__player_tab = PlayerTab(self)
@@ -67,7 +68,7 @@ class PanucciGUI(object):
         self.main_window.setCentralWidget(widget)
         self.main_window.show()
         player.init(filepath=filename)
-        app.exec_()
+        self.app.exec_()
 
     def create_actions(self):
         # File menu
@@ -170,7 +171,10 @@ class PanucciGUI(object):
         self.main_window.hide()
         player.quit()
         self.write_config()
-        self.main_window.close()
+        self.app.exit()
+
+    def close_main_window_callback(self, event):
+        self.quit_panucci()
 
     def add_file_callback(self):
         filenames = qtutil.get_file_from_filechooser(self)
