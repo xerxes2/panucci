@@ -58,18 +58,10 @@ class PanucciGUI(object):
         
         app = QtGui.QApplication(["Panucci"])
         self.main_window = QtGui.QMainWindow(None)
-        # Create a Label and show it
-        #label = QtGui.QLabel("Hello World")
-        #label.show()
-        #button = QtGui.QPushButton("Click me")
-        #button.clicked.connect(self.destroy)
-        # Enter Qt application main loop
-        #button.show()
         self.create_actions()
         self.create_menus()
         self.__player_tab = PlayerTab(self)
         widget = QtGui.QWidget()
-        #widget.setContentsMargins(0, 0, 0, 0)
         widget.setLayout(self.__player_tab.mainbox)
         self.main_window.setCentralWidget(widget)
         self.main_window.show()
@@ -303,6 +295,9 @@ class PlayerTab(ObservableService):
         self.label_artist = QtGui.QLabel()
         self.label_album = QtGui.QLabel()
         self.label_title = QtGui.QLabel()
+        self.label_artist.setContentsMargins(0, 0, 5, 10)
+        self.label_album.setContentsMargins(0, 0, 5, 0)
+        self.label_title.setContentsMargins(0, 10, 5, 0)
         vlayout.addWidget(self.label_artist)
         vlayout.addWidget(self.label_album)
         vlayout.addWidget(self.label_title)
@@ -466,7 +461,7 @@ class PlayerTab(ObservableService):
         
     def stop_progress_timer( self ):
         self.timer.stop()
-
+    """
     def get_coverart_size( self ):
         if platform.MAEMO:
             if self.__gui_root.fullscreen:
@@ -482,7 +477,7 @@ class PlayerTab(ObservableService):
         self.label_cover.setPixmap(pixmap)
         self.label_cover.show()
         self.has_coverart = True
-
+    """
     def set_metadata( self, tag_message ):
         tags = { 'title': self.label_title, 'artist': self.label_artist,
                  'album': self.label_album }
@@ -494,12 +489,16 @@ class PlayerTab(ObservableService):
             try:
                 pixmap = QtGui.QPixmap()
                 pixmap.loadFromData(value)
-                pixmap = pixmap.scaled(settings.config.getint("options", "cover_height"),
-                    settings.config.getint("options", "cover_height"), mode=QtCore.Qt.SmoothTransformation)
-                self.set_coverart(pixmap)
+                if self.__gui_root.main_window.isFullScreen():
+                    size = settings.config.getint("options", "cover_full_height")
+                else:
+                    size = settings.config.getint("options", "cover_height")
+                pixmap = pixmap.scaled(size, size, mode=QtCore.Qt.SmoothTransformation)
+                self.label_cover.setPixmap(pixmap)
+                self.label_cover.show()
+                self.has_coverart = True
             except Exception, e:
                 self.__log.exception('Error setting coverart...')
-
 
         # set the text metadata
         for tag,value in tag_message.iteritems():
