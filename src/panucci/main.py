@@ -31,7 +31,7 @@ import os.path
 import sys
 
 import panucci
-
+from panucci.settings import settings
 # Detect the platform we're running on
 from panucci import platform
 platform.detect()
@@ -65,6 +65,10 @@ def run(opts, args):
         init_logging( logging.DEBUG if opts.debug else logging.ERROR )
 
         if opts.qt:
+            from panucci.qtui.qtmain import PanucciGUI
+        elif opts.gtk:
+            from panucci.gtkui.gtkmain import PanucciGUI
+        elif settings.config.get("options", "gui") == "qt":
             from panucci.qtui.qtmain import PanucciGUI
         else:
             from panucci.gtkui.gtkmain import PanucciGUI
