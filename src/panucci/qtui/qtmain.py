@@ -250,8 +250,8 @@ class PanucciGUI(object):
         self.set_config_option("play_mode", "repeat")
 
     def about_callback(self):
-        QtGui.QMessageBox.about(self.main_window, "About Panucci",
-          "Add some stuff here.")
+        from panucci.qtui import qtaboutdialog
+        qtaboutdialog.AboutDialog(self.main_window, panucci.__version__)
 
     def set_config_option(self, option, value):
         self.config.set("options", option, value)
