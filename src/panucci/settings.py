@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # This file is part of Panucci.
 # Copyright (c) 2008-2011 The Panucci Project
@@ -15,7 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-#
 
 from __future__ import absolute_import
 
@@ -40,7 +39,19 @@ class Settings(object):
     def __init__(self):
         self.__log = logging.getLogger('panucci.settings.Settings')
         self.config = ConfigParser.SafeConfigParser()
-        self.config.read([CONFIG_FOLDER + "/panucci.conf"])
+        # Parse everything
+        _file = open(util.find_data_file("panucci-all.conf"))
+        self.config.readfp(_file)
+        _file.close()
+        # Parse non editable 
+        if os.path.exists(CONFIG_FOLDER + '/panucci-noedit.conf'):
+            _file = open(CONFIG_FOLDER + "/panucci-noedit.conf")
+            self.config.readfp(_file)
+            _file.close()
+        # Parse editable
+        _file = open(CONFIG_FOLDER + "/panucci.conf")
+        self.config.readfp(_file)
+        _file.close()
     """
     def __getattr__(self, key):
         if DEFAULTS.has_key(key):

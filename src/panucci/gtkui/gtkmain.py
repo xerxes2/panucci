@@ -643,6 +643,7 @@ class PanucciGUI(object):
             settings.config.set("options", w.get_name(), "true")
         else:
             settings.config.set("options", w.get_name(), "false")
+        self.write_config()
 
     def scrolling_labels_callback(self, w):
         self.set_boolean_config_callback(w)
@@ -650,6 +651,12 @@ class PanucciGUI(object):
 
     def set_play_mode_callback(self, w):
         settings.config.set("options", "play_mode", w.get_name())
+        self.write_config()
+
+    def write_config(self):
+        _file = open(os.path.expanduser("~/.config/panucci/panucci-noedit.conf"), "w")
+        settings.config.write(_file)
+        _file.close()
 
     def __get_fullscreen(self):
         return self.__window_fullscreen
