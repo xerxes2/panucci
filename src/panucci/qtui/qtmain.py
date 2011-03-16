@@ -334,7 +334,7 @@ class PlayerTab(ObservableService):
         self.button_bookmark.setFixedHeight(settings.config.getint("options", "button_height"))
 
         layout = QtGui.QHBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(0, 4, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self.button_rrewind)
         layout.addWidget(self.button_rewind)
@@ -429,7 +429,7 @@ class PlayerTab(ObservableService):
          self.do_seek(settings.config.getint("options", "seek_long"))
 
     def button_bookmark_callback(self):
-        player.play_pause_toggle()
+        player.add_bookmark_at_current_position()
 
     def set_progress_callback(self, time_elapsed, total_time):
         """ times must be in nanoseconds """
@@ -461,23 +461,20 @@ class PlayerTab(ObservableService):
         
     def stop_progress_timer( self ):
         self.timer.stop()
-    """
-    def get_coverart_size( self ):
-        if platform.MAEMO:
-            if self.__gui_root.fullscreen:
-                size = util.coverart_sizes['maemo fullscreen']
-            else:
-                size = util.coverart_sizes['maemo']
+
+    def get_cover_size(self):
+        if self.__gui_root.main_window.isFullScreen():
+            size = settings.config.getint("options", "cover_full_height")
         else:
-            size = util.coverart_sizes['normal']
+            size = settings.config.getint("options", "cover_height")
+        return size
 
-        return size, size
+    def set_cover_size(self):
+        if self.has_coverart:
+            size = self.get_cover_size()
+            pixmap = self.label_cover.pixmap().scaled(size, size, mode=QtCore.Qt.SmoothTransformation)
+            self.label_cover.setPixmap(pixmap)
 
-    def set_coverart( self, pixmap ):
-        self.label_cover.setPixmap(pixmap)
-        self.label_cover.show()
-        self.has_coverart = True
-    """
     def set_metadata( self, tag_message ):
         tags = { 'title': self.label_title, 'artist': self.label_artist,
                  'album': self.label_album }
@@ -489,10 +486,7 @@ class PlayerTab(ObservableService):
             try:
                 pixmap = QtGui.QPixmap()
                 pixmap.loadFromData(value)
-                if self.__gui_root.main_window.isFullScreen():
-                    size = settings.config.getint("options", "cover_full_height")
-                else:
-                    size = settings.config.getint("options", "cover_height")
+                size = self.get_cover_size()
                 pixmap = pixmap.scaled(size, size, mode=QtCore.Qt.SmoothTransformation)
                 self.label_cover.setPixmap(pixmap)
                 self.label_cover.show()
