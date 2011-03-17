@@ -517,7 +517,10 @@ class PlayerTab(ObservableService):
                     tags[tag].setText('<big>'+cgi.escape(value)+'</big>')
                 except TypeError, e:
                     self.__log.exception(str(e))
-                #tags[tag].set_alignment( 0.5*int(not self.has_coverart), 0.5)
+                if not self.has_coverart:
+                    tags[tag].setAlignment(QtCore.Qt.AlignHCenter)
+                else:
+                    tags[tag].setAlignment(QtCore.Qt.AlignLeft)
                 tags[tag].show()
 
             if tag == 'title':
