@@ -44,6 +44,7 @@ from panucci.player import player
 from panucci.dbusinterface import interface
 from panucci.services import ObservableService
 from panucci.qtui import qtutil
+from panucci.qtui import qtplaylist
 
 ##################################################
 # PanucciGUI
@@ -63,6 +64,7 @@ class PanucciGUI(object):
         self.create_actions()
         self.create_menus()
         self.__player_tab = PlayerTab(self)
+        self.__playlisy_tab = qtplaylist.PlaylistTab(self, player)
         widget = QtGui.QWidget()
         widget.setLayout(self.__player_tab.mainbox)
         self.main_window.setCentralWidget(widget)
@@ -176,6 +178,9 @@ class PanucciGUI(object):
     def close_main_window_callback(self, event):
         self.quit_panucci()
 
+    def show_main_window(self):
+        self.main_window.activateWindow()
+
     def add_file_callback(self):
         filenames = qtutil.get_file_from_filechooser(self)
         if filenames:
@@ -220,7 +225,7 @@ class PanucciGUI(object):
             player.playlist.delete_all_bookmarks()
 
     def playlist_callback(self):
-        pass
+        self.__playlisy_tab.main_window.show()
 
     def lock_progress_callback(self):
         self.set_config_option("lock_progress", str(self.action_lock_progress.isChecked()).lower())

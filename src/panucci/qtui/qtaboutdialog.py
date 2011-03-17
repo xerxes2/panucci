@@ -46,20 +46,54 @@ class AboutDialog:
         label = QtGui.QLabel()
         label.setText(about.about_text)
         vlayout.addWidget(label, 2)
-        label = QtGui.QLabel()
-        vlayout.addWidget(label, 3)
+        label = QtGui.QLabel(about.about_copyright)
+        vlayout.addWidget(label, 2)
+        label = QtGui.QLabel("<qt><a href='%s'>"%(about.about_website) + about.about_website + "</a></qt>")
+        label.setOpenExternalLinks(True)
+        vlayout.addWidget(label, 2)
         hlayout.addLayout(vlayout, 2)
         main_layout.addLayout(hlayout)
+
         layout = QtGui.QHBoxLayout()
         label = QtGui.QLabel()
         layout.addWidget(label, 2)
-
+        button = QtGui.QPushButton(_("Credits"))
+        button.clicked.connect(self.show_credits)
+        layout.addWidget(button)
         button = QtGui.QPushButton(_("Close"))
         button.clicked.connect(self.close)
         layout.addWidget(button)
         main_layout.addLayout(layout)
 
+        self.cd = QtGui.QDialog(self.ad)
+        self.cd.setWindowTitle(_("Credits"))
+        self.cd.setModal(True)
+        layout = QtGui.QVBoxLayout()
+        self.cd.setLayout(layout)
+
+        tw = QtGui.QTabWidget()
+        layout.addWidget(tw)
+        te = QtGui.QTextEdit()
+        tw.addTab(te, _("Authors"))
+        te.setReadOnly(True)
+        for i in about.about_authors:
+            te.append(i)
+
+        hlayout = QtGui.QHBoxLayout()
+        label = QtGui.QLabel()
+        hlayout.addWidget(label, 2)
+        button = QtGui.QPushButton(_("Close"))
+        button.clicked.connect(self.close_credits)
+        hlayout.addWidget(button)
+
+        layout.addLayout(hlayout)
         self.ad.exec_()
-        
+
     def close(self):
         self.ad.close()
+
+    def show_credits(self):
+        self.cd.show()
+
+    def close_credits(self):
+        self.cd.close()
