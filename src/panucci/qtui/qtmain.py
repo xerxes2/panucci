@@ -64,11 +64,12 @@ class PanucciGUI(object):
         self.create_actions()
         self.create_menus()
         self.__player_tab = PlayerTab(self)
-        self.__playlisy_tab = qtplaylist.PlaylistTab(self, player)
+        self.__playlist_tab = qtplaylist.PlaylistTab(self, player)
         widget = QtGui.QWidget()
         widget.setLayout(self.__player_tab.mainbox)
         self.main_window.setCentralWidget(widget)
         self.main_window.show()
+        
         player.init(filepath=filename)
         self.app.exec_()
 
@@ -216,7 +217,7 @@ class PanucciGUI(object):
 
     def clear_playlist_callback(self):
         player.playlist.reset_playlist()
-        #self.__playlist_tab.treeview.get_model().clear()
+        self.__playlist_tab.clear_model()
 
     def delete_bookmarks_callback(self):
         response = qtutil.dialog(self.main_window,  _('Delete all bookmarks?'),
@@ -225,7 +226,7 @@ class PanucciGUI(object):
             player.playlist.delete_all_bookmarks()
 
     def playlist_callback(self):
-        self.__playlisy_tab.main_window.show()
+        self.__playlist_tab.main_window.show()
 
     def lock_progress_callback(self):
         self.set_config_option("lock_progress", str(self.action_lock_progress.isChecked()).lower())

@@ -158,6 +158,7 @@ class Playlist(ObservableService):
         new_pos = self.__queue.index(item_id)
         same_pos = self.__queue.current_item_position == new_pos
         self.__queue.current_item_position = new_pos
+        
 
         if bookmark is None:
             self.__queue.current_item.seek_to = 0
@@ -255,11 +256,11 @@ class Playlist(ObservableService):
             return False
 
         if bookmark_id is None:
-            if self.__queue.current_item_position == self.__queue.index(item_id):
+            if self.__queue.current_item_position == self.__queue.index(item):
                 self.next()
 
             item.delete_bookmark(None)
-            self.__queue.remove(item_id)
+            self.__queue.remove(item)
         else:
             item.delete_bookmark(bookmark_id)
 
@@ -664,7 +665,7 @@ class Queue(list, ObservableService):
             return False
         else:
             return True
-  
+
     def get_bookmark(self, item_id, bookmark_id):
         item = self.get_item(item_id)
 
@@ -679,8 +680,8 @@ class Queue(list, ObservableService):
 
             if item is None: return None, None
 
-        if item.bookmarks.count(bookmark_id):
-            return item, item.bookmarks[item.bookmarks.index(bookmark_id)]
+        if item.get_bookmark(bookmark_id):
+            return item, item.get_bookmark(bookmark_id)
         else:
             return item, None
 
@@ -870,6 +871,11 @@ class PlaylistItem(object):
         b.save()
         self.bookmarks.append(b)
 
+    def get_bookmark(self, bkmk_id):
+        for i in self.bookmarks:
+            if str(i) == bkmk_id:
+                return i
+
     def delete_bookmark(self, bookmark_id):
         """ WARNING: if bookmark_id is None, ALL bookmarks will be deleted """
         if bookmark_id is None:
@@ -880,10 +886,11 @@ class PlaylistItem(object):
                 bkmk.delete()
             self.bookmarks = []
         else:
-            bkmk = self.bookmarks.index(bookmark_id)
-            if bkmk >= 0:
-                self.bookmarks[bkmk].delete()
-                self.bookmarks.remove(bookmark_id)
+            bookmark = self.get_bookmark(bookmark_id)
+            pos = self.bookmarks.index(bookmark)
+            if pos >= 0:
+                self.bookmarks[pos].delete()
+                self.bookmarks.remove(bookmark)
             else:
                 self.__log.info('Cannot find bookmark with id: %s',bookmark_id)
                 return False

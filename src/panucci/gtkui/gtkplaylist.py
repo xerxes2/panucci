@@ -319,8 +319,6 @@ class PlaylistTab(gtk.VBox):
             model, bkmk_id, bkmk_iter, item_id, item_iter = selected.pop(0)
             self.player.playlist.load_from_bookmark_id(item_id, bkmk_id)
 
-            # FIXME: The player/playlist should be able to take care of this
-
     def empty_playlist(self, w):
         self.player.playlist.reset_playlist()
         self.treeview.get_model().clear()
