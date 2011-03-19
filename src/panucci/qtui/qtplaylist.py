@@ -135,7 +135,10 @@ class PlaylistTab():
         return selection, item, bkmk, item_id, bkmk_id, parent
 
     def button_info_callback(self):
-        pass
+        selection, item, bkmk, item_id, bkmk_id, parent = self.get_current_selection()
+        if selection:
+            playlist_item = self.player.playlist.get_item_by_id(item_id)
+            PlaylistItemDetails(self.main_window, playlist_item)
 
     def button_clear_callback(self):
         self.__gui_root.clear_playlist_callback()
@@ -164,3 +167,58 @@ class PlaylistTab():
     def on_bookmark_added(self, parent_id, bookmark_name, position):
         #self.__gui_root.notify(_('Bookmark added: %s') % bookmark_name)
         self.update_model()
+
+##################################################
+# PlaylistItemDetails
+##################################################
+class PlaylistItemDetails():
+    def __init__(self, parent, playlist_item):
+        self.id = QtGui.QDialog(parent)
+        self.id.setWindowTitle(_("Info"))
+        main_layout = QtGui.QVBoxLayout()
+        self.id.setLayout(main_layout)
+
+        self.grid = QtGui.QGridLayout()
+        main_layout.addLayout(self.grid)
+        self.grid.setColumnStretch(1, 3)
+
+        hlayout = QtGui.QHBoxLayout()
+        label = QtGui.QLabel()
+        hlayout.addWidget(label, 2)
+        button = QtGui.QPushButton(_("Close"))
+        button.clicked.connect(self.close)
+        hlayout.addWidget(button)
+        main_layout.addLayout(hlayout)
+
+        self.fill(playlist_item)
+        self.id.exec_()
+
+    def close(self):
+        self.id.close()
+
+    def fill(self, playlist_item):
+        metadata = playlist_item.metadata
+        
+        label = QtGui.QLabel("<b>" + _('Title:') + "</b>")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        self.grid.addWidget(label, 0, 0, QtCore.Qt.AlignRight)
+        label = QtGui.QLabel(metadata["title"])
+        self.grid.addWidget(label, 0, 1)
+
+        label = QtGui.QLabel("<b>" + _('Length:') + "</b>")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        self.grid.addWidget(label, 1, 0, QtCore.Qt.AlignRight)
+        label = QtGui.QLabel(util.convert_ns(metadata["length"]))
+        self.grid.addWidget(label, 1, 1)
+        
+        label = QtGui.QLabel("<b>" + _('Artist:') + "</b>")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        self.grid.addWidget(label, 2, 0, QtCore.Qt.AlignRight)
+        label = QtGui.QLabel(metadata["artist"])
+        self.grid.addWidget(label, 2, 1)
+        
+        label = QtGui.QLabel("<b>" + _('Album:') + "</b>")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        self.grid.addWidget(label, 3, 0, QtCore.Qt.AlignRight)
+        label = QtGui.QLabel(metadata["album"])
+        self.grid.addWidget(label, 3, 1)
