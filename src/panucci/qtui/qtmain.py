@@ -403,6 +403,7 @@ class PlayerTab(ObservableService):
             widget.setText('')
         self.label_cover.hide()
         self.has_coverart = False
+        self.reset_progress()
 
     def on_player_new_metadata(self):
         self.metadata = player.playlist.get_file_metadata()

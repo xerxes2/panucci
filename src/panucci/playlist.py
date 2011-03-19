@@ -255,12 +255,15 @@ class Playlist(ObservableService):
             self.__log.info('Cannot find item with id: %s', item_id)
             return False
 
-        if bookmark_id is None:
+        if bookmark_id is None:            
             if self.__queue.current_item_position == self.__queue.index(item):
-                self.next()
-
-            item.delete_bookmark(None)
-            self.__queue.remove(item)
+                item.delete_bookmark(None)
+                self.__queue.remove(item)
+                self.notify('stop-requested', caller=self.remove_bookmark)
+                self.__queue.current_item_position = self.__queue.current_item_position
+            else:
+                item.delete_bookmark(None)
+                self.__queue.remove(item)
         else:
             item.delete_bookmark(bookmark_id)
 
