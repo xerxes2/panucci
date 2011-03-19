@@ -45,6 +45,7 @@ from panucci.dbusinterface import interface
 from panucci.services import ObservableService
 from panucci.qtui import qtutil
 from panucci.qtui import qtplaylist
+from panucci.qtui import qtwidgets
 
 ##################################################
 # PanucciGUI
@@ -331,8 +332,13 @@ class PlayerTab(ObservableService):
         self.progress.mousePressEvent = self.on_progress_clicked
         self.progress.setFixedHeight(settings.config.getint("options", "progress_height"))
 
-        self.button_rrewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-skip-backward.png')), "")
-        self.button_rrewind.clicked.connect(self.button_rrewind_callback)
+        #self.button_rrewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-skip-backward.png')), "")
+        self.button_rrewind = qtwidgets.DualActionButton(settings.config, 
+                                                      QtGui.QIcon(util.find_data_file('media-skip-backward.png')),
+                                                      self.button_rrewind_callback,
+                                         QtGui.QIcon("/usr/share/icons/gnome/24x24/actions/gtk-goto-first-ltr.png"),
+                                         player.playlist.prev)
+        #self.button_rrewind.clicked.connect(self.button_rrewind_callback)
         self.button_rrewind.setFixedHeight(settings.config.getint("options", "button_height"))
         self.button_rewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-seek-backward.png')), "")
         self.button_rewind.clicked.connect(self.button_rewind_callback)
@@ -343,8 +349,13 @@ class PlayerTab(ObservableService):
         self.button_forward = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-seek-forward.png')), "")
         self.button_forward.clicked.connect(self.button_forward_callback)
         self.button_forward.setFixedHeight(settings.config.getint("options", "button_height"))
-        self.button_fforward = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-skip-forward.png')), "")
-        self.button_fforward.clicked.connect(self.button_fforward_callback)
+        #self.button_fforward = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-skip-forward.png')), "")
+        self.button_fforward = qtwidgets.DualActionButton(settings.config, 
+                                                      QtGui.QIcon(util.find_data_file('media-skip-forward.png')),
+                                                      self.button_fforward_callback,
+                                         QtGui.QIcon("/usr/share/icons/gnome/24x24/actions/gtk-goto-last-ltr.png"),
+                                         player.playlist.next)
+        #self.button_fforward.clicked.connect(self.button_fforward_callback)
         self.button_fforward.setFixedHeight(settings.config.getint("options", "button_height"))
         self.button_bookmark = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('bookmark-new.png')), "")
         self.button_bookmark.clicked.connect(self.button_bookmark_callback)

@@ -1,0 +1,65 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of Panucci.
+# Copyright (c) 2008-2011 The Panucci Project
+#
+# Panucci is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Panucci is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import absolute_import
+
+from PySide  import QtCore
+from PySide import QtGui
+
+from panucci import platform
+
+class DualActionButton(QtGui.QPushButton):
+    def __init__(self, config, default_icon, default_action, longpress_icon=None, longpress_action=None):
+        super(DualActionButton, self).__init__()
+
+        self.config = config
+        self.default_icon = default_icon
+        self.default_action = default_action
+        if longpress_icon:
+            self.longpress = True
+            self.longpress_icon = longpress_icon
+            self.longpress_action = longpress_action
+        else:
+            self.longpress = False
+        
+        self.setIcon(default_icon)
+        self.state = False
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(int(1000*self.config.getfloat("options", "dual_action_button_delay")))
+        self.timer.timeout.connect(self.timer_callback)
+        
+        self.pressed.connect(self.pressed_callback)
+        self.released.connect(self.released_callback)
+
+    def timer_callback(self):
+        self.state = True
+        self.setIcon(self.longpress_icon)
+        self.timer.stop()
+    
+    def pressed_callback(self):
+        if self.longpress and self.config.getboolean("options", "dual_action_button"):
+            self.timer.start()
+        
+    def released_callback(self):
+        self.timer.stop()
+        if self.state and self.longpress:
+            self.longpress_action()
+        else:
+            self.default_action()
+        self.state = False
+        self.setIcon(self.default_icon)
