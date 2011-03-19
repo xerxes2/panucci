@@ -255,13 +255,17 @@ class Playlist(ObservableService):
             self.__log.info('Cannot find item with id: %s', item_id)
             return False
 
-        if bookmark_id is None:            
-            if self.__queue.current_item_position == self.__queue.index(item):
+        if bookmark_id is None:
+            if self.__queue.current_item_position < self.__queue.index(item):
+                item.delete_bookmark(None)
+                self.__queue.remove(item)
+            elif self.__queue.current_item_position == self.__queue.index(item):
                 item.delete_bookmark(None)
                 self.__queue.remove(item)
                 self.notify('stop-requested', caller=self.remove_bookmark)
                 self.__queue.current_item_position = self.__queue.current_item_position
             else:
+                self.__queue.set_current_item_position(self.__queue.current_item_position - 1)
                 item.delete_bookmark(None)
                 self.__queue.remove(item)
         else:
@@ -750,6 +754,9 @@ class Queue(list, ObservableService):
 
     def pop(self, item):
         self.__log.warning('FIXME: pop not supported yet...')
+
+    def set_current_item_position(self, position):
+        self.__current_item_position = position
 
 class PlaylistItem(object):
     """ A (hopefully) lightweight object to hold the bare minimum amount of
