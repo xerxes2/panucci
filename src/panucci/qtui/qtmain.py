@@ -63,9 +63,12 @@ class PanucciGUI(object):
         self.main_window = QtGui.QMainWindow(None)
         self.main_window.closeEvent = self.close_main_window_callback
         self.create_actions()
-        self.create_menus()
         self.__player_tab = PlayerTab(self)
         self.__playlist_tab = qtplaylist.PlaylistTab(self, player)
+        if platform.MAEMO:
+            self.create_maemo_menus()
+        else:
+            self.create_menus()
         widget = QtGui.QWidget()
         widget.setLayout(self.__player_tab.mainbox)
         self.main_window.setCentralWidget(widget)
@@ -91,6 +94,8 @@ class PanucciGUI(object):
         # Tools menu
         self.action_playlist = QtGui.QAction("Playlist", self.main_window, shortcut="Ctrl+P",
             statusTip="Open playlist", triggered=self.playlist_callback)
+        self.action_settings = QtGui.QAction("Settings", self.main_window, shortcut="Ctrl+C",
+            statusTip="Open settings dialog", triggered=self.settings_callback)
         # Settings menu
         self.action_lock_progress = QtGui.QAction("Lock Progress Bar", self.main_window, shortcut="Ctrl+L",
             statusTip="Lock progress bar", triggered=self.lock_progress_callback)
@@ -171,6 +176,20 @@ class PanucciGUI(object):
         self.menu_help = self.main_window.menuBar().addMenu("&Help")
         self.menu_help.addAction(self.action_about)
 
+    def create_maemo_menus(self):
+        # Player menu
+        self.menu_player = self.main_window.menuBar().addMenu("Player")
+        self.menu_player.addAction(self.action_settings)
+        self.menu_player.addAction(self.action_playlist)
+        self.menu_player.addAction(self.action_add_file)
+        self.menu_player.addAction(self.action_add_folder)
+        self.menu_player.addAction(self.action_about)
+        # Playlist menu
+        self.menu_playlist = self.__playlist_tab.main_window.menuBar().addMenu("Playlist")
+        self.menu_playlist.addAction(self.action_save_playlist)
+        self.menu_playlist.addAction(self.action_clear_playlist)
+        self.menu_playlist.addAction(self.action_delete_bookmarks)
+
     def quit_panucci(self):
         self.main_window.hide()
         player.quit()
@@ -228,6 +247,9 @@ class PanucciGUI(object):
 
     def playlist_callback(self):
         self.__playlist_tab.main_window.show()
+
+    def settings_callback(self):
+        pass
 
     def lock_progress_callback(self):
         self.set_config_option("lock_progress", str(self.action_lock_progress.isChecked()).lower())
