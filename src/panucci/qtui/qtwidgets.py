@@ -72,13 +72,15 @@ class ScrollingLabel(QtGui.QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setFrameStyle(QtGui.QFrame.NoFrame)
-        self.scene = QtGui.QGraphicsScene()
 
+        self.scene = QtGui.QGraphicsScene()
         self.setScene(self.scene)
         self.scene.setBackgroundBrush(self.palette().window())
 
         self.text_item = self.scene.addText("Pannuci")
         self.text_item.setHtml("<b><big>Resuming podcact and audiobook player</b></big>")
+        color = QtGui.QColor("#" + self.config.get("options", "scrolling_color"))
+        self.text_item.setDefaultTextColor(color)
         self.height = self.text_item.boundingRect().height() + 10
         self.setFixedHeight(self.height)
 
