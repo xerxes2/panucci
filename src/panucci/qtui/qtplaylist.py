@@ -201,24 +201,24 @@ class PlaylistItemDetails():
         
         label = QtGui.QLabel("<b>" + _('Title:') + "</b>")
         label.setAlignment(QtCore.Qt.AlignRight)
-        self.grid.addWidget(label, 0, 0, QtCore.Qt.AlignRight)
+        self.grid.addWidget(label, 0, 0, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         label = QtGui.QLabel(metadata["title"])
         self.grid.addWidget(label, 0, 1)
 
         label = QtGui.QLabel("<b>" + _('Length:') + "</b>")
         label.setAlignment(QtCore.Qt.AlignRight)
-        self.grid.addWidget(label, 1, 0, QtCore.Qt.AlignRight)
+        self.grid.addWidget(label, 1, 0, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         label = QtGui.QLabel(util.convert_ns(metadata["length"]))
         self.grid.addWidget(label, 1, 1)
         
         label = QtGui.QLabel("<b>" + _('Artist:') + "</b>")
         label.setAlignment(QtCore.Qt.AlignRight)
-        self.grid.addWidget(label, 2, 0, QtCore.Qt.AlignRight)
+        self.grid.addWidget(label, 2, 0, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         label = QtGui.QLabel(metadata["artist"])
         self.grid.addWidget(label, 2, 1)
         
         label = QtGui.QLabel("<b>" + _('Album:') + "</b>")
         label.setAlignment(QtCore.Qt.AlignRight)
-        self.grid.addWidget(label, 3, 0, QtCore.Qt.AlignRight)
+        self.grid.addWidget(label, 3, 0, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         label = QtGui.QLabel(metadata["album"])
         self.grid.addWidget(label, 3, 1)

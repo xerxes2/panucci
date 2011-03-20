@@ -243,6 +243,7 @@ class PanucciGUI(object):
 
     def scrolling_labels_callback(self):
         self.set_config_option("scrolling_labels", str(self.action_scrolling_labels.isChecked()).lower())
+        self.__player_tab.label_title.set_scrolling(self.config.getboolean("options", "scrolling_labels"))
 
     def play_mode_all_callback(self):
         self.set_config_option("play_mode", "all")
@@ -304,7 +305,7 @@ class PlayerTab(ObservableService):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         self.label_cover = QtGui.QLabel()
-        self.label_cover.setContentsMargins(0, 5, 5, 5)
+        self.label_cover.setContentsMargins(0, 5, 2, 5)
         layout.addWidget(self.label_cover)
         vlayout = QtGui.QVBoxLayout()
         vlayout.setContentsMargins(0, 0, 0, 0)
@@ -312,10 +313,10 @@ class PlayerTab(ObservableService):
         vlayout.addStretch(5)
         self.label_artist = QtGui.QLabel()
         self.label_album = QtGui.QLabel()
-        self.label_title = QtGui.QLabel()
-        self.label_artist.setContentsMargins(0, 0, 5, 10)
-        self.label_album.setContentsMargins(0, 0, 5, 0)
-        self.label_title.setContentsMargins(0, 10, 5, 0)
+        self.label_artist.setContentsMargins(3, 0, 5, 10)
+        self.label_album.setContentsMargins(3, 0, 5, 10)
+        self.label_title = qtwidgets.ScrollingLabel(settings.config)
+        self.label_title.setContentsMargins(0, 0, 0, 0)
         vlayout.addWidget(self.label_artist)
         vlayout.addWidget(self.label_album)
         vlayout.addWidget(self.label_title)
