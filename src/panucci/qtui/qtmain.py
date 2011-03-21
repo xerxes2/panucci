@@ -73,7 +73,7 @@ class PanucciGUI(object):
         widget.setLayout(self.__player_tab.mainbox)
         self.main_window.setCentralWidget(widget)
         self.main_window.show()
-        
+        self.main_window.focusInEvent = self.raise_playlist_window
         player.init(filepath=filename)
         self.app.exec_()
 
@@ -202,6 +202,10 @@ class PanucciGUI(object):
 
     def show_main_window(self):
         self.main_window.activateWindow()
+
+    def raise_playlist_window(self, event):
+        self.__playlist_tab.main_window.raise_()
+        print 1
 
     def add_file_callback(self):
         filenames = qtutil.get_file_from_filechooser(self)
