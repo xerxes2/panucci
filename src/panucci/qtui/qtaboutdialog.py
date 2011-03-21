@@ -55,8 +55,7 @@ class AboutDialog:
         main_layout.addLayout(hlayout)
 
         layout = QtGui.QHBoxLayout()
-        label = QtGui.QLabel()
-        layout.addWidget(label, 2)
+        layout.addStretch(2)
         button = QtGui.QPushButton(_("Credits"))
         button.clicked.connect(self.show_credits)
         layout.addWidget(button)
