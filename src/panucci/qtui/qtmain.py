@@ -160,6 +160,7 @@ class PanucciGUI(object):
         # Tools menu
         self.menu_tools = self.main_window.menuBar().addMenu("&Tools")
         self.menu_tools.addAction(self.action_playlist)
+        self.menu_tools.addAction(self.action_settings)
         # Settings menu
         self.menu_settings = self.main_window.menuBar().addMenu("&Settings")
         self.menu_settings.addAction(self.action_lock_progress)
@@ -189,7 +190,7 @@ class PanucciGUI(object):
         self.menu_playlist.addAction(self.action_save_playlist)
         self.menu_playlist.addAction(self.action_clear_playlist)
         self.menu_playlist.addAction(self.action_delete_bookmarks)
-
+ 
     def quit_panucci(self):
         self.main_window.hide()
         player.quit()
@@ -249,7 +250,8 @@ class PanucciGUI(object):
         self.__playlist_tab.main_window.show()
 
     def settings_callback(self):
-        pass
+        from panucci.qtui.qtsettingsdialog import SettingsDialog
+        SettingsDialog(self)
 
     def lock_progress_callback(self):
         self.set_config_option("lock_progress", str(self.action_lock_progress.isChecked()).lower())
