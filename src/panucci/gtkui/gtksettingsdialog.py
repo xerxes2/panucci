@@ -18,7 +18,6 @@
 
 import gtk
 from panucci import platform
-from panucci import about
 
 try:
     import hildon
