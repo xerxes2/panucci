@@ -88,7 +88,7 @@ class PanucciGUI(object):
             statusTip="Clear current playlist", triggered=self.clear_playlist_callback)
         self.action_delete_bookmarks = QtGui.QAction(QtGui.QIcon(':/images/trashcan.png'), "Delete All Bookmarks", self.main_window, shortcut="Ctrl+K",
             statusTip="Delete all bookmarks", triggered=self.delete_bookmarks_callback)
-        self.action_quit = QtGui.QAction(QtGui.QIcon('/usr/share/icons/gnome/16x16/actions/exit.png'), "E&xit", self.main_window, shortcut="Ctrl+Q",
+        self.action_quit = QtGui.QAction(QtGui.QIcon('/usr/share/icons/gnome/16x16/actions/exit.png'), "Q&uit", self.main_window, shortcut="Ctrl+Q",
             statusTip="Exit the application", triggered=self.quit_panucci)
         # Tools menu
         self.action_playlist = QtGui.QAction("Playlist", self.main_window, shortcut="Ctrl+P",
