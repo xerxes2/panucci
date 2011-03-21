@@ -16,14 +16,15 @@ BUG REPORTS:
         https://bugs.maemo.org/enter_bug.cgi?product=Panucci
 
 AUTHOR:
-        Thomas Perl with friends
+        Thomas Perl and Jens Persson with friends
 
 REQUIREMENTS:
-        GTK (2.x with python bindings)
         Python (2.x)
         GStreamer (with python bindings)
         Sqlite
         Mutagen
+        GTK (2.x with python bindings)(optional)
+        Qt (4.7.x with PySide bindings)(optional)
 
 INSTALL:
         $ make install
