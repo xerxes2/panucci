@@ -73,7 +73,6 @@ class PanucciGUI(object):
         widget.setLayout(self.__player_tab.mainbox)
         self.main_window.setCentralWidget(widget)
         self.main_window.show()
-        self.main_window.focusInEvent = self.raise_playlist_window
         player.init(filepath=filename)
         self.app.exec_()
 
@@ -144,7 +143,7 @@ class PanucciGUI(object):
         else:
             self.action_play_mode_all.setChecked(True)
         # help menu
-        self.action_about = QtGui.QAction(QtGui.QIcon('about.png'), "&About Panucci", self.main_window,
+        self.action_about = QtGui.QAction(QtGui.QIcon('about.png'), "&About", self.main_window,
             statusTip="Show about dialog", triggered=self.about_callback)
 
     def create_menus(self):
@@ -202,10 +201,6 @@ class PanucciGUI(object):
 
     def show_main_window(self):
         self.main_window.activateWindow()
-
-    def raise_playlist_window(self, event):
-        self.__playlist_tab.main_window.raise_()
-        print 1
 
     def add_file_callback(self):
         filenames = qtutil.get_file_from_filechooser(self)
