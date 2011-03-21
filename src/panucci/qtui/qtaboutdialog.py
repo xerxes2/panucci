@@ -77,6 +77,11 @@ class AboutDialog:
         te.setReadOnly(True)
         for i in about.about_authors:
             te.append(i)
+        te = QtGui.QTextEdit()
+        tw.addTab(te, _("Contributors"))
+        te.setReadOnly(True)
+        for i in about.about_contributors:
+            te.append(i)
 
         hlayout = QtGui.QHBoxLayout()
         label = QtGui.QLabel()

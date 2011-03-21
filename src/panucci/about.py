@@ -24,3 +24,4 @@ about_bugtracker = 'http://bugs.maemo.org/enter_bug.cgi?product=Panucci'
 about_donate = 'http://gpodder.org/donate'
 about_copyright = 'Copyright (c) 2008-2011 The Panucci Project'
 about_authors = ['Thomas Perl', 'Nick (nikosapi)', 'Matthew Taylor', 'Jens Persson']
+about_contributors = ['Helmuth']
