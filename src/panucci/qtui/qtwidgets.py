@@ -47,9 +47,9 @@ class DualActionButton(QtGui.QPushButton):
         self.released.connect(self.released_callback)
 
     def timer_callback(self):
+        self.timer.stop()
         self.state = True
         self.setIcon(self.longpress_icon)
-        self.timer.stop()
 
     def pressed_callback(self):
         if self.longpress and self.config.getboolean("options", "dual_action_button"):
