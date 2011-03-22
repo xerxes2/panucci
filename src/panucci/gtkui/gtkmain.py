@@ -295,7 +295,6 @@ class PanucciGUI(object):
         menu = hildon.AppMenu()
 
         for action in (self.action_save,
-                self.action_empty_playlist,
                 self.action_delete_bookmarks):
             b = gtk.Button()
             action.connect_proxy(b)
@@ -311,6 +310,7 @@ class PanucciGUI(object):
                 self.action_playlist,
                 self.action_open,
                 self.action_open_dir,
+                self.action_empty_playlist,
                 self.action_about):
             b = gtk.Button()
             action.connect_proxy(b)

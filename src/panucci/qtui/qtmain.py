@@ -183,11 +183,11 @@ class PanucciGUI(object):
         self.menu_player.addAction(self.action_playlist)
         self.menu_player.addAction(self.action_add_file)
         self.menu_player.addAction(self.action_add_folder)
+        self.menu_player.addAction(self.action_clear_playlist)
         self.menu_player.addAction(self.action_about)
         # Playlist menu
         self.menu_playlist = self.__playlist_tab.main_window.menuBar().addMenu("Playlist")
         self.menu_playlist.addAction(self.action_save_playlist)
-        self.menu_playlist.addAction(self.action_clear_playlist)
         self.menu_playlist.addAction(self.action_delete_bookmarks)
  
     def quit_panucci(self):
