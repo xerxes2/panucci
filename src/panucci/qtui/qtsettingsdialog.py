@@ -28,10 +28,16 @@ class SettingsDialog:
         self.main = main
         self.dialog = QtGui.QDialog(self.main.main_window)
         self.dialog.setWindowTitle(_("Settings"))
-        main_layout = QtGui.QVBoxLayout()
-        self.dialog.setLayout(main_layout)
 
-        label = QtGui.QLabel("Main Window")
+        layout = QtGui.QHBoxLayout()
+        self.dialog.setLayout(layout)
+        scrollarea = QtGui.QScrollArea()
+        layout.addWidget(scrollarea)
+        main_widget = QtGui.QWidget()
+        main_layout = QtGui.QVBoxLayout()
+        main_widget.setLayout(main_layout)
+
+        label = QtGui.QLabel(_("Main Window"))
         main_layout.addWidget(label)
         # It does not seem to be possible to use action as proxies.
         self.box_scrolling_labels = QtGui.QCheckBox(_("Scrolling Labels"))
@@ -49,7 +55,8 @@ class SettingsDialog:
         self.box_dual_action.stateChanged.connect(self.dual_action_callback)
         main_layout.addWidget(self.box_dual_action)
 
-        label = QtGui.QLabel("Playback")
+        main_layout.addSpacing(10)
+        label = QtGui.QLabel(_("Playback"))
         main_layout.addWidget(label)
 
         self.box_stay_at_end = QtGui.QCheckBox(_("Stay at End"))
@@ -62,7 +69,8 @@ class SettingsDialog:
         self.box_seek_back.stateChanged.connect(self.seek_back_callback)
         main_layout.addWidget(self.box_seek_back)
 
-        label = QtGui.QLabel("Play Mode")
+        main_layout.addSpacing(10)
+        label = QtGui.QLabel(_("Play Mode"))
         main_layout.addWidget(label)
         group_play_mode = QtGui.QButtonGroup()
 
@@ -97,6 +105,7 @@ class SettingsDialog:
         layout.addWidget(button)
         main_layout.addLayout(layout)
 
+        scrollarea.setWidget(main_widget)
         self.dialog.exec_()
 
     def close(self):
