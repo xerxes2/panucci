@@ -415,7 +415,6 @@ class PlayerTab(ObservableService):
         self.stop_progress_timer()
         #self.set_progress_callback( position, duration )
         self.button_play.setIcon(QtGui.QIcon(util.find_data_file('media-playback-start.png')))
-        pass
 
     def on_player_eof(self):
         play_mode = settings.config.get("options", "play_mode")
@@ -550,27 +549,28 @@ class PlayerTab(ObservableService):
         # set the text metadata
         for tag,value in tag_message.iteritems():
             if tags.has_key(tag) and value is not None and value.strip():
-                try:
-                    tags[tag].setText('<big>'+cgi.escape(value)+'</big>')
-                except TypeError, e:
-                    self.__log.exception(str(e))
+                if tag == "artist":
+                    _str = '<big>' + cgi.escape(value) + '</big>'
+                elif tag == "album":
+                    _str = cgi.escape(value)
+                elif tag == "title":
+                    _str = '<b><big>' + cgi.escape(value) + '</big></b>'
+                    if not platform.MAEMO:
+                        value += ' - Panucci'
+                    if platform.FREMANTLE and len(value) > 25:
+                        value = value[:24] + '...'
+                    self.__gui_root.main_window.setWindowTitle(value)
+ 
                 if not self.has_coverart:
                     tags[tag].setAlignment(QtCore.Qt.AlignHCenter)
                 else:
                     tags[tag].setAlignment(QtCore.Qt.AlignLeft)
+                try:
+                    tags[tag].setText(_str)
+                except TypeError, e:
+                    self.__log.exception(str(e))
+                
                 tags[tag].show()
-
-            if tag == 'title':
-                # make the title bold
-                tags[tag].setText('<b><big>'+cgi.escape(value)+'</big></b>')
-
-                if not platform.MAEMO:
-                    value += ' - Panucci'
-
-                if platform.FREMANTLE and len(value) > 25:
-                    value = value[:24] + '...'
-
-                self.__gui_root.main_window.setWindowTitle(value)
 
     def do_seek(self, seek_amount):
         seek_amount = seek_amount*10**9
