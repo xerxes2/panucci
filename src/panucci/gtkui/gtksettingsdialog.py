@@ -95,20 +95,20 @@ class SettingsDialog():
         else:
             dialog.vbox.add(vb)
 
-        vb.pack_start(gtk.Frame('Main window'))
+        vb.pack_start(gtk.Frame(_('Main window')))
         vb.pack_start(check_button_factory(self.main.action_scrolling_labels))
         vb.pack_start(check_button_factory(self.main.action_lock_progress))
         vb.pack_start(check_button_factory(self.main.action_dual_action_button))
 
         vb.pack_start(gtk.Label('')) # Used as a spacer
 
-        vb.pack_start(gtk.Frame('Playback'))
+        vb.pack_start(gtk.Frame(_('Playback')))
         vb.pack_start(check_button_factory(self.main.action_stay_at_end))
         vb.pack_start(check_button_factory(self.main.action_seek_back))
 
         vb.pack_start(gtk.Label('')) # Used as a spacer
 
-        vb.pack_start(gtk.Frame('Play mode'))
+        vb.pack_start(gtk.Frame(_('Play mode')))
         hb = gtk.HBox(homogeneous=True)
         vb.pack_start(hb)
 

@@ -42,8 +42,8 @@ def get_file_from_filechooser(main, folder=False, save_file=False, save_to=None)
 
 def dialog(parent, text="", info="", ok=None, save=None, cancel=None, discard=None):
     msgBox = QtGui.QMessageBox(parent)
-    msgBox.setText(text)
-    msgBox.setInformativeText(info)
+    msgBox.setText(text.decode("utf-8"))
+    msgBox.setInformativeText(info.decode("utf-8"))
     if save and cancel and discard:
         msgBox.setStandardButtons(QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Discard | QtGui.QMessageBox.Save )
     elif ok and cancel and discard:

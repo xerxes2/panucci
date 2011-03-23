@@ -29,7 +29,7 @@ from panucci import util
 class AboutDialog:
     def __init__(self, parent, version):
         self.ad = QtGui.QDialog(parent)
-        self.ad.setWindowTitle(_("About"))
+        self.ad.setWindowTitle(_("About").decode("utf-8"))
         main_layout = QtGui.QVBoxLayout()
         self.ad.setLayout(main_layout)
 
@@ -44,7 +44,7 @@ class AboutDialog:
         label.setText('<b><big>' + about.about_name + " " + version + '</b></big>')
         vlayout.addWidget(label, 2)
         label = QtGui.QLabel()
-        label.setText(about.about_text)
+        label.setText(about.about_text.decode("utf-8"))
         vlayout.addWidget(label, 2)
         label = QtGui.QLabel(about.about_copyright)
         vlayout.addWidget(label, 2)
@@ -56,16 +56,16 @@ class AboutDialog:
 
         layout = QtGui.QHBoxLayout()
         layout.addStretch(2)
-        button = QtGui.QPushButton(_("Credits"))
+        button = QtGui.QPushButton(_("Credits").decode("utf-8"))
         button.clicked.connect(self.show_credits)
         layout.addWidget(button)
-        button = QtGui.QPushButton(_("Close"))
+        button = QtGui.QPushButton(_("Close").decode("utf-8"))
         button.clicked.connect(self.close)
         layout.addWidget(button)
         main_layout.addLayout(layout)
 
         self.cd = QtGui.QDialog(self.ad)
-        self.cd.setWindowTitle(_("Credits"))
+        self.cd.setWindowTitle(_("Credits").decode("utf-8"))
         self.cd.setModal(True)
         layout = QtGui.QVBoxLayout()
         self.cd.setLayout(layout)
@@ -73,12 +73,12 @@ class AboutDialog:
         tw = QtGui.QTabWidget()
         layout.addWidget(tw)
         te = QtGui.QTextEdit()
-        tw.addTab(te, _("Authors"))
+        tw.addTab(te, _("Authors").decode("utf-8"))
         te.setReadOnly(True)
         for i in about.about_authors:
             te.append(i)
         te = QtGui.QTextEdit()
-        tw.addTab(te, _("Contributors"))
+        tw.addTab(te, _("Contributors").decode("utf-8"))
         te.setReadOnly(True)
         for i in about.about_contributors:
             te.append(i)
@@ -86,7 +86,7 @@ class AboutDialog:
         hlayout = QtGui.QHBoxLayout()
         label = QtGui.QLabel()
         hlayout.addWidget(label, 2)
-        button = QtGui.QPushButton(_("Close"))
+        button = QtGui.QPushButton(_("Close").decode("utf-8"))
         button.clicked.connect(self.close_credits)
         hlayout.addWidget(button)
 

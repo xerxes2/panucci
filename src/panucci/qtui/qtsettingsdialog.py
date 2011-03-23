@@ -27,7 +27,7 @@ class SettingsDialog:
     def __init__(self, main):
         self.main = main
         self.dialog = QtGui.QDialog(self.main.main_window)
-        self.dialog.setWindowTitle(_("Settings"))
+        self.dialog.setWindowTitle(_("Settings").decode("utf-8"))
 
         layout = QtGui.QHBoxLayout()
         self.dialog.setLayout(layout)
@@ -37,62 +37,62 @@ class SettingsDialog:
         main_layout = QtGui.QVBoxLayout()
         main_widget.setLayout(main_layout)
 
-        label = QtGui.QLabel(_("Main Window"))
+        label = QtGui.QLabel(_("Main Window").decode("utf-8"))
         main_layout.addWidget(label)
         # It does not seem to be possible to use action as proxies.
-        self.box_scrolling_labels = QtGui.QCheckBox(_("Scrolling Labels"))
+        self.box_scrolling_labels = QtGui.QCheckBox(_("Scrolling Labels").decode("utf-8"))
         self.box_scrolling_labels.setChecked(self.main.action_scrolling_labels.isChecked())
         self.box_scrolling_labels.stateChanged.connect(self.scrolling_labels_callback)
         main_layout.addWidget(self.box_scrolling_labels)
 
-        self.box_lock_progress = QtGui.QCheckBox(_("Lock Progress Bar"))
+        self.box_lock_progress = QtGui.QCheckBox(_("Lock Progress Bar").decode("utf-8"))
         self.box_lock_progress.setChecked(self.main.action_lock_progress.isChecked())
         self.box_lock_progress.stateChanged.connect(self.lock_progress_callback)
         main_layout.addWidget(self.box_lock_progress)
 
-        self.box_dual_action = QtGui.QCheckBox(_("Dual Action Button"))
+        self.box_dual_action = QtGui.QCheckBox(_("Dual Action Button").decode("utf-8"))
         self.box_dual_action.setChecked(self.main.action_dual_action.isChecked())
         self.box_dual_action.stateChanged.connect(self.dual_action_callback)
         main_layout.addWidget(self.box_dual_action)
 
         main_layout.addSpacing(10)
-        label = QtGui.QLabel(_("Playback"))
+        label = QtGui.QLabel(_("Playback").decode("utf-8"))
         main_layout.addWidget(label)
 
-        self.box_stay_at_end = QtGui.QCheckBox(_("Stay at End"))
+        self.box_stay_at_end = QtGui.QCheckBox(_("Stay at End").decode("utf-8"))
         self.box_stay_at_end.setChecked(self.main.action_stay_at_end.isChecked())
         self.box_stay_at_end.stateChanged.connect(self.stay_at_end_callback)
         main_layout.addWidget(self.box_stay_at_end)
 
-        self.box_seek_back = QtGui.QCheckBox(_("Seek Back"))
+        self.box_seek_back = QtGui.QCheckBox(_("Seek Back").decode("utf-8"))
         self.box_seek_back.setChecked(self.main.action_seek_back.isChecked())
         self.box_seek_back.stateChanged.connect(self.seek_back_callback)
         main_layout.addWidget(self.box_seek_back)
 
         main_layout.addSpacing(10)
-        label = QtGui.QLabel(_("Play Mode"))
+        label = QtGui.QLabel(_("Play Mode").decode("utf-8"))
         main_layout.addWidget(label)
         group_play_mode = QtGui.QButtonGroup()
 
-        self.radio_play_mode_all = QtGui.QRadioButton(_("All"))
+        self.radio_play_mode_all = QtGui.QRadioButton(_("All").decode("utf-8"))
         self.radio_play_mode_all.setChecked(self.main.action_play_mode_all.isChecked())
         self.radio_play_mode_all.toggled.connect(self.play_mode_all_callback)
         group_play_mode.addButton(self.radio_play_mode_all)
         main_layout.addWidget(self.radio_play_mode_all)
 
-        self.radio_play_mode_single = QtGui.QRadioButton(_("Single"))
+        self.radio_play_mode_single = QtGui.QRadioButton(_("Single").decode("utf-8"))
         self.radio_play_mode_single.setChecked(self.main.action_play_mode_single.isChecked())
         self.radio_play_mode_single.toggled.connect(self.play_mode_single_callback)
         group_play_mode.addButton(self.radio_play_mode_single)
         main_layout.addWidget(self.radio_play_mode_single)
 
-        self.radio_play_mode_random = QtGui.QRadioButton(_("Random"))
+        self.radio_play_mode_random = QtGui.QRadioButton(_("Random").decode("utf-8"))
         self.radio_play_mode_random.setChecked(self.main.action_play_mode_random.isChecked())
         self.radio_play_mode_random.toggled.connect(self.play_mode_random_callback)
         group_play_mode.addButton(self.radio_play_mode_random)
         main_layout.addWidget(self.radio_play_mode_random)
 
-        self.radio_play_mode_repeat = QtGui.QRadioButton(_("Repeat"))
+        self.radio_play_mode_repeat = QtGui.QRadioButton(_("Repeat").decode("utf-8"))
         self.radio_play_mode_repeat.setChecked(self.main.action_play_mode_repeat.isChecked())
         self.radio_play_mode_repeat.toggled.connect(self.play_mode_repeat_callback)
         group_play_mode.addButton(self.radio_play_mode_repeat)
@@ -100,7 +100,7 @@ class SettingsDialog:
 
         layout = QtGui.QHBoxLayout()
         layout.addStretch(2)
-        button = QtGui.QPushButton(_("Close"))
+        button = QtGui.QPushButton(_("Close").decode("utf-8"))
         button.clicked.connect(self.close)
         layout.addWidget(button)
         main_layout.addLayout(layout)

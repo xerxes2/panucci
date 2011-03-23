@@ -78,17 +78,17 @@ class PanucciGUI(object):
 
     def create_actions(self):
         # File menu
-        self.action_add_file = QtGui.QAction(QtGui.QIcon(':/actions/add.png'), "Add File", self.main_window, shortcut="Ctrl+A",
+        self.action_add_file = QtGui.QAction(QtGui.QIcon(':/actions/add.png'), _("Add File").decode("utf-8"), self.main_window, shortcut="Ctrl+A",
             statusTip="Add file to playlist", triggered=self.add_file_callback)
-        self.action_add_folder = QtGui.QAction(QtGui.QIcon(':/images/open.png'), "Add Folder", self.main_window, shortcut="Ctrl+D",
+        self.action_add_folder = QtGui.QAction(QtGui.QIcon(':/images/open.png'), _("Add Folder").decode("utf-8"), self.main_window, shortcut="Ctrl+D",
             statusTip="Add folder to playlist", triggered=self.add_folder_callback)
-        self.action_save_playlist = QtGui.QAction(QtGui.QIcon(':/images/save.png'), "Save Playlist", self.main_window, shortcut="Ctrl+W",
+        self.action_save_playlist = QtGui.QAction(QtGui.QIcon(':/images/save.png'), _("Save Playlist").decode("utf-8"), self.main_window, shortcut="Ctrl+W",
             statusTip="Save current playlist as m3u", triggered=self.save_playlist_callback)
-        self.action_clear_playlist = QtGui.QAction(QtGui.QIcon(':/images/trashcan.png'), "Clear Playlist", self.main_window, shortcut="Ctrl+H",
+        self.action_clear_playlist = QtGui.QAction(QtGui.QIcon(':/images/trashcan.png'), _("Clear Playlist").decode("utf-8"), self.main_window, shortcut="Ctrl+H",
             statusTip="Clear current playlist", triggered=self.clear_playlist_callback)
-        self.action_delete_bookmarks = QtGui.QAction(QtGui.QIcon(':/images/trashcan.png'), "Delete All Bookmarks", self.main_window, shortcut="Ctrl+K",
+        self.action_delete_bookmarks = QtGui.QAction(QtGui.QIcon(':/images/trashcan.png'), _("Delete All Bookmarks").decode("utf-8"), self.main_window, shortcut="Ctrl+K",
             statusTip="Delete all bookmarks", triggered=self.delete_bookmarks_callback)
-        self.action_quit = QtGui.QAction(QtGui.QIcon('/usr/share/icons/gnome/16x16/actions/exit.png'), "Q&uit", self.main_window, shortcut="Ctrl+Q",
+        self.action_quit = QtGui.QAction(QtGui.QIcon('/usr/share/icons/gnome/16x16/actions/exit.png'), "Quit", self.main_window, shortcut="Ctrl+Q",
             statusTip="Exit the application", triggered=self.quit_panucci)
         # Tools menu
         self.action_playlist = QtGui.QAction("Playlist", self.main_window, shortcut="Ctrl+P",
@@ -96,36 +96,36 @@ class PanucciGUI(object):
         self.action_settings = QtGui.QAction("Settings", self.main_window, shortcut="Ctrl+C",
             statusTip="Open settings dialog", triggered=self.settings_callback)
         # Settings menu
-        self.action_lock_progress = QtGui.QAction("Lock Progress Bar", self.main_window, shortcut="Ctrl+L",
+        self.action_lock_progress = QtGui.QAction(_("Lock Progress Bar").decode("utf-8"), self.main_window, shortcut="Ctrl+L",
             statusTip="Lock progress bar", triggered=self.lock_progress_callback)
         self.action_lock_progress.setCheckable(True)
         self.action_lock_progress.setChecked(self.config.getboolean("options", "lock_progress"))
-        self.action_dual_action = QtGui.QAction("Dual Action Button", self.main_window, shortcut="Ctrl+B",
+        self.action_dual_action = QtGui.QAction(_("Dual Action Button").decode("utf-8"), self.main_window, shortcut="Ctrl+B",
             statusTip="Set dual action button", triggered=self.dual_action_callback)
         self.action_dual_action.setCheckable(True)
         self.action_dual_action.setChecked(self.config.getboolean("options", "dual_action_button"))
-        self.action_stay_at_end = QtGui.QAction("Stay at End", self.main_window, shortcut="Ctrl+E",
+        self.action_stay_at_end = QtGui.QAction(_("Stay at End").decode("utf-8"), self.main_window, shortcut="Ctrl+E",
             statusTip="Stay at file end", triggered=self.stay_at_end_callback)
         self.action_stay_at_end.setCheckable(True)
         self.action_stay_at_end.setChecked(self.config.getboolean("options", "stay_at_end"))
-        self.action_seek_back = QtGui.QAction("Seek Back", self.main_window, shortcut="Ctrl+S",
+        self.action_seek_back = QtGui.QAction(_("Seek Back").decode("utf-8"), self.main_window, shortcut="Ctrl+S",
             statusTip="Seek back to previous file", triggered=self.seek_back_callback)
         self.action_seek_back.setCheckable(True)
         self.action_seek_back.setChecked(self.config.getboolean("options", "seek_back"))
-        self.action_scrolling_labels = QtGui.QAction("Scrolling Labels", self.main_window, shortcut="Ctrl+V",
+        self.action_scrolling_labels = QtGui.QAction(_("Scrolling Labels").decode("utf-8"), self.main_window, shortcut="Ctrl+V",
             statusTip="Scroll title labels when too long", triggered=self.scrolling_labels_callback)
         self.action_scrolling_labels.setCheckable(True)
         self.action_scrolling_labels.setChecked(self.config.getboolean("options", "scrolling_labels"))
-        self.action_play_mode_all = QtGui.QAction("All", self.main_window, statusTip="Set play mode",
+        self.action_play_mode_all = QtGui.QAction(_("All").decode("utf-8"), self.main_window, statusTip="Set play mode",
             triggered=self.play_mode_all_callback)
         self.action_play_mode_all.setCheckable(True)
-        self.action_play_mode_single = QtGui.QAction("Single", self.main_window, statusTip="Set play mode",
+        self.action_play_mode_single = QtGui.QAction(_("Single").decode("utf-8"), self.main_window, statusTip="Set play mode",
             triggered=self.play_mode_single_callback)
         self.action_play_mode_single.setCheckable(True)
-        self.action_play_mode_random = QtGui.QAction("Random", self.main_window, statusTip="Set play mode",
+        self.action_play_mode_random = QtGui.QAction(_("Random").decode("utf-8"), self.main_window, statusTip="Set play mode",
             triggered=self.play_mode_random_callback)
         self.action_play_mode_random.setCheckable(True)
-        self.action_play_mode_repeat = QtGui.QAction("Repeat", self.main_window, statusTip="Set play mode",
+        self.action_play_mode_repeat = QtGui.QAction(_("Repeat").decode("utf-8"), self.main_window, statusTip="Set play mode",
             triggered=self.play_mode_repeat_callback)
         self.action_play_mode_repeat.setCheckable(True)
         actiongroup = QtGui.QActionGroup(self.main_window)
@@ -143,12 +143,12 @@ class PanucciGUI(object):
         else:
             self.action_play_mode_all.setChecked(True)
         # help menu
-        self.action_about = QtGui.QAction(QtGui.QIcon('about.png'), "&About", self.main_window,
+        self.action_about = QtGui.QAction(QtGui.QIcon('about.png'), _("About").decode("utf-8"), self.main_window,
             statusTip="Show about dialog", triggered=self.about_callback)
 
     def create_menus(self):
         # File menu
-        self.menu_file = self.main_window.menuBar().addMenu("&File")
+        self.menu_file = self.main_window.menuBar().addMenu(_("File").decode("utf-8"))
         self.menu_file.addAction(self.action_add_file)
         self.menu_file.addAction(self.action_add_folder)
         self.menu_file.addAction(self.action_save_playlist)
@@ -157,23 +157,23 @@ class PanucciGUI(object):
         self.menu_file.addSeparator()
         self.menu_file.addAction(self.action_quit)
         # Tools menu
-        self.menu_tools = self.main_window.menuBar().addMenu("&Tools")
+        self.menu_tools = self.main_window.menuBar().addMenu(_("Tools").decode("utf-8"))
         self.menu_tools.addAction(self.action_playlist)
         #self.menu_tools.addAction(self.action_settings)
         # Settings menu
-        self.menu_settings = self.main_window.menuBar().addMenu("&Settings")
+        self.menu_settings = self.main_window.menuBar().addMenu(_("Settings").decode("utf-8"))
         self.menu_settings.addAction(self.action_lock_progress)
         self.menu_settings.addAction(self.action_dual_action)
         self.menu_settings.addAction(self.action_stay_at_end)
         self.menu_settings.addAction(self.action_seek_back)
         self.menu_settings.addAction(self.action_scrolling_labels)
-        self.menu_play_mode = self.menu_settings.addMenu("Play Mode")
+        self.menu_play_mode = self.menu_settings.addMenu(_("Play Mode").decode("utf-8"))
         self.menu_play_mode.addAction(self.action_play_mode_all)
         self.menu_play_mode.addAction(self.action_play_mode_single)
         self.menu_play_mode.addAction(self.action_play_mode_random)
         self.menu_play_mode.addAction(self.action_play_mode_repeat)
         # Help menu
-        self.menu_help = self.main_window.menuBar().addMenu("&Help")
+        self.menu_help = self.main_window.menuBar().addMenu(_("Help").decode("utf-8"))
         self.menu_help.addAction(self.action_about)
 
     def create_maemo_menus(self):
