@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # This file is part of Panucci.
 # Copyright (c) 2008-2011 The Panucci Project
@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-#
-# _Heavily_ inspired by gPodder's dbsqlite
-#
 
 from __future__ import absolute_import
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # This file is part of Panucci.
 # Copyright (c) 2008-2011 The Panucci Project
@@ -15,7 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-#
 
 from __future__ import absolute_import
 
@@ -815,6 +814,7 @@ class PlaylistItem(object):
 
     def __str__(self):
         uid = self.filepath + str(self.duplicate_id)
+        print uid
         return md5(uid).hexdigest()
 
     @property
