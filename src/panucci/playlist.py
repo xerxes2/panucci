@@ -255,16 +255,12 @@ class Playlist(ObservableService):
             return False
 
         if bookmark_id is None:
-            if self.__queue.current_item_position < self.__queue.index(item):
-                item.delete_bookmark(None)
-                self.__queue.remove(item)
-            elif self.__queue.current_item_position == self.__queue.index(item):
+            if self.__queue.current_item_position == self.__queue.index(item):
                 item.delete_bookmark(None)
                 self.__queue.remove(item)
                 self.notify('stop-requested', caller=self.remove_bookmark)
                 self.__queue.current_item_position = self.__queue.current_item_position
             else:
-                self.__queue.set_current_item_position(self.__queue.current_item_position - 1)
                 item.delete_bookmark(None)
                 self.__queue.remove(item)
         else:
