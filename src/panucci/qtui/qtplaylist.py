@@ -150,11 +150,11 @@ class PlaylistTab():
         self.clear_model()
 
         for item, data in plist.get_playlist_item_ids():
-            parent = QtGui.QStandardItem(data.get('title'))
+            parent = QtGui.QStandardItem(data.get('title').decode('utf-8'))
             self.__model.appendRow((parent, None, QtGui.QStandardItem(item)))
 
             for bid, bname, bpos in plist.get_bookmarks_from_item_id( item ):
-                parent.appendRow((QtGui.QStandardItem(bname), QtGui.QStandardItem(util.convert_ns(bpos)),
+                parent.appendRow((QtGui.QStandardItem(bname.decode('utf-8')), QtGui.QStandardItem(util.convert_ns(bpos)),
                                   QtGui.QStandardItem(bid)))
 
         self.tree.expandAll()

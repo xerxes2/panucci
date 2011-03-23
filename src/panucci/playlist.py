@@ -814,7 +814,6 @@ class PlaylistItem(object):
 
     def __str__(self):
         uid = self.filepath + str(self.duplicate_id)
-        print uid
         return md5(uid).hexdigest()
 
     @property

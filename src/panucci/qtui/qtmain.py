@@ -205,12 +205,12 @@ class PanucciGUI(object):
     def add_file_callback(self):
         filenames = qtutil.get_file_from_filechooser(self)
         if filenames:
-            self._play_file(filenames[0])
+            self._play_file(filenames[0].encode('utf-8'))
 
     def add_folder_callback(self):
         filenames = qtutil.get_file_from_filechooser(self, folder=True)
         if filenames:
-            self._play_file(filenames[0])
+            self._play_file(filenames[0].encode('utf-8'))
 
     def save_playlist_callback(self):
         filenames = qtutil.get_file_from_filechooser(self, save_file=True, save_to=True)
@@ -549,6 +549,7 @@ class PlayerTab(ObservableService):
         # set the text metadata
         for tag,value in tag_message.iteritems():
             if tags.has_key(tag) and value is not None and value.strip():
+                value = value.decode('utf-8')
                 if tag == "artist":
                     _str = '<big>' + cgi.escape(value) + '</big>'
                 elif tag == "album":
