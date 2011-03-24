@@ -130,7 +130,7 @@ class panucciInterface(dbus.service.Object):
         to start playback from the position given by
         the "seconds" parameter.
         """
-        print 1
+
         self.__log.debug('%s playback_from %d' % (uri, seconds))
         if self.player is not None:
             self.show_main_window()

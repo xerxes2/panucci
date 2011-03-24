@@ -959,24 +959,24 @@ class PlayerTab(ObservableService, gtk.HBox):
         # set the text metadata
         for tag,value in tag_message.iteritems():
             if tags.has_key(tag) and value is not None and value.strip():
+                if tag == "artist":
+                    _str = '<big>' + cgi.escape(value) + '</big>'
+                elif tag == "album":
+                    _str = cgi.escape(value)
+                elif tag == "title":
+                    _str = '<b><big>' + cgi.escape(value) + '</big></b>'
+                    if not platform.MAEMO:
+                        value += ' - Panucci'
+                    if platform.FREMANTLE and len(value) > 25:
+                        value = value[:24] + '...'
+                    self.__gui_root.main_window.set_title( value )
+                
                 try:
-                    tags[tag].set_markup('<big>'+cgi.escape(value)+'</big>')
+                    tags[tag].set_markup(_str)
                 except TypeError, e:
                     self.__log.exception(str(e))
                 tags[tag].set_alignment( 0.5*int(not self.has_coverart), 0.5)
                 tags[tag].show()
-
-            if tag == 'title':
-                # make the title bold
-                tags[tag].set_markup('<b><big>'+cgi.escape(value)+'</big></b>')
-
-                if not platform.MAEMO:
-                    value += ' - Panucci'
-
-                if platform.FREMANTLE and len(value) > 25:
-                    value = value[:24] + '...'
-
-                self.__gui_root.main_window.set_title( value )
 
     def do_seek(self, seek_amount):
         seek_amount = seek_amount*10**9
