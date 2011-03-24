@@ -547,6 +547,11 @@ class Playlist(ObservableService):
         """ Same as next() except moves to the previous track. """
         return self.skip( loop=False, skip_by=-1 )
 
+    def last(self):
+        """ Plays last file in queue. """
+        skip_to = len(self.__queue.get_items()) - 1
+        return self.skip( False, None, skip_to )
+
     def random(self):
         """ Plays random file in queue. """
         skip_to = random.choice(range(len(self.__queue.get_items())))

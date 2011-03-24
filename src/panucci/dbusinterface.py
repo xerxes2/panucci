@@ -130,25 +130,26 @@ class panucciInterface(dbus.service.Object):
         to start playback from the position given by
         the "seconds" parameter.
         """
-
+        
         self.__log.debug('%s playback_from %d' % (uri, seconds))
         if self.player is not None:
             self.show_main_window()
 
             new_file = (self.player.playlist.current_filepath != uri)
 
-            if self.gui is not None:
-                self.gui.set_progress_indicator(new_file)
+            # I've diabled this for now as I've no possibility to debug it. /xerxes2
+            #if self.gui is not None:
+            #    self.gui.set_progress_indicator(new_file)
 
             if new_file:
                 self.player.playlist.load(uri)
 
-            if self.player._is_playing:
-                self.player.do_seek(from_beginning=(10**9)*seconds)
-            else:
+            #if self.player._is_playing:
+            #    self.player.do_seek(from_beginning=(10**9)*seconds)
+            #else:
                 self.player.playlist.set_seek_to(seconds)
-                self.player.play()
-
+                self.player.playlist.last()
+        
     @dbus.service.method('org.panucci.panucciInterface', in_signature='s')
     def queue_file(self, filepath):
         self.__log.debug('queue_file() called with: ' + filepath)
