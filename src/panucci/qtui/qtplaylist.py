@@ -42,7 +42,11 @@ class PlaylistTab():
         self.player.playlist.register( 'file_queued', lambda x,y,z: self.update_model() )
         self.player.playlist.register( 'bookmark_added', self.on_bookmark_added )
 
-        self.main_window = QtGui.QMainWindow(main.main_window, QtCore.Qt.Dialog)
+        self.main_window = QtGui.QMainWindow(main.main_window)
+        if platform.FREMANTLE:
+            self.main_window.setAttribute(QtCore.Qt.WA_Maemo5StackedWindow)
+        else:
+            self.main_window.setWindowFlags(QtCore.Qt.Tool)
         self.main_window.setWindowTitle(_("Playlist").decode("utf-8"))
         widget = QtGui.QWidget()
         layout = QtGui.QVBoxLayout()
