@@ -41,7 +41,8 @@ DATA_FILES = [
     ('share/panucci', glob.glob('icons/*.png')),
     ('share/panucci', ['data/panucci.conf', 'data/panucci-all.conf']),
     ('share/applications', ['data/panucci.desktop']),
-    ('share/icons/hicolor/scalable/apps', ['data/panucci.png']),
+    ('share/icons/hicolor/scalable/apps', ['data/panucci.svg']),
+    ('share/icons/hicolor/64x64/apps', ['data/panucci.png']),
     ('share/dbus-1/services', ['data/panucci.service']),
 ]
 
