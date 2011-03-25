@@ -143,13 +143,14 @@ class panucciInterface(dbus.service.Object):
 
             if new_file:
                 self.player.playlist.load(uri)
-
             #if self.player._is_playing:
             #    self.player.do_seek(from_beginning=(10**9)*seconds)
             #else:
                 self.player.playlist.set_seek_to(seconds)
                 self.player.playlist.last()
-        
+            elif not self.player._is_playing:
+                self.player.play()
+              
     @dbus.service.method('org.panucci.panucciInterface', in_signature='s')
     def queue_file(self, filepath):
         self.__log.debug('queue_file() called with: ' + filepath)
