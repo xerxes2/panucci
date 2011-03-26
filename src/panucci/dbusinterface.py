@@ -125,12 +125,11 @@ class panucciInterface(dbus.service.Object):
     @dbus.service.method('org.panucci.panucciInterface', in_signature='su')
     def playback_from(self, uri, seconds):
         """Playback an URI from a position (in seconds)
-
         This sets the current file to "uri" and tries
         to start playback from the position given by
         the "seconds" parameter.
         """
-        
+
         self.__log.debug('%s playback_from %d' % (uri, seconds))
         if self.player is not None:
             self.show_main_window()
@@ -143,14 +142,13 @@ class panucciInterface(dbus.service.Object):
 
             if new_file:
                 self.player.playlist.load(uri)
-            #if self.player._is_playing:
-            #    self.player.do_seek(from_beginning=(10**9)*seconds)
-            #else:
                 self.player.playlist.set_seek_to(seconds)
                 self.player.playlist.last()
             elif not self.player._is_playing:
                 self.player.play()
-              
+            #else:
+            #    self.player.do_seek(from_beginning=(10**9)*seconds)
+
     @dbus.service.method('org.panucci.panucciInterface', in_signature='s')
     def queue_file(self, filepath):
         self.__log.debug('queue_file() called with: ' + filepath)
