@@ -24,16 +24,10 @@
 from __future__ import absolute_import
 
 import logging
-import sys
-import os, os.path
-import time
 
 import gtk
 import gobject
 import pango
-
-import cgi
-import dbus
 
 import panucci
 from panucci import platform
