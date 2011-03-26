@@ -19,11 +19,6 @@
 from __future__ import absolute_import
 
 import logging
-import sys
-import os
-import time
-import cgi
-import dbus
 
 from PySide  import QtCore
 from PySide import QtGui
