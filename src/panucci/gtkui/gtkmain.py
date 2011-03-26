@@ -19,19 +19,13 @@
 from __future__ import absolute_import
 
 import logging
-import sys
-import os, os.path
-import time
-
+import os.path
+import cgi
 import gtk
 import gobject
 import pango
 
-import cgi
-import dbus
-
 import panucci
-
 from panucci import util
 from panucci import platform
 from panucci.gtkui import gtkwidgets as widgets
@@ -136,6 +130,7 @@ class PanucciGUI(object):
 
         if platform.MAEMO and interface.headset_device:
             # Enable play/pause with headset button
+            import dbus
             interface.headset_device.connect_to_signal('Condition', \
                     self.handle_headset_button)
             system_bus = dbus.SystemBus()
@@ -994,12 +989,3 @@ class PlayerTab(ObservableService, gtk.HBox):
         if resp:
             # Preemptively update the progressbar to make seeking smoother
             self.set_progress_callback( *resp )
-
-def run(filename=None):
-    PanucciGUI(filename)
-    gtk.main()
-
-if __name__ == '__main__':
-    log.error( 'Use the "panucci" executable to run this program.' )
-    log.error( 'Exiting...' )
-    sys.exit(1)
