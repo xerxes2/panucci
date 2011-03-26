@@ -134,7 +134,8 @@ class SettingsDialog:
     def save(self):
         self.close()
         for i in range(len(self.global_actions)):
-            self.global_actions[i].setChecked(self.local_actions[i].isChecked())
+            if self.global_actions[i].isChecked() != self.local_actions[i].isChecked():
+                self.global_actions[i].trigger()
 
     """
     def scrolling_labels_callback(self):
