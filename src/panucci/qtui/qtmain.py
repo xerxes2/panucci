@@ -61,6 +61,8 @@ class PanucciGUI(object):
         self.app = QtGui.QApplication(["Panucci"])
         self.app.setWindowIcon(QtGui.QIcon(util.find_data_file('panucci.png')))
         self.main_window = QtGui.QMainWindow(None)
+        if platform.FREMANTLE:
+            self.main_window.setAttribute(QtCore.Qt.WA_Maemo5StackedWindow)
         self.main_window.closeEvent = self.close_main_window_callback
         self.create_actions()
         self.__player_tab = PlayerTab(self)
