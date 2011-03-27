@@ -354,6 +354,8 @@ class PlayerTab(ObservableService):
         self.progress.mousePressEvent = self.on_progress_clicked
         self.progress.setFixedHeight(self.config.getint("options", "progress_height"))
 
+        self.icon_play = QtGui.QIcon(util.find_data_file('media-playback-start.png'))
+        self.icon_pause = QtGui.QIcon(util.find_data_file('media-playback-pause.png'))
         #self.button_rrewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-skip-backward.png')), "")
         self.button_rrewind = qtwidgets.DualActionButton(self.config, 
                                                       QtGui.QIcon(util.find_data_file('media-skip-backward.png')),
@@ -365,7 +367,7 @@ class PlayerTab(ObservableService):
         self.button_rewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-seek-backward.png')), "")
         self.button_rewind.clicked.connect(self.button_rewind_callback)
         self.button_rewind.setFixedHeight(self.config.getint("options", "button_height"))
-        self.button_play = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-playback-start.png')), "")
+        self.button_play = QtGui.QPushButton(self.icon_play, "")
         self.button_play.clicked.connect(self.button_play_callback)
         self.button_play.setFixedHeight(self.config.getint("options", "button_height"))
         self.button_forward = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-seek-forward.png')), "")
@@ -401,18 +403,18 @@ class PlayerTab(ObservableService):
     def on_player_stopped(self):
         self.stop_progress_timer()
         #self.set_controls_sensitivity(False)
-        self.button_play.setIcon(QtGui.QIcon(util.find_data_file('media-playback-start.png')))
+        self.button_play.setIcon(self.icon_play)
         pass
 
     def on_player_playing(self):
         self.start_progress_timer()
-        self.button_play.setIcon(QtGui.QIcon(util.find_data_file('media-playback-pause.png')))
+        self.button_play.setIcon(self.icon_pause)
         #self.set_controls_sensitivity(True)
 
     def on_player_paused( self, position, duration ):
         self.stop_progress_timer()
         #self.set_progress_callback( position, duration )
-        self.button_play.setIcon(QtGui.QIcon(util.find_data_file('media-playback-start.png')))
+        self.button_play.setIcon(self.icon_play)
 
     def on_player_eof(self):
         play_mode = self.config.get("options", "play_mode")
