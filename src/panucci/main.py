@@ -28,7 +28,7 @@ import dbus.glib
 import logging
 import logging.handlers
 import os.path
-import sys
+from sys import excepthook
 
 import panucci
 from panucci.settings import settings
@@ -105,11 +105,5 @@ def init_logging( log_level ):
     logger.addHandler(fh)
 
     # force all exceptions to pass through the logger
-    sys.excepthook = lambda *args: logger.critical( 'Exception caught:',
+    excepthook = lambda *args: logger.critical( 'Exception caught:',
                                                     exc_info=args )
-
-if __name__ == '__main__':
-    log = logging.getLogger('panucci.panucci')
-    log.error( 'Use the "panucci" executable to run this program.' )
-    log.error( 'Exiting...' )
-    sys.exit(1)
