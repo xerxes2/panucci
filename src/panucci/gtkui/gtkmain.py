@@ -32,8 +32,6 @@ from panucci.gtkui import gtkwidgets as widgets
 from panucci.gtkui import gtkplaylist
 from panucci.gtkui import gtkutil
 
-log = logging.getLogger('panucci.panucci')
-
 try:
     import pynotify
     pynotify.init('Panucci')
@@ -45,6 +43,7 @@ try:
     import hildon
 except:
     if platform.MAEMO:
+        log = logging.getLogger('panucci.panucci')
         log.critical( 'Using GTK widgets, install "python2.5-hildon" '
             'for this to work properly.' )
 

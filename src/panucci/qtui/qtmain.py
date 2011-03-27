@@ -24,8 +24,6 @@ import cgi
 from PySide  import QtCore
 from PySide import QtGui
 
-log = logging.getLogger('panucci.panucci')
-
 try:
     import pynotify
     pynotify.init('Panucci')
