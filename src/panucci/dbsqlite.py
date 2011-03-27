@@ -22,11 +22,10 @@ import os.path
 import logging
 import time
 
-log = logging.getLogger('panucci.dbsqlite')
-
 try:
     from sqlite3 import dbapi2 as sqlite
 except ImportError:
+    log = logging.getLogger('panucci.dbsqlite')
     log.critical('Error importing sqlite, FAIL!')
 
 import panucci
