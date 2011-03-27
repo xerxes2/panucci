@@ -38,11 +38,11 @@ from panucci.gtkui import gtkutil
 # PlaylistTab
 ##################################################
 class PlaylistTab(gtk.VBox):
-    def __init__(self, main_window, player):
+    def __init__(self, main_window, playlist):
         gtk.VBox.__init__(self)
         self.__log = logging.getLogger('panucci.panucci.BookmarksWindow')
         self.main = main_window
-        self.player = player
+        self.playlist = playlist
 
         self.__model = gtk.TreeStore(
             # uid, name, position
@@ -142,9 +142,9 @@ class PlaylistTab(gtk.VBox):
 
         self.pack_start(self.hbox, False, True)
 
-        self.player.playlist.register( 'file_queued',
+        self.playlist.register( 'file_queued',
                                   lambda x,y,z: self.update_model() )
-        self.player.playlist.register( 'bookmark_added', self.on_bookmark_added )
+        self.playlist.register( 'bookmark_added', self.on_bookmark_added )
 
         self.show_all()
 
@@ -208,17 +208,16 @@ class PlaylistTab(gtk.VBox):
             self.__log.debug('No drop_data or selection.data available')
 
     def update_model(self):
-        plist = self.player.playlist
         path_info = self.treeview.get_path_at_pos(0,0)
         path = path_info[0] if path_info is not None else None
 
         self.__model.clear()
 
         # build the tree
-        for item, data in plist.get_playlist_item_ids():
+        for item, data in self.playlist.get_playlist_item_ids():
             parent = self.__model.append(None, (item, data.get('title'), None))
 
-            for bid, bname, bpos in plist.get_bookmarks_from_item_id( item ):
+            for bid, bname, bpos in self.playlist.get_bookmarks_from_item_id( item ):
                 nice_bpos = util.convert_ns(bpos)
                 self.__model.append( parent, (bid, bname, nice_bpos) )
 
@@ -248,12 +247,12 @@ class PlaylistTab(gtk.VBox):
     def add_file(self, widget):
         filename = gtkutil.get_file_from_filechooser(self.main)
         if filename is not None:
-            self.player.playlist.load(filename)
+            self.playlist.load(filename)
 
     def add_directory(self, widget):
         directory = gtkutil.get_file_from_filechooser(self.main, folder=True )
         if directory is not None:
-            self.player.playlist.load(directory)
+            self.playlist.load(directory)
 
     def __cur_selection(self):
         selection = self.treeview.get_selection()
@@ -280,7 +279,7 @@ class PlaylistTab(gtk.VBox):
 
     def remove_bookmark(self, w=None):
         for model, bkmk_id, bkmk_iter, item_id, item_iter in self.__cur_selection():
-            self.player.playlist.remove_bookmark( item_id, bkmk_id )
+            self.playlist.remove_bookmark( item_id, bkmk_id )
             if bkmk_iter is not None:
                 model.remove(bkmk_iter)
             elif item_iter is not None:
@@ -289,7 +288,7 @@ class PlaylistTab(gtk.VBox):
     def select_current_item(self):
         model = self.treeview.get_model()
         selection = self.treeview.get_selection()
-        current_item_id = str(self.player.playlist.get_current_item())
+        current_item_id = str(self.playlist.get_current_item())
         for row in iter(model):
             if model.get_value(row.iter, 0) == current_item_id:
                 selection.unselect_all()
@@ -302,7 +301,7 @@ class PlaylistTab(gtk.VBox):
         if selection.count_selected_rows() == 1:
             selected = self.__cur_selection().next()
             model, bkmk_id, bkmk_iter, item_id, item_iter = selected
-            playlist_item = self.player.playlist.get_item_by_id(item_id)
+            playlist_item = self.playlist.get_item_by_id(item_id)
             PlaylistItemDetails(self.main, playlist_item)
 
     def jump_bookmark(self, w):
@@ -311,10 +310,10 @@ class PlaylistTab(gtk.VBox):
             # It should be guranteed by the fact that we only enable the
             # "Jump to" button when the selection count equals 1.
             model, bkmk_id, bkmk_iter, item_id, item_iter = selected.pop(0)
-            self.player.playlist.load_from_bookmark_id(item_id, bkmk_id)
+            self.playlist.load_from_bookmark_id(item_id, bkmk_id)
 
     def empty_playlist(self, w):
-        self.player.playlist.reset_playlist()
+        self.playlist.reset_playlist()
         self.treeview.get_model().clear()
 
 ##################################################

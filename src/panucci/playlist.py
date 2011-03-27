@@ -31,7 +31,7 @@ import panucci
 
 from panucci.dbsqlite import db
 from panucci.services import ObservableService
-
+from panucci import player
 from panucci import util
 
 def is_supported(uri):
@@ -46,10 +46,12 @@ class Playlist(ObservableService):
                 'bookmark_added', 'seek-requested', 'end-of-playlist',
                 'playlist-to-be-overwritten', 'stop-requested', 'reset-playlist' ]
 
-    def __init__(self):
+    def __init__(self, config):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
         ObservableService.__init__(self, self.signals, self.__log)
-
+        self.config = config
+        
+        self.player = player.PanucciPlayer(self, self.config)
         self.__queue = Queue(None)
         self.__queue.register(
             'current_item_changed', self.on_queue_current_item_changed )

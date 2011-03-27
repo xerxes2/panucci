@@ -20,10 +20,8 @@ from __future__ import absolute_import
 
 import logging
 
-from panucci.playlist import Playlist
 from panucci.services import ForwardingObservableService
 from panucci.dbusinterface import interface
-from panucci.backends import gstreamer
 
 from panucci import util
 
@@ -35,10 +33,14 @@ class PanucciPlayer(ForwardingObservableService):
     """
     signals = [ "playing", "paused", "stopped", "eof" ]
 
-    def __init__(self, player):
+    def __init__(self, playlist, config):
         self.__log = logging.getLogger('panucci.player.PanucciPlayer')
         ForwardingObservableService.__init__(self, self.signals, self.__log)
-        self.__player = player
+        self.config = config
+        if self.config.get("options", "backend") == "gstreamer":
+            from panucci.backends import gstreamer
+            self.__player = gstreamer.GStreamerPlayer()
+
         self.__initialized = False
         self._start_position = 0
         self._is_playing = False
@@ -54,7 +56,7 @@ class PanucciPlayer(ForwardingObservableService):
         #self.__player.register( "eof", self.on_eof )
         self.__player.register( "error", self.on_player_error )
 
-        self.playlist = Playlist()
+        self.playlist = playlist
         self.playlist.register( 'new-track-loaded', self.on_new_track )
         self.playlist.register( 'seek-requested', self.do_seek )
         self.playlist.register( 'stop-requested', self.on_stop_requested )
@@ -81,7 +83,7 @@ class PanucciPlayer(ForwardingObservableService):
             Returns: (bookmark lable string, position in nanoseconds)
         """
 
-        default_label, position = player.get_formatted_position()
+        default_label, position = self.get_formatted_position()
         label = default_label if label is None else label
         self.playlist.save_bookmark( label, position )
         self.__log.info('Added bookmark: %s - %d', label, position)
@@ -199,6 +201,3 @@ class PanucciPlayer(ForwardingObservableService):
         """ Called when the application exits """
         self.on_stop_requested()
         self.playlist.quit()
-
-# there should only ever be one panucciPlayer object
-player = PanucciPlayer(gstreamer.GStreamerPlayer())

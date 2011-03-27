@@ -30,12 +30,12 @@ from panucci import util
 # PlaylistTab
 ##################################################
 class PlaylistTab():
-    def __init__(self, main, player):
+    def __init__(self, main, playlist):
         self.__log = logging.getLogger('panucci.panucci.BookmarksWindow')
         self.__gui_root = main
-        self.player = player
-        self.player.playlist.register( 'file_queued', lambda x,y,z: self.update_model() )
-        self.player.playlist.register( 'bookmark_added', self.on_bookmark_added )
+        self.playlist = playlist
+        self.playlist.register( 'file_queued', lambda x,y,z: self.update_model() )
+        self.playlist.register( 'bookmark_added', self.on_bookmark_added )
 
         self.main_window = QtGui.QMainWindow(main.main_window)
         if platform.FREMANTLE:
@@ -108,12 +108,12 @@ class PlaylistTab():
                 parent.removeRow(selection[0].row())
             else:
                 self.__model.removeRow(selection[0].row())
-            self.player.playlist.remove_bookmark( item_id, bkmk_id )
+            self.playlist.remove_bookmark( item_id, bkmk_id )
 
     def button_jump_callback(self):
         selection, item, bkmk, item_id, bkmk_id, parent = self.get_current_selection()
         if selection:
-            self.player.playlist.load_from_bookmark_id(item_id, bkmk_id)
+            self.playlist.load_from_bookmark_id(item_id, bkmk_id)
 
     def get_current_selection(self):
         selection = self.tree.selectedIndexes()
@@ -136,23 +136,22 @@ class PlaylistTab():
     def button_info_callback(self):
         selection, item, bkmk, item_id, bkmk_id, parent = self.get_current_selection()
         if selection:
-            playlist_item = self.player.playlist.get_item_by_id(item_id)
+            playlist_item = self.playlist.get_item_by_id(item_id)
             PlaylistItemDetails(self.main_window, playlist_item)
 
     def button_clear_callback(self):
         self.__gui_root.clear_playlist_callback()
 
     def update_model(self):
-        plist = self.player.playlist
         #path_info = self.treeview.get_path_at_pos(0,0)
         #path = path_info[0] if path_info is not None else None
         self.clear_model()
 
-        for item, data in plist.get_playlist_item_ids():
+        for item, data in self.playlist.get_playlist_item_ids():
             parent = QtGui.QStandardItem(data.get('title').decode('utf-8'))
             self.__model.appendRow((parent, None, QtGui.QStandardItem(item)))
 
-            for bid, bname, bpos in plist.get_bookmarks_from_item_id( item ):
+            for bid, bname, bpos in self.playlist.get_bookmarks_from_item_id( item ):
                 parent.appendRow((QtGui.QStandardItem(bname.decode('utf-8')), QtGui.QStandardItem(util.convert_ns(bpos)),
                                   QtGui.QStandardItem(bid)))
 

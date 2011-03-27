@@ -34,7 +34,7 @@ except:
 import panucci
 from panucci import util
 from panucci import platform
-from panucci.player import player
+from panucci import playlist
 from panucci.dbusinterface import interface
 from panucci.services import ObservableService
 from panucci.qtui import qtutil
@@ -51,6 +51,7 @@ class PanucciGUI(object):
         self.__log = logging.getLogger('panucci.panucci.PanucciGUI')
         interface.register_gui(self)
         self.config = settings.config
+        self.playlist = playlist.Playlist(self.config)
 
         self.app = QtGui.QApplication(["Panucci"])
         self.app.setWindowIcon(QtGui.QIcon(util.find_data_file('panucci.png')))
@@ -60,7 +61,7 @@ class PanucciGUI(object):
         self.main_window.closeEvent = self.close_main_window_callback
         self.create_actions()
         self.__player_tab = PlayerTab(self)
-        self.__playlist_tab = qtplaylist.PlaylistTab(self, player)
+        self.__playlist_tab = qtplaylist.PlaylistTab(self, self.playlist)
         if platform.MAEMO:
             self.create_maemo_menus()
         else:
@@ -69,7 +70,7 @@ class PanucciGUI(object):
         widget.setLayout(self.__player_tab.mainbox)
         self.main_window.setCentralWidget(widget)
         self.main_window.show()
-        player.init(filepath=filename)
+        self.playlist.player.init(filepath=filename)
         self.app.exec_()
 
     def create_actions(self):
@@ -188,7 +189,7 @@ class PanucciGUI(object):
  
     def quit_panucci(self):
         self.main_window.hide()
-        player.quit()
+        self.playlist.player.quit()
         self.write_config()
         self.app.exit()
 
@@ -225,21 +226,21 @@ class PanucciGUI(object):
                 return self.save_playlist_callback()
 
         ext = util.detect_filetype(filename)
-        if not player.playlist.save_to_new_playlist(filename, ext):
+        if not self.playlist.save_to_new_playlist(filename, ext):
             self.notify(_('Error saving playlist...'))
             return False
 
         return True
 
     def clear_playlist_callback(self):
-        player.playlist.reset_playlist()
+        self.playlist.reset_playlist()
         self.__playlist_tab.clear_model()
 
     def delete_bookmarks_callback(self):
         response = qtutil.dialog(self.main_window,  _('Delete all bookmarks?'),
                 _('By accepting all bookmarks in the database will be deleted.'), True, False, True, False)
         if response == QtGui.QMessageBox.Ok:
-            player.playlist.delete_all_bookmarks()
+            self.playlist.delete_all_bookmarks()
 
     def playlist_callback(self):
         self.__playlist_tab.main_window.show()
@@ -289,9 +290,9 @@ class PanucciGUI(object):
         _file.close()
 
     def _play_file(self, filename, pause_on_load=False):
-        player.playlist.load( os.path.abspath(filename) )
+        self.playlist.load( os.path.abspath(filename) )
 
-        if player.playlist.is_empty:
+        if self.playlist.is_empty:
             return False
 
 ##################################################
@@ -306,16 +307,17 @@ class PlayerTab(ObservableService):
         self.__log = logging.getLogger('panucci.panucci.PlayerTab')
         self.__gui_root = gui_root
         self.config = gui_root.config
+        self.playlist = gui_root.playlist
         ObservableService.__init__(self, self.signals, self.__log)
 
-        player.register( 'stopped', self.on_player_stopped )
-        player.register( 'playing', self.on_player_playing )
-        player.register( 'paused', self.on_player_paused )
-        player.register( 'eof', self.on_player_eof )
-        player.playlist.register( 'end-of-playlist', self.on_player_end_of_playlist )
-        player.playlist.register( 'new-track-loaded', self.on_player_new_track )
-        player.playlist.register( 'new-metadata-available', self.on_player_new_metadata )
-        player.playlist.register( 'reset-playlist', self.on_player_reset_playlist )
+        self.playlist.player.register( 'stopped', self.on_player_stopped )
+        self.playlist.player.register( 'playing', self.on_player_playing )
+        self.playlist.player.register( 'paused', self.on_player_paused )
+        self.playlist.player.register( 'eof', self.on_player_eof )
+        self.playlist.register( 'end-of-playlist', self.on_player_end_of_playlist )
+        self.playlist.register( 'new-track-loaded', self.on_player_new_track )
+        self.playlist.register( 'new-metadata-available', self.on_player_new_metadata )
+        self.playlist.register( 'reset-playlist', self.on_player_reset_playlist )
 
         self.mainbox = QtGui.QVBoxLayout()
         self.mainbox.setContentsMargins(0, 0, 0, 0)
@@ -359,7 +361,7 @@ class PlayerTab(ObservableService):
                                                       QtGui.QIcon(util.find_data_file('media-skip-backward.png')),
                                                       self.button_rrewind_callback,
                                          QtGui.QIcon("/usr/share/icons/gnome/24x24/actions/gtk-goto-first-ltr.png"),
-                                         player.playlist.prev)
+                                         self.playlist.prev)
         self.button_rrewind.setFixedHeight(self.config.getint("options", "button_height"))
         self.button_rewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-seek-backward.png')), "")
         self.button_rewind.clicked.connect(self.button_rewind_callback)
@@ -374,7 +376,7 @@ class PlayerTab(ObservableService):
                                                       QtGui.QIcon(util.find_data_file('media-skip-forward.png')),
                                                       self.button_fforward_callback,
                                          QtGui.QIcon("/usr/share/icons/gnome/24x24/actions/gtk-goto-last-ltr.png"),
-                                         player.playlist.next)
+                                         self.playlist.next)
         self.button_fforward.setFixedHeight(self.config.getint("options", "button_height"))
         self.button_bookmark = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('bookmark-new.png')), "")
         self.button_bookmark.clicked.connect(self.button_bookmark_callback)
@@ -416,15 +418,15 @@ class PlayerTab(ObservableService):
             if not self.config.getboolean("options", "stay_at_end"):
                 self.on_player_end_of_playlist(False)
         elif play_mode == "random":
-            player.playlist.random()
+            self.playlist.random()
         elif play_mode == "repeat":
-            player.playlist.next(True)
+            self.playlist.next(True)
         else:
-            if player.playlist.end_of_playlist():
+            if self.playlist.end_of_playlist():
                 if not self.config.getboolean("options", "stay_at_end"):
-                   player.playlist.next(False)
+                   self.playlist.next(False)
             else:
-              player.playlist.next(False)
+              self.playlist.next(False)
 
     def on_player_new_track(self):
         for widget in [self.label_title, self.label_artist, self.label_album, self.label_cover]:
@@ -433,21 +435,21 @@ class PlayerTab(ObservableService):
         self.has_coverart = False
 
     def on_player_new_metadata(self):
-        self.metadata = player.playlist.get_file_metadata()
+        self.metadata = self.playlist.get_file_metadata()
         self.set_metadata(self.metadata)
         
-        if not player.playing:
-            position = player.playlist.get_current_position()
+        if not self.playlist.player.playing:
+            position = self.playlist.get_current_position()
             estimated_length = self.metadata.get('length', 0)
             self.set_progress_callback( position, estimated_length )
-            player.set_position_duration(position, 0)
+            self.playlist.player.set_position_duration(position, 0)
 
     def on_player_end_of_playlist(self, loop):
         if not loop:
-            player.stop_end_of_playlist()
+            self.playlist.player.stop_end_of_playlist()
             estimated_length = self.metadata.get('length', 0)
             self.set_progress_callback( 0, estimated_length )
-            player.set_position_duration(0, 0)
+            self.playlist.player.set_position_duration(0, 0)
 
     def on_player_reset_playlist(self):
         self.on_player_stopped()
@@ -465,7 +467,7 @@ class PlayerTab(ObservableService):
         self.do_seek(-1*self.config.getint("options", "seek_short"))
 
     def button_play_callback(self):
-        player.play_pause_toggle()
+        self.playlist.player.play_pause_toggle()
 
     def button_forward_callback(self):
         self.do_seek(self.config.getint("options", "seek_short"))
@@ -474,7 +476,7 @@ class PlayerTab(ObservableService):
          self.do_seek(self.config.getint("options", "seek_long"))
 
     def button_bookmark_callback(self):
-        player.add_bookmark_at_current_position()
+        self.playlist.player.add_bookmark_at_current_position()
 
     def set_progress_callback(self, time_elapsed, total_time):
         """ times must be in nanoseconds """
@@ -488,14 +490,14 @@ class PlayerTab(ObservableService):
         if ( not self.config.getboolean("options", "lock_progress") and
                 event.button() == QtCore.Qt.MouseButton.LeftButton ):
             new_fraction = float(event.x())/float(self.progress.width())
-            resp = player.do_seek(percent=new_fraction)
+            resp = self.playlist.player.do_seek(percent=new_fraction)
             if resp:
                 # Preemptively update the progressbar to make seeking smoother
                 self.set_progress_callback( *resp )
 
     def timer_callback( self ):
-        if player.playing and not player.seeking:
-            pos_int, dur_int = player.get_position_duration()
+        if self.playlist.player.playing and not self.playlist.player.seeking:
+            pos_int, dur_int = self.playlist.player.get_position_duration()
             # This prevents bogus values from being set while seeking
             if ( pos_int > 10**9 ) and ( dur_int > 10**9 ):
                 self.set_progress_callback( pos_int, dur_int )
@@ -569,16 +571,16 @@ class PlayerTab(ObservableService):
     def do_seek(self, seek_amount):
         seek_amount = seek_amount*10**9
         resp = None
-        if not self.config.getboolean("options", "seek_back") or player.playlist.start_of_playlist() or seek_amount > 0:
-            resp = player.do_seek(from_current=seek_amount)
+        if not self.config.getboolean("options", "seek_back") or self.playlist.start_of_playlist() or seek_amount > 0:
+            resp = self.playlist.player.do_seek(from_current=seek_amount)
         else:
-            pos_int, dur_int = player.get_position_duration()
+            pos_int, dur_int = self.playlist.player.get_position_duration()
             if pos_int + seek_amount >= 0:
-                resp = player.do_seek(from_current=seek_amount)
+                resp = self.playlist.player.do_seek(from_current=seek_amount)
             else:
-                player.playlist.prev()
-                pos_int, dur_int = player.get_position_duration()
-                resp = player.do_seek(from_beginning=dur_int+seek_amount)
+                self.playlist.prev()
+                pos_int, dur_int = self.playlist.player.get_position_duration()
+                resp = self.playlist.player.do_seek(from_beginning=dur_int+seek_amount)
         if resp:
             # Preemptively update the progressbar to make seeking smoother
             self.set_progress_callback( *resp )
