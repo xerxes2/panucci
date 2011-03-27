@@ -51,7 +51,7 @@ if platform.FREMANTLE:
     # Workaround Maemo bug 6694 (Playback in Silent mode)
     gobject.set_application_name('FMRadio')
 
-from panucci.settings import settings
+#from panucci.settings import settings
 from panucci.player import player
 from panucci.dbusinterface import interface
 from panucci.services import ObservableService
