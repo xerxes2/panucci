@@ -72,7 +72,7 @@ def run(opts, args):
             from panucci.qtui.qtmain import PanucciGUI
         else:
             from panucci.gtkui.gtkmain import PanucciGUI
-        PanucciGUI(filepath)
+        PanucciGUI(settings, filepath)
     else:
         if filepath is not None:
             if opts.queue_filename is not None:

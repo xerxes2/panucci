@@ -64,7 +64,7 @@ gtk.icon_size_register('panucci-button', 32, 32)
 class PanucciGUI(object):
     """ The object that holds the entire panucci gui """
 
-    def __init__(self, filename=None):
+    def __init__(self, settings, filename=None):
         self.__log = logging.getLogger('panucci.panucci.PanucciGUI')
         interface.register_gui(self)
         self.config = settings.config
@@ -154,9 +154,9 @@ class PanucciGUI(object):
                     elif button == 'pause-cd':
                         player.pause()
                     elif button == 'next-song':
-                        self.__player_tab.do_seek(settings.config.getint("options", "seek_short"))
+                        self.__player_tab.do_seek(self.config.getint("options", "seek_short"))
                     elif button == 'previous-song':
-                        self.__player_tab.do_seek(-1*settings.config.getint("options", "seek_short"))
+                        self.__player_tab.do_seek(-1*self.config.getint("options", "seek_short"))
 
             system_bus.add_signal_receiver(handle_bt_button, 'Condition', \
                     'org.freedesktop.Hal.Device', None, PATH)
@@ -204,19 +204,19 @@ class PanucciGUI(object):
         # Settings menu
         self.action_lock_progress = gtk.ToggleAction('lock_progress', 'Lock Progress Bar', None, None)
         self.action_lock_progress.connect("activate", self.set_boolean_config_callback)
-        self.action_lock_progress.set_active(settings.config.getboolean("options", "lock_progress"))
+        self.action_lock_progress.set_active(self.config.getboolean("options", "lock_progress"))
         self.action_dual_action_button = gtk.ToggleAction('dual_action_button', 'Dual Action Button', None, None)
         self.action_dual_action_button.connect("activate", self.set_boolean_config_callback)
-        self.action_dual_action_button.set_active(settings.config.getboolean("options", "dual_action_button"))
+        self.action_dual_action_button.set_active(self.config.getboolean("options", "dual_action_button"))
         self.action_stay_at_end = gtk.ToggleAction('stay_at_end', 'Stay at End', None, None)
         self.action_stay_at_end.connect("activate", self.set_boolean_config_callback)
-        self.action_stay_at_end.set_active(settings.config.getboolean("options", "stay_at_end"))
+        self.action_stay_at_end.set_active(self.config.getboolean("options", "stay_at_end"))
         self.action_seek_back = gtk.ToggleAction('seek_back', 'Seek Back', None, None)
         self.action_seek_back.connect("activate", self.set_boolean_config_callback)
-        self.action_seek_back.set_active(settings.config.getboolean("options", "seek_back"))
+        self.action_seek_back.set_active(self.config.getboolean("options", "seek_back"))
         self.action_scrolling_labels = gtk.ToggleAction('scrolling_labels', 'Scrolling Labels', None, None)
         self.action_scrolling_labels.connect("activate", self.scrolling_labels_callback)
-        self.action_scrolling_labels.set_active(settings.config.getboolean("options", "scrolling_labels"))
+        self.action_scrolling_labels.set_active(self.config.getboolean("options", "scrolling_labels"))
         self.action_play_mode = gtk.Action('play_mode', 'Play Mode', None, None)
         self.action_play_mode_all = gtk.RadioAction('all', 'All', None, None, 0)
         self.action_play_mode_all.connect("activate", self.set_play_mode_callback)
@@ -229,11 +229,11 @@ class PanucciGUI(object):
         self.action_play_mode_repeat = gtk.RadioAction('repeat', 'Repeat', None, None, 1)
         self.action_play_mode_repeat.connect("activate", self.set_play_mode_callback)
         self.action_play_mode_repeat.set_group(self.action_play_mode_all)
-        if settings.config.get("options", "play_mode") == "single":
+        if self.config.get("options", "play_mode") == "single":
             self.action_play_mode_single.set_active(True)
-        elif settings.config.get("options", "play_mode") == "random":
+        elif self.config.get("options", "play_mode") == "random":
             self.action_play_mode_random.set_active(True)
-        elif settings.config.get("options", "play_mode") == "repeat":
+        elif self.config.get("options", "play_mode") == "repeat":
             self.action_play_mode_repeat.set_active(True)
         else:
             self.action_play_mode_all.set_active(True)
@@ -365,12 +365,12 @@ class PanucciGUI(object):
 
         menu_settings_enable_dual_action = gtk.CheckMenuItem(_('Enable dual-action buttons') )
         menu_settings_enable_dual_action.connect('toggled', self.set_dual_action_button_callback)
-        menu_settings_enable_dual_action.set_active(settings.config.getboolean("options", "dual_action_button"))
+        menu_settings_enable_dual_action.set_active(self.config.getboolean("options", "dual_action_button"))
         menu_settings_sub.append(menu_settings_enable_dual_action)
 
         menu_settings_lock_progress = gtk.CheckMenuItem(_('Lock Progress Bar'))
         menu_settings_lock_progress.connect('toggled', self.lock_progress_callback)
-        menu_settings_lock_progress.set_active(settings.config.getboolean("options", "lock_progress"))
+        menu_settings_lock_progress.set_active(self.config.getboolean("options", "lock_progress"))
         menu_settings_sub.append(menu_settings_lock_progress)
 
         menu_about = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
@@ -386,7 +386,7 @@ class PanucciGUI(object):
         return menu
 
     def create_recent_files_menu( self ):
-        max_files = settings.config.getint("options", "max_recent_files")
+        max_files = self.config.getint("options", "max_recent_files")
         self.recent_files = player.playlist.get_recent_files(max_files)
         menu_recent_sub = gtk.Menu()
 
@@ -534,20 +534,20 @@ class PanucciGUI(object):
 
     def set_boolean_config_callback(self, w):
         if w.get_active():
-            settings.config.set("options", w.get_name(), "true")
+            self.config.set("options", w.get_name(), "true")
         else:
-            settings.config.set("options", w.get_name(), "false")
+            self.config.set("options", w.get_name(), "false")
 
     def scrolling_labels_callback(self, w):
         self.set_boolean_config_callback(w)
         self.__player_tab.title_label.scrolling = w.get_active()
 
     def set_play_mode_callback(self, w):
-        settings.config.set("options", "play_mode", w.get_name())
+        self.config.set("options", "play_mode", w.get_name())
 
     def write_config(self):
         _file = open(os.path.expanduser("~/.config/panucci/panucci-noedit.conf"), "w")
-        settings.config.write(_file)
+        self.config.write(_file)
         _file.close()
 
     def __get_fullscreen(self):
@@ -622,6 +622,7 @@ class PlayerTab(ObservableService, gtk.HBox):
     def __init__(self, gui_root):
         self.__log = logging.getLogger('panucci.panucci.PlayerTab')
         self.__gui_root = gui_root
+        self.config = gui_root.config
 
         gtk.HBox.__init__(self)
         ObservableService.__init__(self, self.signals, self.__log)
@@ -688,12 +689,12 @@ class PlayerTab(ObservableService, gtk.HBox):
         separator.set_size_request(-1, 10)
         metadata_vbox.pack_start(separator, False, False)
         self.title_label = widgets.ScrollingLabel('',
-                                                  settings.config.get("options", "scrolling_color"),
+                                                  self.config.get("options", "scrolling_color"),
                                                   update_interval=100,
                                                   pixel_jump=1,
                                                   delay_btwn_scrolls=5000,
                                                   delay_halfway=3000)
-        self.title_label.scrolling = settings.config.getboolean("options", "scrolling_labels")
+        self.title_label.scrolling = self.config.getboolean("options", "scrolling_labels")
         metadata_vbox.pack_start(self.title_label, False, False)
         metadata_vbox.pack_start(gtk.Image(), True, True)
         metadata_hbox.pack_start( metadata_vbox, True, True )
@@ -703,7 +704,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         progress_eventbox.connect(
             'button-press-event', self.on_progressbar_changed )
         self.progress = gtk.ProgressBar()
-        self.progress.set_size_request(-1, settings.config.getint("options", "progress_height"))
+        self.progress.set_size_request(-1, self.config.getint("options", "progress_height"))
         progress_eventbox.add(self.progress)
         main_vbox.pack_start( progress_eventbox, False, False )
 
@@ -716,18 +717,18 @@ class PlayerTab(ObservableService, gtk.HBox):
                 widget2 = None
                 action2 = None
 
-            return widgets.DualActionButton(widget, action, settings.config, widget2, action2)
+            return widgets.DualActionButton(widget, action, self.config, widget2, action2)
 
         self.rrewind_button = create_da(
                 gtkutil.generate_image('media-skip-backward.png'),
-                lambda: self.do_seek(-1*settings.config.getint('options', 'seek_long')),
+                lambda: self.do_seek(-1*self.config.getint('options', 'seek_long')),
                 gtkutil.generate_image(gtk.STOCK_GOTO_FIRST, True),
                 player.playlist.prev)
         buttonbox.add(self.rrewind_button)
 
         self.rewind_button = create_da(
                 gtkutil.generate_image('media-seek-backward.png'),
-                lambda: self.do_seek(-1*settings.config.getint('options', 'seek_short')))
+                lambda: self.do_seek(-1*self.config.getint('options', 'seek_short')))
         buttonbox.add(self.rewind_button)
 
         self.play_pause_button = gtk.Button('')
@@ -739,12 +740,12 @@ class PlayerTab(ObservableService, gtk.HBox):
 
         self.forward_button = create_da(
                 gtkutil.generate_image('media-seek-forward.png'),
-                lambda: self.do_seek(settings.config.getint('options', 'seek_short')))
+                lambda: self.do_seek(self.config.getint('options', 'seek_short')))
         buttonbox.add(self.forward_button)
 
         self.fforward_button = create_da(
                 gtkutil.generate_image('media-skip-forward.png'),
-                lambda: self.do_seek(settings.config.getint('options', 'seek_long')),
+                lambda: self.do_seek(self.config.getint('options', 'seek_long')),
                 gtkutil.generate_image(gtk.STOCK_GOTO_LAST, True),
                 player.playlist.next)
         buttonbox.add(self.fforward_button)
@@ -762,7 +763,7 @@ class PlayerTab(ObservableService, gtk.HBox):
                 if isinstance(child, gtk.Button):
                     child.set_name('HildonButton-thumb')
 
-        buttonbox.set_size_request(-1, settings.config.getint("options", "button_height"))
+        buttonbox.set_size_request(-1, self.config.getint("options", "button_height"))
         main_vbox.pack_start(buttonbox, False, False)
 
         if platform.MAEMO:
@@ -794,15 +795,15 @@ class PlayerTab(ObservableService, gtk.HBox):
                       self.fforward_button, self.rrewind_button, \
                       self.bookmarks_button:
 
-            button.set_longpress_enabled( settings.config.getboolean("options", "dual_action_button") )
-            button.set_duration( settings.config.getfloat("options", "dual_action_button_delay") )
+            button.set_longpress_enabled( self.config.getboolean("options", "dual_action_button") )
+            button.set_duration( self.config.getfloat("options", "dual_action_button_delay") )
 
     def on_key_press(self, widget, event):
         if platform.MAEMO:
             if event.keyval == gtk.keysyms.Left: # seek back
-                self.do_seek( -1 * settings.seek_long )
+                self.do_seek( -1 * self.config.getint('options', 'seek_long') )
             elif event.keyval == gtk.keysyms.Right: # seek forward
-                self.do_seek( settings.seek_long )
+                self.do_seek( self.config.getint('options', 'seek_long') )
             elif event.keyval == gtk.keysyms.Return: # play/pause
                 self.on_btn_play_pause_clicked()
 
@@ -820,9 +821,9 @@ class PlayerTab(ObservableService, gtk.HBox):
                     self.__gui_root.main_window, False)
 
     def on_player_eof(self):
-        play_mode = settings.config.get("options", "play_mode")
+        play_mode = self.config.get("options", "play_mode")
         if play_mode == "single":
-            if not settings.config.getboolean("options", "stay_at_end"):
+            if not self.config.getboolean("options", "stay_at_end"):
                 self.on_player_end_of_playlist(False)
         elif play_mode == "random":
             player.playlist.random()
@@ -830,7 +831,7 @@ class PlayerTab(ObservableService, gtk.HBox):
             player.playlist.next(True)
         else:
             if player.playlist.end_of_playlist():
-                if not settings.config.getboolean("options", "stay_at_end"):
+                if not self.config.getboolean("options", "stay_at_end"):
                    player.playlist.next(False)
             else:
               player.playlist.next(False)
@@ -884,7 +885,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.progress.set_fraction( fraction )
 
     def on_progressbar_changed(self, widget, event):
-        if ( not settings.config.getboolean("options", "lock_progress") and
+        if ( not self.config.getboolean("options", "lock_progress") and
                 event.type == gtk.gdk.BUTTON_PRESS and event.button == 1 ):
             new_fraction = event.x/float(widget.get_allocation().width)
             resp = player.do_seek(percent=new_fraction)
@@ -944,8 +945,8 @@ class PlayerTab(ObservableService, gtk.HBox):
                 pbl.write(value)
                 pbl.close()
                 pixbuf = pbl.get_pixbuf()
-                pixbuf = pixbuf.scale_simple(settings.config.getint("options", "cover_height"),
-                    settings.config.getint("options", "cover_height"), gtk.gdk.INTERP_BILINEAR )
+                pixbuf = pixbuf.scale_simple(self.config.getint("options", "cover_height"),
+                    self.config.getint("options", "cover_height"), gtk.gdk.INTERP_BILINEAR )
                 self.set_coverart(pixbuf)
             except Exception, e:
                 self.__log.exception('Error setting coverart...')
@@ -975,7 +976,7 @@ class PlayerTab(ObservableService, gtk.HBox):
     def do_seek(self, seek_amount):
         seek_amount = seek_amount*10**9
         resp = None
-        if not settings.config.getboolean("options", "seek_back") or player.playlist.start_of_playlist() or seek_amount > 0:
+        if not self.config.getboolean("options", "seek_back") or player.playlist.start_of_playlist() or seek_amount > 0:
             resp = player.do_seek(from_current=seek_amount)
         else:
             pos_int, dur_int = player.get_position_duration()

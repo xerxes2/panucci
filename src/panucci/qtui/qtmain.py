@@ -34,7 +34,7 @@ except:
 import panucci
 from panucci import util
 from panucci import platform
-from panucci.settings import settings
+#from panucci.settings import settings
 from panucci.player import player
 from panucci.dbusinterface import interface
 from panucci.services import ObservableService
@@ -48,11 +48,11 @@ from panucci.qtui import qtwidgets
 class PanucciGUI(object):
     """ The object that holds the entire panucci gui """
 
-    def __init__(self, filename=None):
+    def __init__(self, settings, filename=None):
         self.__log = logging.getLogger('panucci.panucci.PanucciGUI')
         interface.register_gui(self)
         self.config = settings.config
-        
+
         self.app = QtGui.QApplication(["Panucci"])
         self.app.setWindowIcon(QtGui.QIcon(util.find_data_file('panucci.png')))
         self.main_window = QtGui.QMainWindow(None)
@@ -306,6 +306,7 @@ class PlayerTab(ObservableService):
     def __init__(self, gui_root):
         self.__log = logging.getLogger('panucci.panucci.PlayerTab')
         self.__gui_root = gui_root
+        self.config = gui_root.config
         ObservableService.__init__(self, self.signals, self.__log)
 
         player.register( 'stopped', self.on_player_stopped )
@@ -335,7 +336,7 @@ class PlayerTab(ObservableService):
         self.label_album = QtGui.QLabel()
         self.label_artist.setContentsMargins(3, 0, 5, 10)
         self.label_album.setContentsMargins(3, 0, 5, 10)
-        self.label_title = qtwidgets.ScrollingLabel(settings.config)
+        self.label_title = qtwidgets.ScrollingLabel(self.config)
         self.label_title.setContentsMargins(0, 0, 0, 0)
         vlayout.addWidget(self.label_artist)
         vlayout.addWidget(self.label_album)
@@ -351,36 +352,36 @@ class PlayerTab(ObservableService):
         self.progress.setFormat("00:00 / 00:00")
         self.progress.setValue(0)
         self.progress.mousePressEvent = self.on_progress_clicked
-        self.progress.setFixedHeight(settings.config.getint("options", "progress_height"))
+        self.progress.setFixedHeight(self.config.getint("options", "progress_height"))
 
         #self.button_rrewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-skip-backward.png')), "")
-        self.button_rrewind = qtwidgets.DualActionButton(settings.config, 
+        self.button_rrewind = qtwidgets.DualActionButton(self.config, 
                                                       QtGui.QIcon(util.find_data_file('media-skip-backward.png')),
                                                       self.button_rrewind_callback,
                                          QtGui.QIcon("/usr/share/icons/gnome/24x24/actions/gtk-goto-first-ltr.png"),
                                          player.playlist.prev)
         #self.button_rrewind.clicked.connect(self.button_rrewind_callback)
-        self.button_rrewind.setFixedHeight(settings.config.getint("options", "button_height"))
+        self.button_rrewind.setFixedHeight(self.config.getint("options", "button_height"))
         self.button_rewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-seek-backward.png')), "")
         self.button_rewind.clicked.connect(self.button_rewind_callback)
-        self.button_rewind.setFixedHeight(settings.config.getint("options", "button_height"))
+        self.button_rewind.setFixedHeight(self.config.getint("options", "button_height"))
         self.button_play = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-playback-start.png')), "")
         self.button_play.clicked.connect(self.button_play_callback)
-        self.button_play.setFixedHeight(settings.config.getint("options", "button_height"))
+        self.button_play.setFixedHeight(self.config.getint("options", "button_height"))
         self.button_forward = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-seek-forward.png')), "")
         self.button_forward.clicked.connect(self.button_forward_callback)
-        self.button_forward.setFixedHeight(settings.config.getint("options", "button_height"))
+        self.button_forward.setFixedHeight(self.config.getint("options", "button_height"))
         #self.button_fforward = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-skip-forward.png')), "")
-        self.button_fforward = qtwidgets.DualActionButton(settings.config, 
+        self.button_fforward = qtwidgets.DualActionButton(self.config, 
                                                       QtGui.QIcon(util.find_data_file('media-skip-forward.png')),
                                                       self.button_fforward_callback,
                                          QtGui.QIcon("/usr/share/icons/gnome/24x24/actions/gtk-goto-last-ltr.png"),
                                          player.playlist.next)
         #self.button_fforward.clicked.connect(self.button_fforward_callback)
-        self.button_fforward.setFixedHeight(settings.config.getint("options", "button_height"))
+        self.button_fforward.setFixedHeight(self.config.getint("options", "button_height"))
         self.button_bookmark = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('bookmark-new.png')), "")
         self.button_bookmark.clicked.connect(self.button_bookmark_callback)
-        self.button_bookmark.setFixedHeight(settings.config.getint("options", "button_height"))
+        self.button_bookmark.setFixedHeight(self.config.getint("options", "button_height"))
 
         layout = QtGui.QHBoxLayout()
         layout.setContentsMargins(0, 4, 0, 0)
@@ -414,9 +415,9 @@ class PlayerTab(ObservableService):
         self.button_play.setIcon(QtGui.QIcon(util.find_data_file('media-playback-start.png')))
 
     def on_player_eof(self):
-        play_mode = settings.config.get("options", "play_mode")
+        play_mode = self.config.get("options", "play_mode")
         if play_mode == "single":
-            if not settings.config.getboolean("options", "stay_at_end"):
+            if not self.config.getboolean("options", "stay_at_end"):
                 self.on_player_end_of_playlist(False)
         elif play_mode == "random":
             player.playlist.random()
@@ -424,7 +425,7 @@ class PlayerTab(ObservableService):
             player.playlist.next(True)
         else:
             if player.playlist.end_of_playlist():
-                if not settings.config.getboolean("options", "stay_at_end"):
+                if not self.config.getboolean("options", "stay_at_end"):
                    player.playlist.next(False)
             else:
               player.playlist.next(False)
@@ -462,19 +463,19 @@ class PlayerTab(ObservableService):
         self.set_progress_callback(0,0)
 
     def button_rrewind_callback(self):
-         self.do_seek(-1*settings.config.getint("options", "seek_long"))
+         self.do_seek(-1*self.config.getint("options", "seek_long"))
 
     def button_rewind_callback(self):
-        self.do_seek(-1*settings.config.getint("options", "seek_short"))
+        self.do_seek(-1*self.config.getint("options", "seek_short"))
 
     def button_play_callback(self):
         player.play_pause_toggle()
 
     def button_forward_callback(self):
-        self.do_seek(settings.config.getint("options", "seek_short"))
+        self.do_seek(self.config.getint("options", "seek_short"))
 
     def button_fforward_callback(self):
-         self.do_seek(settings.config.getint("options", "seek_long"))
+         self.do_seek(self.config.getint("options", "seek_long"))
 
     def button_bookmark_callback(self):
         player.add_bookmark_at_current_position()
@@ -488,7 +489,7 @@ class PlayerTab(ObservableService):
         self.progress.setValue( int(fraction*100) )
 
     def on_progress_clicked(self, event):
-        if ( not settings.config.getboolean("options", "lock_progress") and
+        if ( not self.config.getboolean("options", "lock_progress") and
                 event.button() == QtCore.Qt.MouseButton.LeftButton ):
             new_fraction = float(event.x())/float(self.progress.width())
             resp = player.do_seek(percent=new_fraction)
@@ -512,9 +513,9 @@ class PlayerTab(ObservableService):
 
     def get_cover_size(self):
         if self.__gui_root.main_window.isFullScreen():
-            size = settings.config.getint("options", "cover_full_height")
+            size = self.config.getint("options", "cover_full_height")
         else:
-            size = settings.config.getint("options", "cover_height")
+            size = self.config.getint("options", "cover_height")
         return size
 
     def set_cover_size(self):
@@ -572,7 +573,7 @@ class PlayerTab(ObservableService):
     def do_seek(self, seek_amount):
         seek_amount = seek_amount*10**9
         resp = None
-        if not settings.config.getboolean("options", "seek_back") or player.playlist.start_of_playlist() or seek_amount > 0:
+        if not self.config.getboolean("options", "seek_back") or player.playlist.start_of_playlist() or seek_amount > 0:
             resp = player.do_seek(from_current=seek_amount)
         else:
             pos_int, dur_int = player.get_position_duration()
