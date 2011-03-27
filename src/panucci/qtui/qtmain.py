@@ -34,7 +34,6 @@ except:
 import panucci
 from panucci import util
 from panucci import platform
-#from panucci.settings import settings
 from panucci.player import player
 from panucci.dbusinterface import interface
 from panucci.services import ObservableService
@@ -356,13 +355,11 @@ class PlayerTab(ObservableService):
 
         self.icon_play = QtGui.QIcon(util.find_data_file('media-playback-start.png'))
         self.icon_pause = QtGui.QIcon(util.find_data_file('media-playback-pause.png'))
-        #self.button_rrewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-skip-backward.png')), "")
-        self.button_rrewind = qtwidgets.DualActionButton(self.config, 
+        self.button_rrewind = qtwidgets.DualActionButton(self.config,
                                                       QtGui.QIcon(util.find_data_file('media-skip-backward.png')),
                                                       self.button_rrewind_callback,
                                          QtGui.QIcon("/usr/share/icons/gnome/24x24/actions/gtk-goto-first-ltr.png"),
                                          player.playlist.prev)
-        #self.button_rrewind.clicked.connect(self.button_rrewind_callback)
         self.button_rrewind.setFixedHeight(self.config.getint("options", "button_height"))
         self.button_rewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-seek-backward.png')), "")
         self.button_rewind.clicked.connect(self.button_rewind_callback)
@@ -373,13 +370,11 @@ class PlayerTab(ObservableService):
         self.button_forward = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-seek-forward.png')), "")
         self.button_forward.clicked.connect(self.button_forward_callback)
         self.button_forward.setFixedHeight(self.config.getint("options", "button_height"))
-        #self.button_fforward = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-skip-forward.png')), "")
-        self.button_fforward = qtwidgets.DualActionButton(self.config, 
+        self.button_fforward = qtwidgets.DualActionButton(self.config,
                                                       QtGui.QIcon(util.find_data_file('media-skip-forward.png')),
                                                       self.button_fforward_callback,
                                          QtGui.QIcon("/usr/share/icons/gnome/24x24/actions/gtk-goto-last-ltr.png"),
                                          player.playlist.next)
-        #self.button_fforward.clicked.connect(self.button_fforward_callback)
         self.button_fforward.setFixedHeight(self.config.getint("options", "button_height"))
         self.button_bookmark = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('bookmark-new.png')), "")
         self.button_bookmark.clicked.connect(self.button_bookmark_callback)
@@ -404,7 +399,6 @@ class PlayerTab(ObservableService):
         self.stop_progress_timer()
         #self.set_controls_sensitivity(False)
         self.button_play.setIcon(self.icon_play)
-        pass
 
     def on_player_playing(self):
         self.start_progress_timer()
