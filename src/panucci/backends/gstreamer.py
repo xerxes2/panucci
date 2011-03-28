@@ -28,7 +28,7 @@ from panucci.backends import base
 
 gobject.threads_init()
 
-class GStreamerPlayer(base.BasePlayer):
+class Player(base.BasePlayer):
     """ A player that uses Gstreamer for playback """
 
     def __init__(self):

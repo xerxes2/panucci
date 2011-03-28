@@ -51,7 +51,7 @@ class Playlist(ObservableService):
         ObservableService.__init__(self, self.signals, self.__log)
         self.config = config
         
-        self.player = player.PanucciPlayer(self, self.config)
+        self.player = player.PanucciPlayer(self)
         self.__queue = Queue(None)
         self.__queue.register(
             'current_item_changed', self.on_queue_current_item_changed )

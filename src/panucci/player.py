@@ -33,13 +33,13 @@ class PanucciPlayer(ForwardingObservableService):
     """
     signals = [ "playing", "paused", "stopped", "eof" ]
 
-    def __init__(self, playlist, config):
+    def __init__(self, playlist):
         self.__log = logging.getLogger('panucci.player.PanucciPlayer')
         ForwardingObservableService.__init__(self, self.signals, self.__log)
-        self.config = config
+        self.config = playlist.config
         if self.config.get("options", "backend") == "gstreamer":
-            from panucci.backends import gstreamer
-            self.__player = gstreamer.GStreamerPlayer()
+            from panucci.backends.gstreamer import Player
+        self.__player = Player()
 
         self.__initialized = False
         self._start_position = 0
