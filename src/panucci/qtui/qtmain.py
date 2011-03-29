@@ -70,7 +70,7 @@ class PanucciGUI(object):
         widget.setLayout(self.__player_tab.mainbox)
         self.main_window.setCentralWidget(widget)
         self.main_window.show()
-        self.playlist.player.init(filepath=filename)
+        self.playlist.init(filepath=filename)
         self.app.exec_()
 
     def create_actions(self):

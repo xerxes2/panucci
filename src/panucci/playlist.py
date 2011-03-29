@@ -58,7 +58,21 @@ class Playlist(ObservableService):
 
         self.filepath = None
         self._id = None
+    
+    def init(self, filepath=None):
+        """ Start playing the current file in the playlist or a custom file.
+            This should be called by the UI once it has initialized.
 
+            Params: filepath is an optional filepath to the first file that
+                    should be loaded/played
+            Returns: Nothing
+        """
+
+        if filepath is None or not self.load( filepath ):
+            self.load_last_played()
+        else:
+            self.player.play()
+    
     def reset_playlist(self):
         """ Sets the playlist to a default "known" state """
 

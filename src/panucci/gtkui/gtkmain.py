@@ -172,7 +172,7 @@ class PanucciGUI(object):
         self.main_window.show_all()
 
         # this should be done when the gui is ready
-        self.playlist.player.init(filepath=filename)
+        self.playlist.init(filepath=filename)
 
         pos_int, dur_int = self.playlist.player.get_position_duration()
         # This prevents bogus values from being set while seeking

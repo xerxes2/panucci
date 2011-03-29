@@ -101,20 +101,6 @@ class PanucciPlayer(ForwardingObservableService):
         text = util.convert_ns(pos)
         return (text, pos)
 
-    def init(self, filepath=None):
-        """ Start playing the current file in the playlist or a custom file.
-            This should be called by the UI once it has initialized.
-
-            Params: filepath is an optional filepath to the first file that
-                    should be loaded/played
-            Returns: Nothing
-        """
-
-        if filepath is None or not self.playlist.load( filepath ):
-            self.playlist.load_last_played()
-        else:
-            self.play()
-
     def on_new_track(self):
         """ New track callback; stops the player and starts the new track. """
 
