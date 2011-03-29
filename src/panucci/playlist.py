@@ -146,6 +146,7 @@ class Playlist(ObservableService):
 
     def quit(self):
         self.__log.debug('quit() called.')
+        self.notify('stop-requested', caller=self.quit)
         if self.__queue.modified:
             self.__log.info('Queue modified, saving temporary playlist')
             self.save_temp_playlist()

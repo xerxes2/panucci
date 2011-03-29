@@ -422,7 +422,7 @@ class PanucciGUI(object):
 
     def destroy(self, widget):
         self.main_window.hide()
-        self.playlist.player.quit()
+        self.playlist.quit()
         util.write_config(self.config)
         gtk.main_quit()
 

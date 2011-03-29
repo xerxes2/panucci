@@ -196,8 +196,3 @@ class PanucciPlayer(ForwardingObservableService):
 
     def on_player_error(self, msg):
         self.__log.error("Error: %s", msg)
-
-    def quit(self):
-        """ Called when the application exits """
-        self.on_stop_requested()
-        self.playlist.quit()

@@ -189,7 +189,7 @@ class PanucciGUI(object):
  
     def quit_panucci(self):
         self.main_window.hide()
-        self.playlist.player.quit()
+        self.playlist.quit()
         util.write_config(self.config)
         self.app.exit()
 
