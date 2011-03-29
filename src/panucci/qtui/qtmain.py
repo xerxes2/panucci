@@ -308,7 +308,7 @@ class PlayerTab(ObservableService):
         self.playlist.player.register( 'stopped', self.on_player_stopped )
         self.playlist.player.register( 'playing', self.on_player_playing )
         self.playlist.player.register( 'paused', self.on_player_paused )
-        self.playlist.player.register( 'eof', self.on_player_eof )
+        #self.playlist.player.register( 'eof', self.on_player_eof )
         self.playlist.register( 'end-of-playlist', self.on_player_end_of_playlist )
         self.playlist.register( 'new-track-loaded', self.on_player_new_track )
         self.playlist.register( 'new-metadata-available', self.on_player_new_metadata )
@@ -406,22 +406,6 @@ class PlayerTab(ObservableService):
         self.stop_progress_timer()
         #self.set_progress_callback( position, duration )
         self.button_play.setIcon(self.icon_play)
-
-    def on_player_eof(self):
-        play_mode = self.config.get("options", "play_mode")
-        if play_mode == "single":
-            if not self.config.getboolean("options", "stay_at_end"):
-                self.on_player_end_of_playlist(False)
-        elif play_mode == "random":
-            self.playlist.random()
-        elif play_mode == "repeat":
-            self.playlist.next(True)
-        else:
-            if self.playlist.end_of_playlist():
-                if not self.config.getboolean("options", "stay_at_end"):
-                   self.playlist.next(False)
-            else:
-              self.playlist.next(False)
 
     def on_player_new_track(self):
         for widget in [self.label_title, self.label_artist, self.label_album, self.label_cover]:

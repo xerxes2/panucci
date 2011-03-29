@@ -52,6 +52,7 @@ class Playlist(ObservableService):
         self.config = config
         
         self.player = player.PanucciPlayer(self)
+        self.player.register( 'eof', self.on_player_eof )
         self.__queue = Queue(None)
         self.__queue.register(
             'current_item_changed', self.on_queue_current_item_changed )
@@ -572,6 +573,22 @@ class Playlist(ObservableService):
         """ Plays random file in queue. """
         skip_to = random.choice(range(len(self.__queue.get_items())))
         return self.skip( False, None, skip_to )
+
+    def on_player_eof(self):
+        play_mode = self.config.get("options", "play_mode")
+        if play_mode == "single":
+            if not self.config.getboolean("options", "stay_at_end"):
+                self.notify('end-of-playlist', False, caller=self.on_player_eof)
+        elif play_mode == "random":
+            self.random()
+        elif play_mode == "repeat":
+            self.next(True)
+        else:
+            if self.end_of_playlist():
+                if not self.config.getboolean("options", "stay_at_end"):
+                   self.next(False)
+            else:
+              self.next(False)
 
 class Queue(list, ObservableService):
     """ A Simple list of PlaylistItems """

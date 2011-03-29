@@ -639,7 +639,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.playlist.player.register( 'stopped', self.on_player_stopped )
         self.playlist.player.register( 'playing', self.on_player_playing )
         self.playlist.player.register( 'paused', self.on_player_paused )
-        self.playlist.player.register( 'eof', self.on_player_eof )
+        #self.playlist.player.register( 'eof', self.on_player_eof )
         self.playlist.register( 'end-of-playlist',
                                   self.on_player_end_of_playlist )
         self.playlist.register( 'new-track-loaded',
@@ -814,22 +814,6 @@ class PlayerTab(ObservableService, gtk.HBox):
         if platform.FREMANTLE:
             hildon.hildon_gtk_window_set_progress_indicator(\
                     self.__gui_root.main_window, False)
-
-    def on_player_eof(self):
-        play_mode = self.config.get("options", "play_mode")
-        if play_mode == "single":
-            if not self.config.getboolean("options", "stay_at_end"):
-                self.on_player_end_of_playlist(False)
-        elif play_mode == "random":
-            self.playlist.random()
-        elif play_mode == "repeat":
-            self.playlist.next(True)
-        else:
-            if self.playlist.end_of_playlist():
-                if not self.config.getboolean("options", "stay_at_end"):
-                   self.playlist.next(False)
-            else:
-              self.playlist.next(False)
 
     def on_player_new_track(self):
         for widget in [self.title_label,self.artist_label,self.album_label]:
