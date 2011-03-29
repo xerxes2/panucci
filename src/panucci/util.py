@@ -21,12 +21,6 @@ from __future__ import absolute_import
 import os.path
 from sys import argv
 
-coverart_sizes = {
-    'normal'            : 110,
-    'maemo'             : 200,
-    'maemo fullscreen'  : 275,
-}
-
 def convert_ns(time_int):
     """Convert nanosecond values into strings
 
