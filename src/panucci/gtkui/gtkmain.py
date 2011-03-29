@@ -423,7 +423,7 @@ class PanucciGUI(object):
     def destroy(self, widget):
         self.main_window.hide()
         self.playlist.player.quit()
-        self.write_config()
+        util.write_config(self.config)
         gtk.main_quit()
 
     def set_progress_indicator(self, loading_title=False):
@@ -543,11 +543,6 @@ class PanucciGUI(object):
 
     def set_play_mode_callback(self, w):
         self.config.set("options", "play_mode", w.get_name())
-
-    def write_config(self):
-        _file = open(os.path.expanduser("~/.config/panucci/panucci-noedit.conf"), "w")
-        self.config.write(_file)
-        _file.close()
 
     def __get_fullscreen(self):
         return self.__window_fullscreen

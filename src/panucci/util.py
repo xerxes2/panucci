@@ -90,3 +90,8 @@ def find_data_file(filename):
         fn = os.path.abspath(os.path.join(location, filename))
         if os.path.exists(fn):
             return fn
+
+def write_config(config):
+    _file = open(os.path.expanduser("~/.config/panucci/panucci-noedit.conf"), "w")
+    config.write(_file)
+    _file.close()

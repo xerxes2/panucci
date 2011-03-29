@@ -190,7 +190,7 @@ class PanucciGUI(object):
     def quit_panucci(self):
         self.main_window.hide()
         self.playlist.player.quit()
-        self.write_config()
+        util.write_config(self.config)
         self.app.exit()
 
     def close_main_window_callback(self, event):
@@ -283,11 +283,6 @@ class PanucciGUI(object):
 
     def set_config_option(self, option, value):
         self.config.set("options", option, value)
-
-    def write_config(self):
-        _file = open(os.path.expanduser("~/.config/panucci/panucci-noedit.conf"), "w")
-        self.config.write(_file)
-        _file.close()
 
     def _play_file(self, filename, pause_on_load=False):
         self.playlist.load( os.path.abspath(filename) )
