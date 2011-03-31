@@ -398,6 +398,7 @@ class PanucciGUI(object):
         entry = gtk.Entry()
         entry.set_text("5")#int > 0 validation?
         entry.set_editable( True )
+        entry.connect("key_press_event", self.timer_entry_callback)
         dialog.vbox.pack_end(entry)
         dialog.show_all()
         response = dialog.run()
@@ -408,6 +409,10 @@ class PanucciGUI(object):
             except ValueError:
                 pass #some fail message? not necessary if validation works
         dialog.destroy()
+
+    def timer_entry_callback(self, w, event):
+        if not (47 < event.keyval < 58 or event.keyval == 65288):
+            return True
 
     def timed_shutdown(self):
         self.destroy( None )
