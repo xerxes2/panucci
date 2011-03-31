@@ -200,6 +200,8 @@ class PanucciGUI(object):
         self.action_playlist.connect('activate', lambda a: self.playlist_window.show())
         self.action_settings = gtk.Action('settings', _('Settings'), _('Open the settings dialog'), None)
         self.action_settings.connect('activate', self.settings_callback)
+        self.action_timer = gtk.Action('timer', _('Sleep Timer'), _('Start a timed shutdown'), None)
+        self.action_timer.connect('activate', self.create_timer_dialog)
         # Settings menu
         self.action_lock_progress = gtk.ToggleAction('lock_progress', 'Lock Progress Bar', None, None)
         self.action_lock_progress.connect("activate", self.set_boolean_config_callback)
@@ -256,6 +258,7 @@ class PanucciGUI(object):
         tools_menu_item = gtk.MenuItem(_('Tools'))
         tools_menu = gtk.Menu()
         tools_menu.append(self.action_playlist.create_menu_item())
+        tools_menu.append(self.action_timer.create_menu_item())
         #tools_menu.append(self.action_settings.create_menu_item())
         tools_menu_item.set_submenu(tools_menu)
         menu_bar.append(tools_menu_item)
@@ -383,6 +386,32 @@ class PanucciGUI(object):
         menu.append(menu_quit)
 
         return menu
+
+    def create_timer_dialog(self,w):
+        dialog = gtk.Dialog(_("Sleep Timer"),
+        self.main_window,
+        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        label = gtk.Label("Shutdown time in minutes")
+        dialog.vbox.pack_start(label)
+        entry = gtk.Entry()
+        entry.set_text("5")#int > 0 validation?
+        entry.set_editable( True )
+        dialog.vbox.pack_end(entry)
+        dialog.show_all()
+        response = dialog.run()
+        if response == gtk.RESPONSE_ACCEPT:
+            try:
+                seconds = int(entry.get_text())*60
+                gobject.timeout_add(seconds*1000, self.timed_shutdown)
+            except ValueError:
+                pass #some fail message? not necessary if validation works
+        dialog.destroy()
+
+    def timed_shutdown(self):
+        self.destroy( None )
+        return False
 
     def create_recent_files_menu( self ):
         max_files = self.config.getint("options", "max_recent_files")
