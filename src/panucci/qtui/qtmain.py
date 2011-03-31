@@ -92,6 +92,8 @@ class PanucciGUI(object):
             statusTip="Open playlist", triggered=self.playlist_callback)
         self.action_settings = QtGui.QAction("Settings", self.main_window, shortcut="Ctrl+C",
             statusTip="Open settings dialog", triggered=self.settings_callback)
+        self.action_timer = QtGui.QAction("Sleep Timer", self.main_window, shortcut="Ctrl+T",
+            statusTip="Start a timed shutdown", triggered=self.create_timer_dialog)
         # Settings menu
         self.action_lock_progress = QtGui.QAction(_("Lock Progress Bar").decode("utf-8"), self.main_window, shortcut="Ctrl+L",
             statusTip="Lock progress bar", triggered=self.lock_progress_callback)
@@ -156,6 +158,7 @@ class PanucciGUI(object):
         # Tools menu
         self.menu_tools = self.main_window.menuBar().addMenu(_("Tools").decode("utf-8"))
         self.menu_tools.addAction(self.action_playlist)
+        self.menu_tools.addAction(self.action_timer)
         self.menu_tools.addAction(self.action_settings)
         # Settings menu
         self.menu_settings = self.main_window.menuBar().addMenu(_("Settings").decode("utf-8"))
@@ -181,12 +184,19 @@ class PanucciGUI(object):
         self.menu_player.addAction(self.action_add_file)
         self.menu_player.addAction(self.action_add_folder)
         self.menu_player.addAction(self.action_clear_playlist)
+        self.menu_player.addAction(self.action_timer)
         self.menu_player.addAction(self.action_about)
         # Playlist menu
         self.menu_playlist = self.__playlist_tab.main_window.menuBar().addMenu("Playlist")
         self.menu_playlist.addAction(self.action_save_playlist)
         self.menu_playlist.addAction(self.action_delete_bookmarks)
  
+    def create_timer_dialog(self):
+        response = QtGui.QInputDialog.getInteger(self.main_window, "Sleep Timer", "Shutdown time in minutes",
+                       value=5, minValue=1)
+        if response[1]:
+            QtCore.QTimer.singleShot(60000*response[0], self.quit_panucci)
+
     def quit_panucci(self):
         self.main_window.hide()
         self.playlist.quit()
