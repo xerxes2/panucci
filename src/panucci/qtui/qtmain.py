@@ -88,12 +88,12 @@ class PanucciGUI(object):
         self.action_quit = QtGui.QAction(QtGui.QIcon('/usr/share/icons/gnome/16x16/actions/exit.png'), "Quit", self.main_window, shortcut="Ctrl+Q",
             statusTip="Exit the application", triggered=self.quit_panucci)
         # Tools menu
-        self.action_playlist = QtGui.QAction("Playlist", self.main_window, shortcut="Ctrl+P",
-            statusTip="Open playlist", triggered=self.playlist_callback)
-        self.action_settings = QtGui.QAction("Settings", self.main_window, shortcut="Ctrl+C",
-            statusTip="Open settings dialog", triggered=self.settings_callback)
-        self.action_timer = QtGui.QAction("Sleep Timer", self.main_window, shortcut="Ctrl+T",
-            statusTip="Start a timed shutdown", triggered=self.create_timer_dialog)
+        self.action_playlist = QtGui.QAction(_("Playlist"), self.main_window, shortcut="Ctrl+P",
+            statusTip=_("Open playlist"), triggered=self.playlist_callback)
+        self.action_settings = QtGui.QAction(_("Settings"), self.main_window, shortcut="Ctrl+C",
+            statusTip=_("Open settings dialog"), triggered=self.settings_callback)
+        self.action_timer = QtGui.QAction(_("Sleep Timer"), self.main_window, shortcut="Ctrl+T",
+            statusTip=_("Start a timed shutdown"), triggered=self.create_timer_dialog)
         # Settings menu
         self.action_lock_progress = QtGui.QAction(_("Lock Progress Bar").decode("utf-8"), self.main_window, shortcut="Ctrl+L",
             statusTip="Lock progress bar", triggered=self.lock_progress_callback)
@@ -192,7 +192,7 @@ class PanucciGUI(object):
         self.menu_playlist.addAction(self.action_delete_bookmarks)
  
     def create_timer_dialog(self):
-        response = QtGui.QInputDialog.getInteger(self.main_window, "Sleep Timer", "Shutdown time in minutes",
+        response = QtGui.QInputDialog.getInteger(self.main_window, _("Sleep Timer"), _("Shutdown time in minutes"),
                        value=5, minValue=1)
         if response[1]:
             QtCore.QTimer.singleShot(60000*response[0], self.quit_panucci)
