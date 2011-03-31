@@ -307,6 +307,7 @@ class PanucciGUI(object):
                 self.action_open,
                 self.action_open_dir,
                 self.action_empty_playlist,
+                self.action_timer,
                 self.action_about):
             b = gtk.Button()
             action.connect_proxy(b)
