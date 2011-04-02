@@ -590,6 +590,20 @@ class Playlist(ObservableService):
             else:
               self.next(False)
 
+    def do_seek(self, seek_amount):
+        resp = None
+        if not self.config.getboolean("options", "seek_back") or self.start_of_playlist() or seek_amount > 0:
+            resp = self.player.do_seek(from_current=seek_amount)
+        else:
+            pos_int, dur_int = self.player.get_position_duration()
+            if pos_int + seek_amount >= 0:
+                resp = self.player.do_seek(from_current=seek_amount)
+            else:
+                self.prev()
+                pos_int, dur_int = self.player.get_position_duration()
+                resp = self.player.do_seek(from_beginning=dur_int+seek_amount)
+        return resp
+
 class Queue(list, ObservableService):
     """ A Simple list of PlaylistItems """
 

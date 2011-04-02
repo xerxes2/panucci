@@ -558,18 +558,7 @@ class PlayerTab(ObservableService):
                 tags[tag].show()
 
     def do_seek(self, seek_amount):
-        seek_amount = seek_amount*10**9
-        resp = None
-        if not self.config.getboolean("options", "seek_back") or self.playlist.start_of_playlist() or seek_amount > 0:
-            resp = self.playlist.player.do_seek(from_current=seek_amount)
-        else:
-            pos_int, dur_int = self.playlist.player.get_position_duration()
-            if pos_int + seek_amount >= 0:
-                resp = self.playlist.player.do_seek(from_current=seek_amount)
-            else:
-                self.playlist.prev()
-                pos_int, dur_int = self.playlist.player.get_position_duration()
-                resp = self.playlist.player.do_seek(from_beginning=dur_int+seek_amount)
+        resp = self.playlist.do_seek(seek_amount*10**9)
         if resp:
             # Preemptively update the progressbar to make seeking smoother
             self.set_progress_callback( *resp )
