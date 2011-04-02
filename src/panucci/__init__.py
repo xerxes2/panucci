@@ -2,14 +2,14 @@
 
 from __future__ import absolute_import
 
-import os
 import os.path
 
 __version__ = '0.99.0'
 
-HOME = os.path.join(os.path.expanduser('~'), '.config', 'panucci')
+HOME = os.path.expanduser('~/.config/panucci')
 
 if not os.path.exists(HOME):
+    import os
     os.makedirs(HOME)
 
 SETTINGS_FILE = os.path.join(HOME, 'panucci.conf')
@@ -18,4 +18,3 @@ PLAYLIST_FILE = os.path.join(HOME, 'panucci.m3u')
 LOGFILE = os.path.join(HOME, 'panucci.log')
 
 EXTENSIONS = ('mp2', 'mp3', 'mp4', 'ogg', 'm4a', 'wav')
-
