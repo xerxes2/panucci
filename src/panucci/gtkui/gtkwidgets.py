@@ -400,22 +400,49 @@ class ScrollingLabel(gtk.DrawingArea):
         self.__scrolling = False
         self.__scrolling_timer = None
 
-if __name__ == '__main__':
-    w = gtk.Window()
-    w.set_geometry_hints(w, 100, 20)
-    hb = gtk.HBox(homogeneous=True, spacing=1)
-    w.add(hb)
+class IntDialog(gtk.Dialog):
+    def __init__(self, title, label, value, min_value):
+        gtk.Dialog.__init__(self)
+        self.value = value
+        self.min_value = min_value
+        self.set_border_width(8)
+        self.vbox.set_spacing(6)
+        self.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+        self.set_title(title)
+        label = gtk.Label(label)
+        self.vbox.pack_start(label)
+        self.entry = gtk.Entry()
+        self.entry.set_text(str(self.value))
+        self.entry.set_editable( True )
+        self.entry.connect("key_press_event", self.validation_callback)
+        self.entry.connect("key_release_event", self.set_sensitive_callback)
+        self.vbox.pack_end(self.entry)
 
-    # scroll 7 pixels per 0.2 seconds, wait halfway for 0.5 seconds and finally
-    # wait 2 seconds after a complete scroll. wash, rinse, repeat.
-    l = ScrollingLabel('N/A', 100, 1, 2000, 500)
-    l.markup = 'some random text 1234'
-    hb.pack_end(l)
+    def validation_callback(self, w, event):
+        if not (47 < event.keyval < 58 or event.keyval == 65288):
+            return True
 
-    btn = gtk.Button('start/stop')
-    hb.pack_start(btn)
-    btn.connect('clicked', lambda w,e: setattr(e,'scrolling', not e.scrolling), l)
+    def set_sensitive_callback(self, w, event):
+        try:
+            if int(self.entry.get_text()) >= self.min_value:
+                self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+            else:
+                self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+        except:
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
 
-    w.connect('destroy', gtk.main_quit)
-    w.show_all()
-    gtk.main()
+    def get_int(self):
+        self.show_all()
+        response = self.run()
+        try:
+            value = int(self.entry.get_text())
+            if not value >= self.min_value:
+                value = self.value
+        except:
+            value = self.value
+        if response == gtk.RESPONSE_ACCEPT:
+            resp = value, True
+        else:
+            resp = value, False
+        self.destroy()
+        return resp

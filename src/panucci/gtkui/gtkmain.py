@@ -389,31 +389,10 @@ class PanucciGUI(object):
         return menu
 
     def create_timer_dialog(self,w):
-        dialog = gtk.Dialog(_("Sleep Timer"),
-        self.main_window,
-        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        label = gtk.Label("Shutdown time in minutes")
-        dialog.vbox.pack_start(label)
-        entry = gtk.Entry()
-        entry.set_text("5")#int > 0 validation?
-        entry.set_editable( True )
-        entry.connect("key_press_event", self.timer_entry_callback)
-        dialog.vbox.pack_end(entry)
-        dialog.show_all()
-        response = dialog.run()
-        if response == gtk.RESPONSE_ACCEPT:
-            try:
-                seconds = int(entry.get_text())*60
-                gobject.timeout_add(seconds*1000, self.timed_shutdown)
-            except ValueError:
-                pass #some fail message? not necessary if validation works
-        dialog.destroy()
-
-    def timer_entry_callback(self, w, event):
-        if not (47 < event.keyval < 58 or event.keyval == 65288):
-            return True
+        dialog = widgets.IntDialog(_("Sleep Timer"), _("Shutdown time in minutes"), 5, 1)
+        response = dialog.get_int()
+        if response[1]:
+            gobject.timeout_add(60000*response[0], self.timed_shutdown)
 
     def timed_shutdown(self):
         self.destroy( None )
