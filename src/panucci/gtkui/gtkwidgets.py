@@ -15,7 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-#
 
 from __future__ import absolute_import
 
@@ -407,16 +406,16 @@ class IntDialog(gtk.Dialog):
         self.min_value = min_value
         self.set_border_width(8)
         self.vbox.set_spacing(6)
-        self.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
         self.set_title(title)
-        label = gtk.Label(label)
-        self.vbox.pack_start(label)
+        self.vbox.pack_start(gtk.Label(label))
         self.entry = gtk.Entry()
         self.entry.set_text(str(self.value))
         self.entry.set_editable( True )
         self.entry.connect("key_press_event", self.validation_callback)
         self.entry.connect("key_release_event", self.set_sensitive_callback)
         self.vbox.pack_end(self.entry)
+        self.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+        self.show_all()
 
     def validation_callback(self, w, event):
         if not (47 < event.keyval < 58 or event.keyval == 65288):
@@ -431,18 +430,19 @@ class IntDialog(gtk.Dialog):
         except:
             self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
 
-    def get_int(self):
-        self.show_all()
-        response = self.run()
+    @staticmethod
+    def get_int(title, label, value, min_value):
+        dialog = IntDialog(title, label, value, min_value)
+        response = dialog.run()
         try:
-            value = int(self.entry.get_text())
-            if not value >= self.min_value:
-                value = self.value
+            value = int(dialog.entry.get_text())
+            if not value >= dialog.min_value:
+                value = dialog.value
         except:
-            value = self.value
+            value = dialog.value
         if response == gtk.RESPONSE_ACCEPT:
             resp = value, True
         else:
             resp = value, False
-        self.destroy()
+        dialog.destroy()
         return resp

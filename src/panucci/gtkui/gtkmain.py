@@ -389,8 +389,7 @@ class PanucciGUI(object):
         return menu
 
     def create_timer_dialog(self,w):
-        dialog = widgets.IntDialog(_("Sleep Timer"), _("Shutdown time in minutes"), 5, 1)
-        response = dialog.get_int()
+        response = widgets.IntDialog.get_int(_("Sleep Timer"), _("Shutdown time in minutes"), 5, 1)
         if response[1]:
             gobject.timeout_add(60000*response[0], self.timed_shutdown)
 
