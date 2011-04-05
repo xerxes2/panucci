@@ -137,10 +137,13 @@ class Playlist(ObservableService):
         return self.save_to_new_playlist(panucci.PLAYLIST_FILE)
 
     def on_queue_current_item_changed(self):
-        self.notify( 'new-track-loaded',
+        if os.path.isfile(self.__queue.current_item.filepath):
+            self.notify( 'new-track-loaded',
                      caller=self.on_queue_current_item_changed )
-        self.notify( 'new-metadata-available',
+            self.notify( 'new-metadata-available',
                      caller=self.on_queue_current_item_changed )
+        else:
+            self.player.notify( "eof", caller=self.on_queue_current_item_changed )
 
     def send_metadata(self):
         self.notify( 'new-metadata-available', caller=self.send_metadata )
@@ -170,7 +173,6 @@ class Playlist(ObservableService):
         new_pos = self.__queue.index(item_id)
         same_pos = self.__queue.current_item_position == new_pos
         self.__queue.current_item_position = new_pos
-        
 
         if bookmark is None:
             self.__queue.current_item.seek_to = 0
