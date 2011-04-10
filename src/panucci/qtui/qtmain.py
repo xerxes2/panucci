@@ -159,7 +159,7 @@ class PanucciGUI(object):
         self.menu_tools = self.main_window.menuBar().addMenu(_("Tools").decode("utf-8"))
         self.menu_tools.addAction(self.action_playlist)
         self.menu_tools.addAction(self.action_timer)
-        self.menu_tools.addAction(self.action_settings)
+        #self.menu_tools.addAction(self.action_settings)
         # Settings menu
         self.menu_settings = self.main_window.menuBar().addMenu(_("Settings").decode("utf-8"))
         self.menu_settings.addAction(self.action_lock_progress)
