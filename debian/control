@@ -1,0 +1,45 @@
+Source: panucci
+Maintainer: Thomas Perl <m@thp.io>
+Section: user/multimedia
+Priority: optional
+Standards-Version: 3.7.3
+Build-Depends: debhelper (>= 5.0.37.2), python2.5-dev
+XS-Python-Version: >= 2.5
+XB-Python-Version: ${python:Versions}
+Homepage: http://gpodder.org/panucci/
+XSBC-Bugtracker: https://bugs.maemo.org/enter_bug.cgi?product=Panucci
+
+Package: panucci
+Architecture: all
+Depends: ${python:Depends}, python-gtk2, python-gst0.10, python-dbus, python-hildon, python-gconf, python-mutagen, python-osso
+Recommends: gpodder
+Description: Play audio books, podcasts and live concerts with resuming
+  Panucci will automatically resume the playback from the position
+  where you stopped last time. Bookmarks are also supported. The
+  interface has elements big enough to be used with your fingers.
+XB-Maemo-Display-Name: Panucci resuming audiobook and podcast player
+XB-Maemo-Icon-26:
+  iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAAAXNSR0IArs4c6QAAAAZiS
+  0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB9gKGRc5F8Emid
+  4AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAEGklEQVRIx+2VXUx
+  bBRiG3/PTX0ppWdeWlBVoO4jjTyaYMRmwJWTDIEPZYlhkbmGaZdHpwkLUoVlMNm+MRg3G
+  JQY1YmLUbswsbG7gD2xjRDZGxoBKgbYgtS1nhf6etuecejMvlpipBC+Me2++my/vk+/if
+  T/ggf5LUgGg/i3zP4y1TRVGe4lRuVunSzAzC5wbALvqNLVC3Hz+1UeTwx8XJdkxS3LyYn
+  byUvfRG7W1Ozau6kWb1qt3VpvIranxBXDhBDIfskAra8mo27Xn+cfrd26v3V5aGmKuB+3
+  OsHOlIBoA0uRiGU0DfCSOqJ/C4MEb0Hjr4M80Ehs/+KJcWfVc+RM1loM/978/PjqV9tmb
+  b/d+yTCM6x9ftF4vq9xsllVJEEAsbIIw7IUjnoQkGoRvrBNx/2XothxH1oY9a43seE19h
+  eXFTcXGAsh1HtuUw/W3Qes0ssqaPG4rjRhyD3wOxuaE6s4cJFla0CYWXHgOKcYySNZY4L
+  /5FdjRT0k9N5X/iIbZV5ghlBUZKMHlFwIBFsv3BZWZVXs3Z/MlFOLQV7Ug65mXoG2sQkb
+  1j6DFYjA/sODcApQFBUgvroZErULYMQQqFiN080RuUYjYVVlAHy4vEeVLdBK/bTbh+FPQ
+  tsK17XkGtUEs+JGq80EsmQMR+QYC9TBsp0ZA3YqAnRiDc6AThjIrJLJpyM37MWvtBzV9N
+  wiLIMsPHc5/tvWNvaV50w36NQGvXkOztpl4CIBAA4BSLBiDcTFSdHLIUm5CuDMKytABz5
+  V+hFzL4KNJhMUEMjgpyLQnQWpegIo2IKsemDl5AgmagFylRmZtO0SKVDTsP1tcV7XDKiS
+  W0NG1NNb6lm8bDQBJgecT0SAiLgKkiADr48B8fwHSdYUo/agPsydaQC46wZl4OHt/RfbT
+  6SAIEpaW15Gq9oEf74a68R2IFKkAAIJKx5jD6OJCnnPfDYQ/AeCjAWB+iR+sILlGZoRFI
+  iJg6KgH+sCHmKUIyLcYIMpcALOQhLovBOegFQrTU1DkmEElzgP0afA5Cfh/eRnTS7dHPJ
+  GKHrfb3dPcbL0OIHZPjibc0WtSZWYjl+uB7bQHkpCAiagAuYwENTcPSqkANR/EfAKQkAQ
+  mT+6DoogHJSIh04ox7OCvXXVFX+n4+vhP9w1sIMrxBB+DQQNIVRRUR8qhuRQGR4eQzIsg
+  u+kUJrzvgR66iDhNQPqYNCQ2ixxREX3r3OWwtf3d5TMAhL9sBrNOkU/SNBBPgqQJZO0+B
+  PJAwz2LaW16ofNYvM92deC1b4/5hldUQYFIwsuzYQikCFK5CMJyNwhFNX7zRpN2u/2K3W
+  7vbmtrO7O4uDiz0q4j7s4NrXU5Q1q1IuVCz2RX05H03tszMlfX2eA4wzDe1f4WWgCWB//
+  //6vfATBvqdKFiW29AAAAAElFTkSuQmCC

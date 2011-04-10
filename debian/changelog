@@ -1,0 +1,188 @@
+panucci (0.99.1) fremantle; urgency=low
+
+  * Second experimental build from xerxes2's Github fork
+
+ -- Thomas Perl <m@thp.io>  Sun, 10 Apr 2011 20:33:29 +0200
+
+panucci (0.99.0) fremantle; urgency=low
+
+  * Experimental build from xerxes2's Github fork
+
+ -- Thomas Perl <m@thp.io>  Tue,  1 Mar 2011 21:33:04 +0100
+
+panucci (0.9-alpha1) fremantle; urgency=low
+
+  * Merge up to date fixes from the development release
+
+ -- Thomas Perl <thp@thpinfo.com>  Fri, 16 Jul 2010 21:51:49 +0200
+
+panucci (0.9-alpha0) fremantle; urgency=low
+
+  * The first test release of the new codebase
+
+ -- Thomas Perl <thp@thpinfo.com>  Sun, 13 Jun 2010 02:51:31 +0200
+
+panucci (0.3.17) fremantle; urgency=low
+
+  * Updated version number in the UI
+
+ -- Thomas Perl <thp@thpinfo.com>  Wed,  9 Jun 2010 12:58:53 +0200
+
+panucci (0.3.16) fremantle; urgency=low
+
+  * Fix landscape mode for PR1.2 (Maemo bug 10493)
+
+ -- Thomas Perl <thp@thpinfo.com>  Thu,  3 Jun 2010 18:47:27 +0200
+
+panucci (0.3.15) fremantle; urgency=low
+
+  * Another fix for the about dialog
+
+ -- Thomas Perl <thp@thpinfo.com>  Fri, 30 Apr 2010 21:35:11 +0200
+
+panucci (0.3.14) fremantle; urgency=low
+
+  * Do not use gobject.get_application_name() in About (Maemo bug 10047)
+
+ -- Thomas Perl <thp@thpinfo.com>  Fri, 30 Apr 2010 15:15:36 +0200
+
+panucci (0.3.13) fremantle; urgency=low
+
+  * Fix problem with invalid filename encodings (e.g. umlauts) in db
+
+ -- Thomas Perl <thp@thpinfo.com>  Mon, 12 Apr 2010 00:49:48 +0200
+
+panucci (0.3.12) fremantle; urgency=low
+
+  * Use Maemo 5 confirmation dialog style (Maemo bug 9818)
+
+ -- Thomas Perl <thp@thpinfo.com>  Sun, 11 Apr 2010 17:10:33 +0200
+
+panucci (0.3.11) fremantle; urgency=low
+
+  * Use the Hildon-Extras About Dialog (Maemo bug 9814)
+
+ -- Thomas Perl <thp@thpinfo.com>  Sun, 11 Apr 2010 16:59:17 +0200
+
+panucci (0.3.10) fremantle; urgency=low
+
+  * Use /home/user/MyDocs as default "last folder" (to make the
+    file selector correctly display the SD cards in the dialog)
+  * Add support for Bluetooth headset buttons (Maemo bug 8283)
+  * Update bugtracker field to bugs.maemo.org (in debian/control)
+  * Add dependency on python-osso (Maemo bug 9813)
+  * Add correct app version to about dialog (Maemo bug 9815)
+
+ -- Thomas Perl <thp@thpinfo.com>  Sun, 11 Apr 2010 16:05:17 +0200
+
+panucci (0.3.9-5) fremantle; urgency=low
+
+  * Merge rotation fix from gPodder's Git repository (switch
+    to landscape mode while the keyboard is opened)
+
+ -- Thomas Perl <thp@thpinfo.com>  Sat, 20 Mar 2010 07:45:48 -0700
+
+panucci (0.3.9-4) fremantle; urgency=low
+
+  * Add support for streaming over HTTP (don't look at the source,
+    it's very embarrassing and a patchy quick-fix...)
+
+ -- Thomas Perl <thp@thpinfo.com>  Thu, 11 Mar 2010 11:58:29 +0100
+
+panucci (0.3.9-3) fremantle; urgency=low
+
+  * Add "FM transmitter" AppMenu button for easy access to the FMTX
+
+ -- Thomas Perl <thp@thpinfo.com>  Thu, 11 Mar 2010 11:33:27 +0100
+
+panucci (0.3.9-2) fremantle; urgency=low
+
+  * Monitor connection state of BT headset (allow "play on connect")
+
+ -- Thomas Perl <thp@thpinfo.com>  Tue,  2 Feb 2010 21:23:49 +0100
+
+panucci (0.3.9-1) fremantle; urgency=low
+
+  * Fix command-line argument handling for gPodder (thanks to Tomasz
+    Dominikowski for reporting this issue)
+
+ -- Thomas Perl <thp@thpinfo.com>  Sat, 30 Jan 2010 19:39:27 +0100
+
+panucci (0.3.9-0) fremantle; urgency=low
+
+  * Support for "Silent" profile (Workaround for Maemo bug 6694)
+  * Default to Landscape mode + rotation filter buttons in AppMenu
+  * Removed volume controls + UI (handled automatically on Maemo 5)
+  * Fix text alignment of song title in portrait mode (centered)
+  * Manual optification (mostly because of the 6694 workaround)
+
+ -- Thomas Perl <thp@thpinfo.com>  Fri, 29 Jan 2010 19:07:15 +0100
+
+panucci (0.3-8thp0) fremantle; urgency=low
+
+  * First working Fremantle version (uses playbin2 instead of playbin)
+  * Automatic screen rotation based on gPodder's portrait module
+  * Use Hildon Button Styles
+  * Fix AppMenu items (remove Bookmarks Button in Appmenu)
+  * Replacement About Dialog (use HildonNote)
+  * Optification
+  * Pannable area and finger-friendly bookmarks list
+
+ -- Thomas Perl <thp@thpinfo.com>  Wed, 21 Oct 2009 17:51:20 +0200
+
+panucci (0.3-7) unstable; urgency=low
+
+  * Support orientation changes (LANDSCAPE / PORTRAIT) depending
+    on screen rotation (needs screen rotation kernel/xserver patch)
+
+ -- Thomas Perl <thp@thpinfo.com>  Sun, 30 Aug 2009 14:25:39 +0200
+
+panucci (0.3-6) unstable; urgency=low
+
+  * Support clicking the cover art for play/pause functionality
+  * Add XB-Maemo-Upgrade-Description and XB-Maemo-Display-Name
+
+ -- Thomas Perl <thp@thpinfo.com>  Fri, 28 Aug 2009 15:01:35 +0200
+
+panucci (0.3-5) unstable; urgency=low
+
+  * Add fullscreen button support to the main window
+
+ -- Thomas Perl <thp@thpinfo.com>  Fri, 28 Aug 2009 14:37:44 +0200
+
+panucci (0.3-4) unstable; urgency=low
+
+  * Stable 0.3 release
+
+ -- Nick Nobody <me@nikosapi.org>  Mon, 16 Mar 2009 16:59:39 -0400
+
+panucci (0.3-3) unstable; urgency=low
+
+  * apply 8e2d5dd2d95d7646b1ced05343dcba1e81ebb03c
+  * apply 789e08387fe524bced654535f90c2c9244972d06
+
+ -- Nick Nobody <me@nikosapi.org>  Mon,  2 Mar 2009 23:20:39 -0500
+
+panucci (0.3-2) unstable; urgency=low
+
+  * apply 8b69ade0d20b003b062b707816e9dd430a6964b8
+
+ -- Nick Nobody <me@nikosapi.org>  Sun,  1 Mar 2009 19:11:12 -0500
+
+panucci (0.3-1) unstable; urgency=low
+
+  * apply 875080629a53eaa53e9ad291d896feb8d191be6b
+
+ -- Nick Nobody <me@nikosapi.org>  Sun,  1 Mar 2009 18:32:55 -0500
+
+panucci (0.3-0) unstable; urgency=low
+
+  * 0.3 release (SQLite, Playlist management and so much more...)
+
+ -- Nick Nobody <me@nikosapi.org>  Fri, 27 Feb 2009 12:12:57 -0500
+
+panucci (0.2-1) unstable; urgency=low
+
+  * Initial public release
+
+ -- Thomas Perl <thp@perli.net>  Sun, 26 Oct 2008 11:28:35 +0100

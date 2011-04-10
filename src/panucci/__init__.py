@@ -4,7 +4,7 @@ from __future__ import absolute_import
 
 import os.path
 
-__version__ = '0.99.0'
+__version__ = '0.99.1'
 
 HOME = os.path.expanduser('~/.config/panucci')
 
