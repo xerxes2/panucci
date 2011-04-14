@@ -202,6 +202,8 @@ class PanucciGUI(object):
         self.action_settings.connect('activate', self.settings_callback)
         self.action_timer = gtk.Action('timer', _('Sleep Timer'), _('Start a timed shutdown'), None)
         self.action_timer.connect('activate', self.create_timer_dialog)
+        self.action_fm = gtk.Action('fm', _('FM Transmitter'), _('Show FM transmitter dialog'), None)
+        self.action_fm.connect('activate', self.show_fm_transmitter)
         # Settings menu
         self.action_lock_progress = gtk.ToggleAction('lock_progress', 'Lock Progress Bar', None, None)
         self.action_lock_progress.connect("activate", self.set_boolean_config_callback)
@@ -259,7 +261,7 @@ class PanucciGUI(object):
         tools_menu = gtk.Menu()
         tools_menu.append(self.action_playlist.create_menu_item())
         tools_menu.append(self.action_timer.create_menu_item())
-        #tools_menu.append(self.action_settings.create_menu_item())
+        #tools_menu.append(self.action_fm.create_menu_item())
         tools_menu_item.set_submenu(tools_menu)
         menu_bar.append(tools_menu_item)
 
@@ -308,6 +310,7 @@ class PanucciGUI(object):
                 self.action_open_dir,
                 self.action_empty_playlist,
                 self.action_timer,
+                self.action_fm,
                 self.action_about):
             b = gtk.Button()
             action.connect_proxy(b)
@@ -601,6 +604,12 @@ class PanucciGUI(object):
         else:
             from panucci.gtkui.gtkaboutdialog import AboutDialog
             AboutDialog(self.main_window, panucci.__version__)
+
+    def show_fm_transmitter(self, ws):
+        import osso
+        ctx = osso.Context('Panucci', '1.3.3.7', False)
+        plugin = osso.Plugin(ctx)
+        plugin.plugin_execute('libcpfmtx.so', True)
 
     def _play_file(self, filename, pause_on_load=False):
         self.playlist.load( os.path.abspath(filename) )
