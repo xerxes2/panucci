@@ -411,9 +411,16 @@ class IntDialog(gtk.Dialog):
         self.entry = gtk.Entry()
         self.entry.set_text(str(self.value))
         self.entry.set_editable( True )
+        self.entry.set_max_length(5)
         self.entry.connect("key_press_event", self.validation_callback)
         self.entry.connect("key_release_event", self.set_sensitive_callback)
-        self.vbox.pack_end(self.entry)
+        self.vbox.pack_start(self.entry)
+        self.adj = gtk.Adjustment(1.0, 1.0, 50.0, 0.5)
+        self.adj.connect("value-changed", self.adj_callback)
+        self.hscale = gtk.HScale(self.adj)
+        self.hscale.set_digits(0)
+        self.hscale.set_draw_value(False)
+        self.vbox.pack_end(self.hscale)
         self.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
         self.show_all()
 
@@ -429,6 +436,10 @@ class IntDialog(gtk.Dialog):
                 self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
         except:
             self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+
+    def adj_callback(self, w):
+        self.entry.set_text(str(int(self.adj.value**1.5)))
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
 
     @staticmethod
     def get_int(title, label, value, min_value):
