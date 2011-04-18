@@ -133,33 +133,14 @@ class PanucciGUI(object):
                     self.handle_headset_button)
             system_bus = dbus.SystemBus()
 
-            # Monitor connection state of BT headset
-            # I haven't seen this option before "settings.play_on_headset"
             PATH = '/org/freedesktop/Hal/devices/computer_logicaldev_input_1'
-            def handler_func(device_path):
-                if device_path == PATH and settings.play_on_headset and not self.playlist.player.playing:
-                    self.playlist.player.play()
-            system_bus.add_signal_receiver(handler_func, 'DeviceAdded', \
-                    'org.freedesktop.Hal.Manager', None, \
-                    '/org/freedesktop/Hal/Manager')
-            # End Monitor connection state of BT headset
+            # Monitor connection state of BT headset
+            system_bus.add_signal_receiver(self.handle_connection_state, 'DeviceAdded', \
+                    'org.freedesktop.Hal.Manager', None, '/org/freedesktop/Hal/Manager')
 
             # Monitor BT headset buttons
-            def handle_bt_button(signal, button):
-                # See http://bugs.maemo.org/8283 for details
-                if signal == 'ButtonPressed':
-                    if button == 'play-cd':
-                        self.playlist.player.play_pause_toggle()
-                    elif button == 'pause-cd':
-                        self.playlist.player.pause()
-                    elif button == 'next-song':
-                        self.__player_tab.do_seek(self.config.getint("options", "seek_short"))
-                    elif button == 'previous-song':
-                        self.__player_tab.do_seek(-1*self.config.getint("options", "seek_short"))
-
-            system_bus.add_signal_receiver(handle_bt_button, 'Condition', \
+            system_bus.add_signal_receiver(self.handle_bt_button, 'Condition', \
                     'org.freedesktop.Hal.Device', None, PATH)
-            # End Monitor BT headset buttons
 
         self.main_window.connect('key-press-event', self.on_key_press)
         self.playlist.register( 'file_queued', self.on_file_queued )
@@ -220,6 +201,9 @@ class PanucciGUI(object):
         self.action_scrolling_labels = gtk.ToggleAction('scrolling_labels', 'Scrolling Labels', None, None)
         self.action_scrolling_labels.connect("activate", self.scrolling_labels_callback)
         self.action_scrolling_labels.set_active(self.config.getboolean("options", "scrolling_labels"))
+        self.action_play_on_headset = gtk.ToggleAction('play_on_headset', 'Play on Headset', None, None)
+        self.action_play_on_headset.connect("activate", self.set_boolean_config_callback)
+        self.action_play_on_headset.set_active(self.config.getboolean("options", "play_on_headset"))
         self.action_play_mode = gtk.Action('play_mode', 'Play Mode', None, None)
         self.action_play_mode_all = gtk.RadioAction('all', 'All', None, None, 0)
         self.action_play_mode_all.connect("activate", self.set_play_mode_callback)
@@ -620,6 +604,23 @@ class PanucciGUI(object):
     def handle_headset_button(self, event, button):
         if event == 'ButtonPressed' and button == 'phone':
             self.playlist.player.play_pause_toggle()
+
+    def handle_connection_state(self, device_path):
+        PATH = '/org/freedesktop/Hal/devices/computer_logicaldev_input_1'
+        if device_path == PATH and self.config.getboolean("options", "play_on_headset") and not self.playlist.player.playing:
+            self.playlist.player.play()
+
+    def handle_bt_button(self, signal, button):
+        # See http://bugs.maemo.org/8283 for details
+        if signal == 'ButtonPressed':
+            if button == 'play-cd':
+                self.playlist.player.play_pause_toggle()
+            elif button == 'pause-cd':
+                self.playlist.player.pause()
+            elif button == 'next-song':
+                self.__player_tab.do_seek(self.config.getint("options", "seek_short"))
+            elif button == 'previous-song':
+                self.__player_tab.do_seek(-1*self.config.getint("options", "seek_short"))
 
     def __select_current_item( self ):
         # Select the currently playing track in the playlist tab
