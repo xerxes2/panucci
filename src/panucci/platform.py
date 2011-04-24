@@ -15,7 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-#
 
 from __future__ import absolute_import
 
@@ -24,8 +23,8 @@ import os.path
 # Variables that can be used to query platform status
 MAEMO = False
 FREMANTLE = False
+MEEGO = False
 DESKTOP = True
-
 
 def file_contains(filename, content):
     try:
@@ -35,14 +34,13 @@ def file_contains(filename, content):
     except:
         return False
 
-
 def detect():
     """Detect current environment
-
     This should be called once from the launcher.
     """
     global MAEMO
     global FREMANTLE
+    global MEEGO
     global DESKTOP
 
     if os.path.exists('/etc/osso_software_version') or \
@@ -51,9 +49,9 @@ def detect():
         MAEMO = True
         DESKTOP = False
 
-        # Check for Maemo 5 (fremantle)
         if file_contains('/etc/issue', 'Maemo 5'):
-            MAEMO = True
             FREMANTLE = True
-            DESKTOP = False
 
+    elif os.path.exists('/etc/meego-release'):
+        MEEGO = True
+        DESKTOP = False
