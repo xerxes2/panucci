@@ -24,6 +24,7 @@ import os.path
 MAEMO = False
 FREMANTLE = False
 MEEGO = False
+HANDSET = False
 DESKTOP = True
 
 def file_contains(filename, content):
@@ -41,17 +42,23 @@ def detect():
     global MAEMO
     global FREMANTLE
     global MEEGO
+    global HANDSET
     global DESKTOP
 
     if os.path.exists('/etc/osso_software_version') or \
             os.path.exists('/proc/component_version') or \
-            file_contains('/etc/issue/', 'maemo'):
-        MAEMO = True
+            file_contains('/etc/issue/', 'maemo') or \
+            os.path.exists('/etc/meego-release'):
+        HANDSET = True
         DESKTOP = False
 
-        if file_contains('/etc/issue', 'Maemo 5'):
-            FREMANTLE = True
+        if os.path.exists('/etc/osso_software_version') or \
+                os.path.exists('/proc/component_version') or \
+                file_contains('/etc/issue/', 'maemo'):
+            MAEMO = True
+            
+            if file_contains('/etc/issue', 'Maemo 5'):
+                FREMANTLE = True
 
-    elif os.path.exists('/etc/meego-release'):
-        MEEGO = True
-        DESKTOP = False
+        elif os.path.exists('/etc/meego-release'):
+            MEEGO = True

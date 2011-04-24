@@ -62,8 +62,8 @@ class PanucciGUI(object):
         self.create_actions()
         self.__player_tab = PlayerTab(self)
         self.__playlist_tab = qtplaylist.PlaylistTab(self, self.playlist)
-        if platform.MAEMO:
-            self.create_maemo_menus()
+        if platform.HANDSET:
+            self.create_handset_menus()
         else:
             self.create_menus()
         widget = QtGui.QWidget()
@@ -176,7 +176,7 @@ class PanucciGUI(object):
         self.menu_help = self.main_window.menuBar().addMenu(_("Help").decode("utf-8"))
         self.menu_help.addAction(self.action_about)
 
-    def create_maemo_menus(self):
+    def create_handset_menus(self):
         # Player menu
         self.menu_player = self.main_window.menuBar().addMenu("Player")
         self.menu_player.addAction(self.action_settings)
