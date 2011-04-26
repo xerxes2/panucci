@@ -368,7 +368,7 @@ class PlayerTab(ObservableService):
         self.button_rrewind = qtwidgets.DualActionButton(self.config,
                                                       QtGui.QIcon(util.find_data_file('media-skip-backward.png')),
                                                       self.button_rrewind_callback,
-                                         QtGui.QIcon("/usr/share/icons/gnome/24x24/actions/gtk-goto-first-ltr.png"),
+                                         QtGui.QIcon(util.find_data_file("gtk-goto-first-ltr.png")),
                                          self.playlist.prev)
         self.button_rewind = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('media-seek-backward.png')), "")
         self.button_rewind.clicked.connect(self.button_rewind_callback)
@@ -379,7 +379,7 @@ class PlayerTab(ObservableService):
         self.button_fforward = qtwidgets.DualActionButton(self.config,
                                                       QtGui.QIcon(util.find_data_file('media-skip-forward.png')),
                                                       self.button_fforward_callback,
-                                         QtGui.QIcon("/usr/share/icons/gnome/24x24/actions/gtk-goto-last-ltr.png"),
+                                         QtGui.QIcon(util.find_data_file("gtk-goto-last-ltr.png")),
                                          self.playlist.next)
         self.button_bookmark = QtGui.QPushButton(QtGui.QIcon(util.find_data_file('bookmark-new.png')), "")
         self.button_bookmark.clicked.connect(self.button_bookmark_callback)

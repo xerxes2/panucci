@@ -740,7 +740,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.rrewind_button = create_da(
                 gtkutil.generate_image('media-skip-backward.png'),
                 lambda: self.do_seek(-1*self.config.getint('options', 'seek_long')),
-                gtkutil.generate_image(gtk.STOCK_GOTO_FIRST, True),
+                gtkutil.generate_image("gtk-goto-first-ltr.png"),
                 self.playlist.prev)
         buttonbox.add(self.rrewind_button)
 
@@ -764,7 +764,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.fforward_button = create_da(
                 gtkutil.generate_image('media-skip-forward.png'),
                 lambda: self.do_seek(self.config.getint('options', 'seek_long')),
-                gtkutil.generate_image(gtk.STOCK_GOTO_LAST, True),
+                gtkutil.generate_image("gtk-goto-last-ltr.png"),
                 self.playlist.next)
         buttonbox.add(self.fforward_button)
 
