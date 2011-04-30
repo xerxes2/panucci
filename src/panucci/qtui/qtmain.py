@@ -251,6 +251,7 @@ class PanucciGUI(object):
                 _('By accepting all bookmarks in the database will be deleted.'), True, False, True, False)
         if response == QtGui.QMessageBox.Ok:
             self.playlist.delete_all_bookmarks()
+            self.__playlist_tab.update_model()
 
     def playlist_callback(self):
         self.__playlist_tab.main_window.show()
