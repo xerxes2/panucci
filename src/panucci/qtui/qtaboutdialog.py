@@ -75,13 +75,17 @@ class AboutDialog:
         te = QtGui.QTextEdit()
         tw.addTab(te, _("Authors").decode("utf-8"))
         te.setReadOnly(True)
+        _str = ""
         for i in about.about_authors:
-            te.append(i)
+            _str = _str + i + "\n"
+        te.setPlainText(_str.decode("utf-8"))
         te = QtGui.QTextEdit()
         tw.addTab(te, _("Contributors").decode("utf-8"))
         te.setReadOnly(True)
+        _str = ""
         for i in about.about_contributors:
-            te.append(i)
+            _str = _str + i + "\n"
+        te.setPlainText(_str.decode("utf-8"))
 
         hlayout = QtGui.QHBoxLayout()
         label = QtGui.QLabel()
