@@ -142,8 +142,8 @@ class panucciInterface(dbus.service.Object):
 
             if new_file:
                 self.player.playlist.load(uri)
-                self.player.playlist.set_seek_to(seconds)
                 self.player.playlist.last()
+                self.player.playlist.set_seek_to(seconds)
             elif not self.player._is_playing:
                 self.player.play()
             #else:
