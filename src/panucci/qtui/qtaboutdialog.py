@@ -88,8 +88,7 @@ class AboutDialog:
         te.setPlainText(_str.decode("utf-8"))
 
         hlayout = QtGui.QHBoxLayout()
-        label = QtGui.QLabel()
-        hlayout.addWidget(label, 2)
+        hlayout.addStretch(2)
         button = QtGui.QPushButton(_("Close").decode("utf-8"))
         button.clicked.connect(self.close_credits)
         hlayout.addWidget(button)
