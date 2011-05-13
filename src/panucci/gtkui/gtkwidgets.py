@@ -96,14 +96,14 @@ class DualActionButton(gtk.Button):
                 return False
             self.__current_state = state
             child = self.get_child()
-            if child is not None:
+            if child:
                 self.remove(child)
             if state == self.DEFAULT:
                 self.add(self.__default_widget)
-            elif state == self.LONGPRESS:
+            elif state == self.LONGPRESS and self.__longpress_widget:
                 self.add(self.__longpress_widget)
             else:
-                raise ValueError('State has to be either DEFAULT or LONGPRESS.')
+                self.add(self.__default_widget)
 
         return False
 
@@ -135,7 +135,10 @@ class DualActionButton(gtk.Button):
             if state == self.DEFAULT:
                 self.__default_action()
             elif state == self.LONGPRESS:
-                self.__longpress_action()
+                if self.__longpress_action:
+                    self.__longpress_action()
+                else:
+                     self.__default_action()
 
         self.set_state(self.DEFAULT)
 
