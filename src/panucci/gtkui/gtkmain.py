@@ -168,6 +168,8 @@ class PanucciGUI(object):
         self.action_open.connect('activate', self.open_file_callback)
         self.action_open_dir = gtk.Action('open_dir', _('Add Folder'), _('Open a directory'), gtk.STOCK_OPEN)
         self.action_open_dir.connect('activate', self.open_dir_callback)
+        self.action_play_one = gtk.Action('play_one', _('Play One'), _('Play one file'), gtk.STOCK_FILE)
+        self.action_play_one.connect('activate', self.play_one_callback)
         self.action_save = gtk.Action('save', _('Save Playlist'), _('Save current playlist to file'), gtk.STOCK_SAVE_AS)
         self.action_save.connect('activate', self.save_to_playlist_callback)
         self.action_empty_playlist = gtk.Action('empty_playlist', _('Clear Playlist'), _('Clear current playlist'), gtk.STOCK_DELETE)
@@ -233,6 +235,7 @@ class PanucciGUI(object):
         file_menu = gtk.Menu()
         file_menu.append(self.action_open.create_menu_item())
         file_menu.append(self.action_open_dir.create_menu_item())
+        file_menu.append(self.action_play_one.create_menu_item())
         file_menu.append(self.action_save.create_menu_item())
         file_menu.append(self.action_empty_playlist.create_menu_item())
         file_menu.append(self.action_delete_bookmarks.create_menu_item())
@@ -292,6 +295,7 @@ class PanucciGUI(object):
                 self.action_playlist,
                 self.action_open,
                 self.action_open_dir,
+                self.action_play_one,
                 self.action_empty_playlist,
                 self.action_timer,
                 self.action_fm,
@@ -477,6 +481,12 @@ class PanucciGUI(object):
     def open_dir_callback(self, widget=None):
         filename = gtkutil.get_file_from_filechooser(self, folder=True)
         if filename is not None:
+            self._play_file(filename)
+
+    def play_one_callback(self, widget=None):
+        filename = gtkutil.get_file_from_filechooser(self)
+        if filename is not None:
+            self.empty_playlist_callback(None)
             self._play_file(filename)
 
     def save_to_playlist_callback(self, widget=None):

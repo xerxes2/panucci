@@ -79,6 +79,8 @@ class PanucciGUI(object):
             statusTip="Add file to playlist", triggered=self.add_file_callback)
         self.action_add_folder = QtGui.QAction(QtGui.QIcon(':/images/open.png'), _("Add Folder").decode("utf-8"), self.main_window, shortcut="Ctrl+D",
             statusTip="Add folder to playlist", triggered=self.add_folder_callback)
+        self.action_play_one = QtGui.QAction(QtGui.QIcon(''), _("Play One").decode("utf-8"), self.main_window, shortcut="Ctrl+O",
+            statusTip="Play one file", triggered=self.play_one_callback)
         self.action_save_playlist = QtGui.QAction(QtGui.QIcon(':/images/save.png'), _("Save Playlist").decode("utf-8"), self.main_window, shortcut="Ctrl+W",
             statusTip="Save current playlist as m3u", triggered=self.save_playlist_callback)
         self.action_clear_playlist = QtGui.QAction(QtGui.QIcon(':/images/trashcan.png'), _("Clear Playlist").decode("utf-8"), self.main_window, shortcut="Ctrl+H",
@@ -150,6 +152,7 @@ class PanucciGUI(object):
         self.menu_file = self.main_window.menuBar().addMenu(_("File").decode("utf-8"))
         self.menu_file.addAction(self.action_add_file)
         self.menu_file.addAction(self.action_add_folder)
+        self.menu_file.addAction(self.action_play_one)
         self.menu_file.addAction(self.action_save_playlist)
         self.menu_file.addAction(self.action_clear_playlist)
         self.menu_file.addAction(self.action_delete_bookmarks)
@@ -183,6 +186,7 @@ class PanucciGUI(object):
         self.menu_player.addAction(self.action_playlist)
         self.menu_player.addAction(self.action_add_file)
         self.menu_player.addAction(self.action_add_folder)
+        self.menu_player.addAction(self.action_play_one)
         self.menu_player.addAction(self.action_clear_playlist)
         self.menu_player.addAction(self.action_timer)
         self.menu_player.addAction(self.action_about)
@@ -217,6 +221,12 @@ class PanucciGUI(object):
     def add_folder_callback(self):
         filenames = qtutil.get_file_from_filechooser(self, folder=True)
         if filenames:
+            self._play_file(filenames[0].encode('utf-8'))
+
+    def play_one_callback(self):
+        filenames = qtutil.get_file_from_filechooser(self)
+        if filenames:
+            self.clear_playlist_callback()
             self._play_file(filenames[0].encode('utf-8'))
 
     def save_playlist_callback(self):
