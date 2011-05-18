@@ -51,7 +51,7 @@ class PanucciPlayer(ForwardingObservableService):
                       PanucciPlayer )
 
         self.__player.register( "playing", self.on_playing )
-        self.__player.register( "paused", self.on_stopped )
+        self.__player.register( "paused", self.on_paused )
         self.__player.register( "stopped", self.on_stopped )
         self.__player.register( "eof", self.on_stopped )
         self.__player.register( "error", self.on_player_error )
@@ -150,13 +150,20 @@ class PanucciPlayer(ForwardingObservableService):
         self._start_position = pos_sec
         self._is_playing = True
 
+    def on_paused(self, *args):
+        self.on_stopped_paused()
+        self._is_playing = False
+
     def on_stopped(self, *args):
+        self.on_stopped_paused()
+        self._is_playing = None
+
+    def on_stopped_paused(self):
         pos, dur = self.get_position_duration()
         pos_sec = max(0, pos / 10**9)
         dur_sec = max(0, dur / 10**9)
         if self.current_file is not None:
             interface.PlaybackStopped(self._start_position, pos_sec, dur_sec, self.current_file)
-        self._is_playing = False
 
     @property
     def current_file(self):

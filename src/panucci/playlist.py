@@ -377,7 +377,11 @@ class Playlist(ObservableService):
         """ Detects filepath's filetype then loads it using
             the appropriate loader function """
         self.__log.debug('Attempting to load %s', filepath)
-        _play = self.__queue.is_empty()
+        _play = self.__queue.is_empty() or (self.end_of_playlist() and self.player._is_playing == None)
+        if self.__queue.is_empty():
+            _position = 0
+        else:
+            _position = len(self.__queue)
         error = False
 
         if os.path.isdir(filepath):
@@ -403,9 +407,11 @@ class Playlist(ObservableService):
         # happen if load_from_bookmark changes the current track), the player
         # will start playing and ingore the resume point
         if _play:
-            self.__queue.disable_notifications = True
-            self.load_from_resume_bookmark()
-            self.__queue.disable_notifications = False
+            self.__queue.set_current_item_position(_position)
+            if _position == 0:
+                self.__queue.disable_notifications = True
+                self.load_from_resume_bookmark()
+                self.__queue.disable_notifications = False
             self.__queue.modified = True
             self.notify( 'stop-requested', caller=self.load )
             self.notify( 'new-track-loaded', caller=self.load )
