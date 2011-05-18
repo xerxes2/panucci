@@ -46,16 +46,15 @@ class Playlist(ObservableService):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
         ObservableService.__init__(self, self.signals, self.__log)
         self.config = config
-        
+        self.filepath = panucci.PLAYLIST_FILE
+        self._id = None
+
         self.player = player.PanucciPlayer(self)
         self.player.register( 'eof', self.on_player_eof )
-        self.__queue = Queue(None)
+        self.__queue = Queue(self.id)
         self.__queue.register(
             'current_item_changed', self.on_queue_current_item_changed )
 
-        self.filepath = None
-        self._id = None
-    
     def init(self, filepath=None):
         """ Start playing the current file in the playlist or a custom file.
             This should be called by the UI once it has initialized.
@@ -69,14 +68,14 @@ class Playlist(ObservableService):
             self.load_last_played()
         else:
             self.player.play()
-    
+
     def reset_playlist(self):
         """ Sets the playlist to a default "known" state """
 
+        self.notify('stop-requested', caller=self.reset_playlist)
         self.filepath = None
         self._id = None
         self.__queue.clear()
-        self.stop(None, False)
         self.notify('reset-playlist', caller=self.reset_playlist)
 
     @property
@@ -389,7 +388,9 @@ class Playlist(ObservableService):
             if parsers.has_key(extension): # importing a playlist
                 self.__log.info('Loading playlist file (%s)', extension)
                 parser = parsers[extension](filepath, self.__queue)
-
+                self.filepath = filepath
+                self._id = None
+                self.__queue.playlist_id = self.id
                 if parser.parse(filepath):
                     self.__queue = parser.get_queue()
                     self.__file_queued( filepath, True, False )
@@ -402,8 +403,6 @@ class Playlist(ObservableService):
         # happen if load_from_bookmark changes the current track), the player
         # will start playing and ingore the resume point
         if _play:
-            self.filepath = filepath
-            self.__queue.playlist_id = self.id
             self.__queue.disable_notifications = True
             self.load_from_resume_bookmark()
             self.__queue.disable_notifications = False
@@ -778,6 +777,7 @@ class Queue(list, ObservableService):
         if not self.__prep_item(item):
             return False
 
+        item.playlist_id = self.playlist_id
         item.duplicate_id = self.__count_dupe_items(self, item)
         item.load_bookmarks()
 
