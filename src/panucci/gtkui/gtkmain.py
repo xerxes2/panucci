@@ -693,8 +693,11 @@ class PlayerTab(ObservableService, gtk.HBox):
         metadata_hbox.set_spacing(6)
         main_vbox.pack_start(metadata_hbox, True, False)
 
+        event_box = gtk.EventBox()
         self.cover_art = gtk.Image()
-        metadata_hbox.pack_start( self.cover_art, False, False )
+        event_box.add(self.cover_art)
+        metadata_hbox.pack_start(event_box, False, False)
+        event_box.connect('button-press-event', self.cover_art_callback)
 
         # vbox to hold metadata
         metadata_vbox = gtk.VBox()
@@ -907,6 +910,9 @@ class PlayerTab(ObservableService, gtk.HBox):
 
     def on_btn_play_pause_clicked(self, widget=None):
         self.playlist.player.play_pause_toggle()
+
+    def cover_art_callback(self, widget, event):
+        self.on_btn_play_pause_clicked(widget)
 
     def progress_timer_callback( self ):
         if self.playlist.player.playing and not self.playlist.player.seeking:

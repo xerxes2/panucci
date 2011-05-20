@@ -344,6 +344,7 @@ class PlayerTab(ObservableService):
         layout.setSpacing(0)
         self.label_cover = QtGui.QLabel()
         self.label_cover.setContentsMargins(0, 5, 2, 5)
+        self.label_cover.mousePressEvent = self.label_cover_callback
         layout.addWidget(self.label_cover)
         vlayout = QtGui.QVBoxLayout()
         vlayout.setContentsMargins(0, 0, 0, 0)
@@ -483,6 +484,9 @@ class PlayerTab(ObservableService):
 
     def button_bookmark_callback(self):
         self.playlist.player.add_bookmark_at_current_position()
+
+    def label_cover_callback(self, event):
+        self.playlist.player.play_pause_toggle()
 
     def set_progress_callback(self, time_elapsed, total_time):
         """ times must be in nanoseconds """
