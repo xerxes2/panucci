@@ -163,7 +163,7 @@ class BasePlayer(services.ObservableService):
 
     def get_position_duration(self):
         """ A cached version of _get_position_duration """
-        if self.playing:
+        if self.playing or self.paused:
             self.__position, self.__duration = self._get_position_duration()
 
         return self.__position, self.__duration
@@ -181,6 +181,11 @@ class BasePlayer(services.ObservableService):
     def playing(self):
         """ Is the player playing? """
         return self.get_state() == self.STATE_PLAYING
+
+    @property
+    def paused(self):
+        """ Is the player paused? """
+        return self.get_state() == self.STATE_PAUSED
 
     def reset_position_duration(self):
       self.__position, self.__duration = 0, 0
