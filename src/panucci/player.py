@@ -22,7 +22,6 @@ import logging
 
 from panucci.services import ForwardingObservableService
 from panucci.dbusinterface import interface
-
 from panucci import util
 
 class PanucciPlayer(ForwardingObservableService):
@@ -58,7 +57,6 @@ class PanucciPlayer(ForwardingObservableService):
         self.__player.register( "eof", self.on_stopped )
         self.__player.register( "error", self.on_player_error )
 
-        
         self.playlist.register( 'new-track-loaded', self.on_new_track )
         self.playlist.register( 'seek-requested', self.do_seek )
         self.playlist.register( 'stop-requested', self.on_stop_requested )
@@ -107,11 +105,10 @@ class PanucciPlayer(ForwardingObservableService):
         """ New track callback; stops the player and starts the new track. """
 
         if self.playlist.current_filepath is not None:
-            
             filepath = self.playlist.current_filepath
             if filepath.startswith('/'):
                 filepath = 'file://' + filepath
-            
+
             self.load_media(filepath)
 
             # This is just here to prevent the player from starting to play

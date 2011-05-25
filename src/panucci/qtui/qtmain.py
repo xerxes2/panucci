@@ -453,10 +453,9 @@ class PlayerTab(ObservableService):
 
     def on_player_end_of_playlist(self, loop):
         if not loop:
-            self.playlist.player.stop_end_of_playlist()
+            self.playlist.player.stop(False)
             estimated_length = self.metadata.get('length', 0)
             self.set_progress_callback( 0, estimated_length )
-            self.playlist.player.set_position_duration(0, 0)
 
     def on_player_reset_playlist(self):
         self.on_player_stopped()

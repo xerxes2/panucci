@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # This file is part of Panucci.
 # Copyright (c) 2008-2011 The Panucci Project
@@ -15,14 +15,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-#
 
 from __future__ import absolute_import
 
 import logging
 
 import panucci
-
 from panucci import services
 
 class BasePlayer(services.ObservableService):
@@ -60,6 +58,13 @@ class BasePlayer(services.ObservableService):
     #############################################
     # Functions to be implemented by subclasses
 
+    def get_position_duration(self):
+        """ A cached version of _get_position_duration """
+        if self.playing or self.paused:
+            self.__position, self.__duration = self._get_position_duration()
+
+        return self.__position, self.__duration
+
     def get_state(self):
         """ Get the current state of the player.
 
@@ -68,6 +73,7 @@ class BasePlayer(services.ObservableService):
                                                  player.STOPPED,
                                                  or player.NULL
         """
+        return self._get_state()
 
     def load_media(self, uri):
         """ Loads a uri into the player
@@ -76,6 +82,7 @@ class BasePlayer(services.ObservableService):
                           Eg. file:///mnt/music/some-file.ogg
             Returns: Nothing
         """
+        return self._load_media(uri)
 
     def pause(self):
         """ Pauses playback.
@@ -83,6 +90,7 @@ class BasePlayer(services.ObservableService):
             Returns: The current position in nanoseconds.
             Signals: Must emit the "paused" signal.
         """
+        return self._pause()
 
     def play(self, position=None):
         """ Starts playing the playlist's current track.
@@ -95,26 +103,24 @@ class BasePlayer(services.ObservableService):
                      True if all is well.
             Signals: Must emit the "playing" signal
         """
+        return self._play()
 
-    def stop(self):
+    def stop(self, player=True):
         """ Stops playback.
 
+            Params: player, boolean if delete player
             Returns: Nothing
             Signals: Must emit the "stopped" signal.
         """
+        return self._stop(player)
 
-    def _get_position_duration(self):
-        """ Get the position and duration of the current file.
-
-            Returns: ( current position, total duration )
-        """
-
-    def _seek(self, position):
+    def seek(self, position):
         """ Seek to an absolute position in the current file.
 
             Params: position is the position to seek to in nanoseconds.
             Returns: True if the seek was successfull.
         """
+        return self._seek(position)
 
     #############################################
     # Generic Functions
@@ -154,25 +160,12 @@ class BasePlayer(services.ObservableService):
 
         if not error:
             self.__log.debug('do_seek: Seeking to: %d', position)
-            self._seek(position)
+            self.seek(position)
             return position, duration
         else:
             self.__log.debug('do_seek: Could not seek.')
 
         return False
-
-    def get_position_duration(self):
-        """ A cached version of _get_position_duration """
-        if self.playing or self.paused:
-            self.__position, self.__duration = self._get_position_duration()
-
-        return self.__position, self.__duration
-
-    def set_position_duration(self, pos, dur):
-        """ used for setting pos and dur on startup"""
-        self.__position, self.__duration = pos, dur
-
-        return self.__position, self.__duration
 
     def play_pause_toggle(self):
         self.pause() if self.playing else self.play()
@@ -186,6 +179,12 @@ class BasePlayer(services.ObservableService):
     def paused(self):
         """ Is the player paused? """
         return self.get_state() == self.STATE_PAUSED
+
+    def set_position_duration(self, pos, dur):
+        """ used for setting pos and dur on startup"""
+        self.__position, self.__duration = pos, dur
+
+        return self.__position, self.__duration
 
     def reset_position_duration(self):
       self.__position, self.__duration = 0, 0

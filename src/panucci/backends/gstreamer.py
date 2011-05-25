@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # This file is part of Panucci.
 # Copyright (c) 2008-2011 The Panucci Project
@@ -54,7 +54,7 @@ class Player(base.BasePlayer):
 
         return pos_int, dur_int
 
-    def get_state(self):
+    def _get_state(self):
         if self._player is None:
             return self.STATE_NULL
         else:
@@ -64,13 +64,24 @@ class Player(base.BasePlayer):
                      gst.STATE_PLAYING : self.STATE_PLAYING
                    }.get( state, self.STATE_NULL )
 
-    def pause(self):
+    def _load_media( self, uri ):
+        filetype = util.detect_filetype(uri)
+
+        if filetype != self._current_filetype or self._player is None:
+            self.__setup_player()
+
+        if self._player is not None:
+            self._filesrc.set_property( self._filesrc_property, uri )
+
+        self._current_filetype = filetype
+
+    def _pause(self):
         pos, dur = self.get_position_duration()
         self.notify('paused', pos, dur, caller=self.pause)
         self._player.set_state(gst.STATE_PAUSED)
         return pos
 
-    def play(self):
+    def _play(self):
         have_player = self._player is not None
 
         # Don't think this is needed
@@ -83,20 +94,14 @@ class Player(base.BasePlayer):
             # should something happen here? perhaps self.stop()?
             return False
 
-    def stop(self):
+    def _stop(self, player):
         self.notify('stopped', caller=self.stop)
 
         if self._player is not None:
-            position, duration = self.get_position_duration()
             self._player.set_state(gst.STATE_NULL)
-            self._player = None
-
-    def stop_end_of_playlist(self):
-        self.notify('stopped', caller=self.stop)
-
-        if self._player is not None:
-            #position, duration = self.get_position_duration()
-            self._player.set_state(gst.STATE_NULL)
+            self.set_position_duration(0, 0)
+            if player:
+                self._player = None
 
     def _seek(self, position):
         self.seeking = True
@@ -135,17 +140,6 @@ class Player(base.BasePlayer):
     def _on_decoder_pad_added(self, decoder, src_pad, sink_pad):
         # link the decoder's new "src_pad" to "sink_pad"
         src_pad.link( sink_pad )
-
-    def load_media( self, uri ):
-        filetype = util.detect_filetype(uri)
-
-        if filetype != self._current_filetype or self._player is None:
-            self.__setup_player()
-
-        if self._player is not None:
-            self._filesrc.set_property( self._filesrc_property, uri )
-
-        self._current_filetype = filetype
 
     def __on_message(self, bus, message):
         t = message.type
