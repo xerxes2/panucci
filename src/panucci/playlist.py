@@ -26,6 +26,7 @@ import random
 import panucci
 from panucci.dbsqlite import db
 from panucci.services import ObservableService
+from panucci.dbusinterface import interface
 from panucci import playlistformat
 from panucci import player
 from panucci import util
@@ -40,7 +41,8 @@ def is_supported(uri):
 class Playlist(ObservableService):
     signals = [ 'new-track-loaded', 'new-metadata-available', 'file_queued',
                 'bookmark_added', 'seek-requested', 'end-of-playlist',
-                'playlist-to-be-overwritten', 'stop-requested', 'reset-playlist' ]
+                'playlist-to-be-overwritten', 'stop-requested', 'reset-playlist',
+                'stopped', 'playing', 'paused' ]
 
     def __init__(self, config):
         self.__log = logging.getLogger('panucci.playlist.Playlist')
@@ -49,11 +51,16 @@ class Playlist(ObservableService):
         self.filepath = panucci.PLAYLIST_FILE
         self._id = None
 
-        self.player = player.PanucciPlayer(self)
-        self.player.register( 'eof', self.on_player_eof )
+        self.__player = player.PanucciPlayer(self.config)
+        self.__player.register('eof', self.on_player_eof)
+        self.__player.register('playing', self.on_player_playing)
+        self.__player.register('paused', self.on_player_paused)
+        self.__player.register('stopped', self.on_player_stopped)
         self.__queue = Queue(self.id)
-        self.__queue.register(
-            'current_item_changed', self.on_queue_current_item_changed )
+        self.__queue.register('current_item_changed', self.on_queue_current_item_changed)
+
+        # Register the d-bus interface only once we're ready
+        interface.register_playlist(self)
 
     def init(self, filepath=None):
         """ Start playing the current file in the playlist or a custom file.
@@ -66,16 +73,19 @@ class Playlist(ObservableService):
 
         if filepath is None or not self.load( filepath ):
             self.load_last_played()
+            self.set_position_duration(self.get_current_position(), 0)
         else:
-            self.player.play()
+            self.play()
 
     def reset_playlist(self):
         """ Sets the playlist to a default "known" state """
 
-        self.notify('stop-requested', caller=self.reset_playlist)
+        #self.notify('stop-requested', caller=self.reset_playlist)
+        self.stop()
         self.filepath = None
         self._id = None
         self.__queue.clear()
+        self.reset_player()
         self.notify('reset-playlist', caller=self.reset_playlist)
 
     @property
@@ -137,12 +147,12 @@ class Playlist(ObservableService):
 
     def on_queue_current_item_changed(self):
         if os.path.isfile(self.__queue.current_item.filepath):
-            self.notify( 'new-track-loaded',
-                     caller=self.on_queue_current_item_changed )
-            self.notify( 'new-metadata-available',
-                     caller=self.on_queue_current_item_changed )
+            self.new_track_loaded()
+            #self.notify( 'new-track-loaded', caller=self.on_queue_current_item_changed )
+            #self.notify('new-metadata-available', caller=self.on_queue_current_item_changed)
         else:
-            self.player.notify( "eof", caller=self.on_queue_current_item_changed )
+            #self.player.notify("eof", caller=self.on_queue_current_item_changed)
+            self.on_player_eof()
 
     def send_metadata(self):
         self.notify( 'new-metadata-available', caller=self.send_metadata )
@@ -157,9 +167,22 @@ class Playlist(ObservableService):
         if len(self.__queue.get_items()) - 1 == self.__queue.current_item_position:
             return True 
 
+    def get_formatted_position(self, pos=None):
+        """ Gets the current position and converts it to a human-readable str.
+
+            Returns: (bookmark lable string, position in nanoseconds)
+        """
+
+        if pos is None:
+            (pos, dur) = self.get_position_duration()
+
+        text = util.convert_ns(pos)
+        return (text, pos)
+
     def quit(self):
         self.__log.debug('quit() called.')
-        self.notify('stop-requested', caller=self.quit)
+        #self.notify('stop-requested', caller=self.quit)
+        self.stop()
         if self.__queue.modified:
             self.__log.info('Queue modified, saving temporary playlist')
             self.save_temp_playlist()
@@ -168,27 +191,31 @@ class Playlist(ObservableService):
     # Bookmark-related functions
     ######################################
 
-    def __load_from_bookmark( self, item_id, bookmark ):
+    def __load_from_bookmark(self, item_id, bookmark):
         new_pos = self.__queue.index(item_id)
         same_pos = self.__queue.current_item_position == new_pos
-        self.__queue.current_item_position = new_pos
+        if not same_pos:
+            self.__queue.current_item_position = new_pos
 
         if bookmark is None:
-            self.__queue.current_item.seek_to = 0
+            seek_position = 0
         else:
-            self.__queue.current_item.seek_to = bookmark.seek_position
+            seek_position = bookmark.seek_position
+        self.__queue.current_item.seek_to = seek_position
 
-            # if we don't request a seek nothing will happen
-            if same_pos:
-                self.notify( 'seek-requested', bookmark.seek_position,
-                    caller=self.__load_from_bookmark )
+        if same_pos:
+            if self.playing:
+                self.do_seek(seek_position)
+            else:
+                self.play()
 
         return True
 
     def load_from_bookmark_id( self, item_id=None, bookmark_id=None ):
         item, bookmark = self.__queue.get_bookmark(item_id, bookmark_id)
         if str(self.__queue.current_item) != item_id:
-            self.notify('stop-requested', caller=self.load_from_bookmark_id)
+            #self.notify('stop-requested', caller=self.load_from_bookmark_id)
+            self.stop()
 
         if item is not None:
             return self.__load_from_bookmark( str(item), bookmark )
@@ -270,11 +297,15 @@ class Playlist(ObservableService):
 
         if bookmark_id is None:
             if self.__queue.current_item_position == self.__queue.index(item):
+                is_end = self.end_of_playlist()
+                self.stop()
                 item.delete_bookmark(None)
                 self.__queue.remove(item)
                 if self.__queue.current_item_position != 0:
-                    self.notify('stop-requested', caller=self.remove_bookmark)
-                    self.__queue.current_item_position = self.__queue.current_item_position
+                    if not is_end:
+                        self.__queue.current_item_position = self.__queue.current_item_position
+                    else:
+                        self.__queue.current_item_position = 0
                 else:
                     self.reset_playlist()
             else:
@@ -297,6 +328,17 @@ class Playlist(ObservableService):
             return False
         else:
             return self.remove_bookmark( item_id, bookmark_id )
+
+    def add_bookmark_at_current_position( self, label=None ):
+        """ Adds a bookmark at the current position
+            Returns: (bookmark lable string, position in nanoseconds)
+        """
+
+        default_label, position = self.get_formatted_position()
+        label = default_label if label is None else label
+        self.save_bookmark( label, position )
+        self.__log.info('Added bookmark: %s - %d', label, position)
+        return label, position
 
     def move_item( self, from_row, to_row ):
         self.__log.info('Moving item from position %d to %d', from_row, to_row)
@@ -380,7 +422,7 @@ class Playlist(ObservableService):
         """ Detects filepath's filetype then loads it using
             the appropriate loader function """
         self.__log.debug('Attempting to load %s', filepath)
-        _play = self.__queue.is_empty() or (self.end_of_playlist() and self.player._is_playing == None)
+        _play = self.__queue.is_empty() or (self.end_of_playlist() and self.null)
         if self.__queue.is_empty():
             _position = 0
         else:
@@ -416,9 +458,11 @@ class Playlist(ObservableService):
                 self.load_from_resume_bookmark()
                 self.__queue.disable_notifications = False
             self.__queue.modified = True
-            self.notify( 'stop-requested', caller=self.load )
-            self.notify( 'new-track-loaded', caller=self.load )
-            self.notify( 'new-metadata-available', caller=self.load )
+            #self.notify( 'stop-requested', caller=self.load )
+            self.stop()
+            self.new_track_loaded()
+            #self.notify( 'new-track-loaded', caller=self.load )
+            #self.notify( 'new-metadata-available', caller=self.load )
 
         return not error
 
@@ -491,24 +535,12 @@ class Playlist(ObservableService):
         """Set the seek-to position for the current track"""
         self.__queue.current_item.seek_to = (10**9) * position
 
-    def play(self):
-        """ This gets called by the player to get
-                the last time the file was paused """
-        pos = self.__queue.current_item.seek_to
-        self.__queue.current_item.seek_to = 0
-        return pos
-
-    def pause(self, position):
-        """ Called whenever the player is paused """
-        self.__queue.current_item.seek_to = position
-
-    def stop(self, position, save_resume_point=True):
-        """ This should be run when the program is closed
-                or if the user switches playlists """
-        self.remove_resume_bookmarks()
-        if not self.is_empty and save_resume_point:
-            self.__queue.current_item.save_bookmark(
-                _('Auto Bookmark'), position, True )
+    def get_seek_to(self, reset=True):
+        """Get the seek-to position for the current track"""
+        seek_to = self.__queue.current_item.seek_to
+        if reset:
+            self.__queue.current_item.seek_to = 0
+        return seek_to
 
     def skip(self, loop=True, skip_by=None, skip_to=None):
         """ Skip to another track in the playlist.
@@ -521,10 +553,10 @@ class Playlist(ObservableService):
         if not self.__queue:
             return False
 
-        current_item = self.__queue.current_item_position
+        current_item_position = self.__queue.current_item_position
 
         if skip_by is not None:
-            skip = current_item + skip_by
+            skip = current_item_position + skip_by
         elif skip_to is not None:
             skip = skip_to
         else:
@@ -532,7 +564,7 @@ class Playlist(ObservableService):
             self.__log.warning('No skip method provided...')
 
         if not 0 <= skip < self.queue_length:
-            self.notify( 'end-of-playlist', loop, caller=self.skip )
+            #self.notify( 'end-of-playlist', loop, caller=self.skip )
 
             if not loop:
                 self.__log.warning( "Can't skip to non-existant file w/o loop."
@@ -551,7 +583,8 @@ class Playlist(ObservableService):
                 else:
                     skip = 0
 
-        self.notify('stop-requested', caller=self.skip)
+        #self.notify('stop-requested', caller=self.skip)
+        self.stop()
         self.__queue.current_item_position = skip
         self.__log.debug( 'Skipping to file %d (%s)', skip,
                           self.__queue.current_item.filepath )
@@ -580,7 +613,38 @@ class Playlist(ObservableService):
         skip_to = random.choice(range(len(self.__queue.get_items())))
         return self.skip( False, None, skip_to )
 
+    ##################################
+    # Player controls
+    ##################################
+
+    def play(self):
+        """ This gets called by the player to get
+                the last time the file was paused """
+        self.__player.play()
+
+    def pause(self):
+        """ Called whenever the player is paused """
+        #position = self.get_position_duration()[0]
+        #self.__queue.current_item.seek_to = position
+        self.__player.pause()
+
+    def play_pause_toggle(self):
+        if self.current_filepath:
+            self.__player.play_pause_toggle()
+
+    def stop(self, save_resume_point=True):
+        """ This should be run when the program is closed
+                or if the user switches playlists """
+        position = self.get_position_duration()[0]
+        self.remove_resume_bookmarks()
+        self.on_player_stopped()
+        self.__player.on_stop_requested()
+        if not self.is_empty and save_resume_point:
+            self.__queue.current_item.save_bookmark(_('Auto Bookmark'), position, True)
+
     def on_player_eof(self):
+        if not self.config.getboolean("options", "stay_at_end"):
+            self.stop()
         play_mode = self.config.get("options", "play_mode")
         if play_mode == "single":
             if not self.config.getboolean("options", "stay_at_end"):
@@ -596,19 +660,68 @@ class Playlist(ObservableService):
             else:
               self.next(False)
 
-    def do_seek(self, seek_amount):
+    def on_player_playing(self):
+        self.notify("playing", caller=self.on_player_playing)
+        self.__player.on_playing(self.get_seek_to())
+
+    def on_player_paused(self, position, duration):
+        self.notify("paused", position, duration, caller=self.on_player_paused)
+
+    def on_player_stopped(self):
+        self.notify("stopped", caller=self.on_player_stopped)
+
+    def do_seek(self, from_beginning=None, from_current=None,  percent=None):
         resp = None
-        if not self.config.getboolean("options", "seek_back") or self.start_of_playlist() or seek_amount > 0:
-            resp = self.player.do_seek(from_current=seek_amount)
-        else:
-            pos_int, dur_int = self.player.get_position_duration()
-            if pos_int + seek_amount >= 0:
-                resp = self.player.do_seek(from_current=seek_amount)
+        if from_beginning:
+            resp = self.__player.do_seek(from_beginning=from_beginning)
+        elif from_current:
+            if not self.config.getboolean("options", "seek_back") or self.start_of_playlist() or from_current > 0:
+                resp = self.__player.do_seek(from_current=from_current)
             else:
-                self.prev()
-                pos_int, dur_int = self.player.get_position_duration()
-                resp = self.player.do_seek(from_beginning=dur_int+seek_amount)
+                pos_int, dur_int = self.get_position_duration()
+                if pos_int + from_current >= 0:
+                    resp = self.__player.do_seek(from_current=from_current)
+                else:
+                    self.prev()
+                    pos_int, dur_int = self.get_position_duration()
+                    resp = self.__player.do_seek(from_beginning=dur_int+from_current)
+        elif percent:
+            resp = self.__player.do_seek(percent=percent)
         return resp
+
+    def get_position_duration(self):
+        return self.__player.get_position_duration()
+
+    def set_position_duration(self, position, duration):
+        self.__player.set_position_duration(position, duration)
+
+    @property
+    def playing(self):
+        return self.__player.playing
+
+    @property
+    def paused(self):
+        return self.__player.paused
+
+    @property
+    def stopped(self):
+        return self.__player.stopped
+
+    @property
+    def null(self):
+        return self.__player.null
+
+    @property
+    def seeking(self):
+        return self.__player.seeking
+
+    def new_track_loaded(self):
+        self.__player.on_new_track(self.current_filepath)
+        self.notify('new-track-loaded', caller=self.new_track_loaded)
+        self.notify( 'new-metadata-available', caller=self.new_track_loaded )
+
+    def reset_player(self):
+        self.__player.on_reset_playlist()
 
 class Queue(list, ObservableService):
     """ A Simple list of PlaylistItems """

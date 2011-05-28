@@ -34,7 +34,7 @@ class panucciInterface(dbus.service.Object):
         self.__log = logging.getLogger('panucci.dbusinterface.panucciInterface')
         dbus.service.Object.__init__(self, object_path=path, bus_name=bus_name)
 
-        self.player = None
+        self.playlist = None
         self.gui = None
         self.headset_device = None
 
@@ -45,9 +45,9 @@ class panucciInterface(dbus.service.Object):
         except Exception, e:
             self.__log.debug('Could not find headset object (on Maemo)')
 
-    def register_player(self, player):
-        self.__log.debug('Registered player.')
-        self.player = player
+    def register_playlist(self, playlist):
+        self.__log.debug('Registered playlist.')
+        self.playlist = playlist
 
     def register_gui(self, gui):
         self.__log.debug('Registered GUI.')
@@ -64,63 +64,63 @@ class panucciInterface(dbus.service.Object):
     @dbus.service.method('org.panucci.panucciInterface')
     def play(self):
         self.__log.debug('play() called')
-        if self.player is not None: self.player.play()
+        if self.playlist: self.playlist.play()
 
     @dbus.service.method('org.panucci.panucciInterface')
     def pause(self):
         self.__log.debug('pause() called')
-        if self.player is not None: self.player.pause()
+        if self.playlist: self.playlist.pause()
 
     @dbus.service.method('org.panucci.panucciInterface')
     def stop(self):
         self.__log.debug('stop() called')
-        if self.player is not None: self.player.stop()
+        if self.playlist: self.playlist.stop()
 
     @dbus.service.method('org.panucci.panucciInterface')
     def playPause(self):
         self.__log.debug('playPause() called')
-        if self.player is not None: self.player.play_pause_toggle()
+        if self.playlist: self.playlist.play_pause_toggle()
 
     @dbus.service.method('org.panucci.panucciInterface')
     def playNext(self):
         self.__log.debug('playNext() called')
-        if self.player is not None: self.player.play_next()
+        if self.playlist: self.playlist.next()
 
     @dbus.service.method('org.panucci.panucciInterface')
     def playPrev(self):
         self.__log.debug('playPrev() called')
-        if self.player is not None: self.player.play_prev()
+        if self.playlist: self.playlist.prev()
 
     @dbus.service.method('org.panucci.panucciInterface')
     def backShort(self):
         self.__log.debug('backShort() called')
         seek_amount = self.gui.config.getint("options", "seek_short")
-        if self.player is not None: self.player.do_seek(from_current=-seek_amount*10**9)
+        if self.playlist: self.playlist.do_seek(from_current=-seek_amount*10**9)
 
     @dbus.service.method('org.panucci.panucciInterface')
     def forwardShort(self):
         self.__log.debug('forwardShort() called')
         seek_amount = self.gui.config.getint("options", "seek_short")
-        if self.player is not None: self.player.do_seek(from_current=seek_amount*10**9)
+        if self.playlist: self.playlist.do_seek(from_current=seek_amount*10**9)
 
     @dbus.service.method('org.panucci.panucciInterface')
     def backLong(self):
         self.__log.debug('backLong() called')
         seek_amount = self.gui.config.getint("options", "seek_long")
-        if self.player is not None: self.player.do_seek(from_current=-seek_amount*10**9)
+        if self.playlist: self.playlist.do_seek(from_current=-seek_amount*10**9)
 
     @dbus.service.method('org.panucci.panucciInterface')
     def forwardLong(self):
         self.__log.debug('forwardLong() called')
         seek_amount = self.gui.config.getint("options", "seek_long")
-        if self.player is not None: self.player.do_seek(from_current=seek_amount*10**9)
+        if self.playlist: self.playlist.do_seek(from_current=seek_amount*10**9)
 
     @dbus.service.method('org.panucci.panucciInterface', in_signature='s')
     def play_file(self, filepath):
         self.__log.debug('play_file() called with: ' + filepath)
-        if self.player is not None:
-            self.player.playlist.load(filepath)
-            self.player.play()
+        if self.playlist:
+            self.playlist.load(filepath)
+            self.playlist.play()
 
     @dbus.service.method('org.panucci.panucciInterface', in_signature='su')
     def playback_from(self, uri, seconds):
@@ -131,44 +131,43 @@ class panucciInterface(dbus.service.Object):
         """
 
         self.__log.debug('%s playback_from %d' % (uri, seconds))
-        if self.player is not None:
+        if self.playlist:
             self.show_main_window()
 
-            new_file = (self.player.playlist.current_filepath != uri)
+            new_file = (self.playlist.current_filepath != uri)
 
             # I've diabled this for now as I've no possibility to debug it. /xerxes2
             #if self.gui is not None:
             #    self.gui.set_progress_indicator(new_file)
 
             if new_file:
-                self.player.playlist.load(uri)
-                self.player.playlist.last()
-                self.player.playlist.set_seek_to(seconds)
-            elif not self.player._is_playing:
-                self.player.play()
+                self.playlist.load(uri)
+                self.playlist.last()
+                self.playlist.set_seek_to(seconds)
+            elif not self.playlist.playing:
+                self.playlist.play_pause_toggle()
             #else:
-            #    self.player.do_seek(from_beginning=(10**9)*seconds)
+            #    self.playlist.do_seek(from_beginning=(10**9)*seconds)
 
     @dbus.service.method('org.panucci.panucciInterface', in_signature='s')
     def queue_file(self, filepath):
         self.__log.debug('queue_file() called with: ' + filepath)
-        if self.player is not None: self.player.playlist.append(filepath)
+        if self.playlist: self.playlist.load(filepath)
 
     @dbus.service.method('org.panucci.panucciInterface', in_signature='su')
     def insert_file(self, pos, filepath):
         self.__log.debug('insert_file() called')
-        if self.player is not None: self.player.playlist.insert(pos, filepath)
+        if self.playlist: self.playlist.insert(pos, filepath)
 
     @dbus.service.method('org.panucci.panucciInterface', in_signature='sb')
     def load_directory(self, directory, append):
         self.__log.debug('load_directory() called')
-        if self.player is not None: self.player.playlist.load_directory(
-            directory, append )
+        if self.playlist: self.playlist.load_directory(directory, append)
 
     @dbus.service.method('org.panucci.panucciInterface')
     def show_main_window(self):
         self.__log.debug('show_main_window() called')
-        if self.gui is not None: self.gui.show_main_window()
+        if self.gui: self.gui.show_main_window()
 
     # Signals for gPodder's media player integration
     @dbus.service.signal(dbus_interface='org.gpodder.player', signature='us')

@@ -22,32 +22,23 @@ import gobject
 import gst
 import logging
 
-import panucci
-from panucci import util
 from panucci.backends import base
 
 gobject.threads_init()
 
 class Player(base.BasePlayer):
-    """ A player that uses Gstreamer for playback """
+    """A player that uses Gstreamer for playback"""
 
     def __init__(self):
         base.BasePlayer.__init__(self)
         self.__log = logging.getLogger('panucci.backends.GStreamerPlayer')
-
-        # have we preformed the initial seek?
-        self.__initial_seek_completed = False
-
         self._player = None
-        self._filesrc = None
-        self._filesrc_property = None
-        self._time_format = gst.Format(gst.FORMAT_TIME)
-        self._current_filetype = None
+        self._current_uri = None
 
     def _get_position_duration(self):
         try:
-            pos_int = self._player.query_position(self._time_format,None)[0]
-            dur_int = self._player.query_duration(self._time_format,None)[0]
+            pos_int = self._player.query_position(gst.FORMAT_TIME, None)[0]
+            dur_int = self._player.query_duration(gst.FORMAT_TIME, None)[0]
         except Exception, e:
             self.__log.exception('Error getting position...')
             pos_int = dur_int = 0
@@ -64,16 +55,10 @@ class Player(base.BasePlayer):
                      gst.STATE_PLAYING : self.STATE_PLAYING
                    }.get( state, self.STATE_NULL )
 
-    def _load_media( self, uri ):
-        filetype = util.detect_filetype(uri)
-
-        if filetype != self._current_filetype or self._player is None:
-            self.__setup_player()
-
-        if self._player is not None:
-            self._filesrc.set_property( self._filesrc_property, uri )
-
-        self._current_filetype = filetype
+    def _load_media(self, uri):
+        self.__setup_player()
+        self._player.set_property("uri", uri)
+        self._current_uri = uri
 
     def _pause(self):
         pos, dur = self.get_position_duration()
@@ -82,64 +67,40 @@ class Player(base.BasePlayer):
         return pos
 
     def _play(self):
-        have_player = self._player is not None
-
-        # Don't think this is needed
-        #if have_player or self.__setup_player():
-        if have_player:
-            self._initial_seek_completed = have_player
+        if self._current_uri and (self._player or not self._load_media(self._current_uri)):
             self._player.set_state(gst.STATE_PLAYING)
             return True
         else:
-            # should something happen here? perhaps self.stop()?
             return False
 
-    def _stop(self, player):
+    def _stop(self):
         self.notify('stopped', caller=self.stop)
 
-        if self._player is not None:
+        if self._player:
             self._player.set_state(gst.STATE_NULL)
             self.set_position_duration(0, 0)
-            if player:
-                self._player = None
+            self._player = None
 
     def _seek(self, position):
         self.seeking = True
         error = False
-
         try:
-            self._player.seek_simple(
-                self._time_format, gst.SEEK_FLAG_FLUSH, position )
+            self._player.seek_simple(gst.FORMAT_TIME, gst.SEEK_FLAG_FLUSH, position)
         except Exception, e:
             self.__log.exception( 'Error seeking' )
             error = True
-
         self.seeking = False
         return not error
 
     def __setup_player(self):
-        if self._setup_player(self._current_filetype):
-            bus = self._player.get_bus()
-            bus.add_signal_watch()
-            bus.connect('message', self.__on_message)
-            return True
-
-        return False
-
-    def _setup_player(self, filetype=None):
         self.__log.debug("Creating playbin-based gstreamer player")
         try:
             self._player = gst.element_factory_make('playbin2', 'player')
         except:
             self._player = gst.element_factory_make('playbin', 'player')
-        self._filesrc = self._player
-        self._filesrc_property = 'uri'
-
-        return True
-
-    def _on_decoder_pad_added(self, decoder, src_pad, sink_pad):
-        # link the decoder's new "src_pad" to "sink_pad"
-        src_pad.link( sink_pad )
+        bus = self._player.get_bus()
+        bus.add_signal_watch()
+        bus.connect('message', self.__on_message)
 
     def __on_message(self, bus, message):
         t = message.type

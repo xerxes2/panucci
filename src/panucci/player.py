@@ -32,11 +32,10 @@ class PanucciPlayer(ForwardingObservableService):
     """
     signals = [ "playing", "paused", "stopped", "eof" ]
 
-    def __init__(self, playlist):
+    def __init__(self, config):
         self.__log = logging.getLogger('panucci.player.PanucciPlayer')
         ForwardingObservableService.__init__(self, self.signals, self.__log)
-        self.playlist = playlist
-        self.config = playlist.config
+        self.config = config
 
         if self.config.get("options", "backend") == "gstreamer":
             from panucci.backends.gstreamer import Player
@@ -45,25 +44,18 @@ class PanucciPlayer(ForwardingObservableService):
         self.__initialized = False
         self._start_position = 0
         self._is_playing = None
+        self.current_file = None
 
         # Forward the following signals
         self.forward( self.__player,
                       [ "playing", "paused", "stopped", "eof" ],
                       PanucciPlayer )
 
-        self.__player.register( "playing", self.on_playing )
+        #self.__player.register( "playing", self.on_playing )
         self.__player.register( "paused", self.on_paused )
         self.__player.register( "stopped", self.on_stopped )
         self.__player.register( "eof", self.on_stopped )
         self.__player.register( "error", self.on_player_error )
-
-        self.playlist.register( 'new-track-loaded', self.on_new_track )
-        self.playlist.register( 'seek-requested', self.do_seek )
-        self.playlist.register( 'stop-requested', self.on_stop_requested )
-        self.playlist.register( 'reset-playlist', self.on_reset_playlist )
-
-        # Register the d-bus interface only once we're ready
-        interface.register_player(self)
 
     def __getattr__(self, attr):
         """ If the attribute isn't found in this object, get it from
@@ -77,35 +69,10 @@ class PanucciPlayer(ForwardingObservableService):
             self.__log.critical("No player available")
             raise AttributeError
 
-    def add_bookmark_at_current_position( self, label=None ):
-        """ Adds a bookmark at the current position
-
-            Returns: (bookmark lable string, position in nanoseconds)
-        """
-
-        default_label, position = self.get_formatted_position()
-        label = default_label if label is None else label
-        self.playlist.save_bookmark( label, position )
-        self.__log.info('Added bookmark: %s - %d', label, position)
-        return label, position
-
-    def get_formatted_position(self, pos=None):
-        """ Gets the current position and converts it to a human-readable str.
-
-            Returns: (bookmark lable string, position in nanoseconds)
-        """
-
-        if pos is None:
-            (pos, dur) = self.get_position_duration()
-
-        text = util.convert_ns(pos)
-        return (text, pos)
-
-    def on_new_track(self):
+    def on_new_track(self, filepath):
         """ New track callback; stops the player and starts the new track. """
 
-        if self.playlist.current_filepath is not None:
-            filepath = self.playlist.current_filepath
+        if filepath:
             if filepath.startswith('/'):
                 filepath = 'file://' + filepath
 
@@ -117,6 +84,7 @@ class PanucciPlayer(ForwardingObservableService):
             if self.__initialized:
                 self.play()
 
+        self.current_file = filepath
         self.__initialized = True
 
     def do_seek(self, from_beginning=None, from_current=None, percent=None):
@@ -131,15 +99,14 @@ class PanucciPlayer(ForwardingObservableService):
         # Hand over the seek command to the backend
         return self.__player.do_seek(from_beginning, from_current, percent)
 
-    def on_playing(self):
+    def on_playing(self, seek_to):
         """
         Used to seek to the correct position once the file has started
         playing. This has to be done once the player is ready because
         certain player backends can't seek in any state except playing.
         """
-        seek = self.playlist.play()
-        if seek > 0:
-            self._seek(seek)
+        if seek_to > 0:
+            self._seek(seek_to)
 
         pos, dur = self.get_position_duration()
         pos_sec = pos / 10**9
@@ -164,12 +131,7 @@ class PanucciPlayer(ForwardingObservableService):
         if self.current_file is not None:
             interface.PlaybackStopped(self._start_position, pos_sec, dur_sec, self.current_file)
 
-    @property
-    def current_file(self):
-        return self.playlist.current_filepath
-
     def on_stop_requested(self):
-        self.playlist.stop( self.get_position_duration()[0] )
         self.stop()
         self._is_playing = False
 

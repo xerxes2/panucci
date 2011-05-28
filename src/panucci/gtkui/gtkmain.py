@@ -155,7 +155,7 @@ class PanucciGUI(object):
         # this should be done when the gui is ready
         self.playlist.init(filepath=filename)
 
-        pos_int, dur_int = self.playlist.player.get_position_duration()
+        pos_int, dur_int = self.playlist.get_position_duration()
         # This prevents bogus values from being set while seeking
         if (pos_int > 10**9) and (dur_int > 10**9):
             self.set_progress_callback(pos_int, dur_int)
@@ -613,20 +613,20 @@ class PanucciGUI(object):
 
     def handle_headset_button(self, event, button):
         if event == 'ButtonPressed' and button == 'phone':
-            self.playlist.player.play_pause_toggle()
+            self.playlist.play_pause_toggle()
 
     def handle_connection_state(self, device_path):
         PATH = '/org/freedesktop/Hal/devices/computer_logicaldev_input_1'
-        if device_path == PATH and self.config.getboolean("options", "play_on_headset") and not self.playlist.player.playing:
-            self.playlist.player.play()
+        if device_path == PATH and self.config.getboolean("options", "play_on_headset") and not self.playlist.playing:
+            self.playlist.play_pause_toggle()
 
     def handle_bt_button(self, signal, button):
         # See http://bugs.maemo.org/8283 for details
         if signal == 'ButtonPressed':
             if button == 'play-cd':
-                self.playlist.player.play_pause_toggle()
+                self.playlist.play_pause_toggle()
             elif button == 'pause-cd':
-                self.playlist.player.pause()
+                self.playlist.play_pause_toggle()
             elif button == 'next-song':
                 self.__player_tab.do_seek(self.config.getint("options", "seek_short"))
             elif button == 'previous-song':
@@ -651,36 +651,23 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.__gui_root = gui_root
         self.config = gui_root.config
         self.playlist = gui_root.playlist
+        self.metadata = None
 
         gtk.HBox.__init__(self)
         ObservableService.__init__(self, self.signals, self.__log)
 
-        # Timers
         self.progress_timer_id = None
-
         self.recent_files = []
         self.make_player_tab()
         self.has_coverart = False
 
-        #settings.register( 'enable_dual_action_btn_changed',
-        #                   self.on_dual_action_setting_changed )
-        #settings.register( 'dual_action_button_delay_changed',
-        #                   self.on_dual_action_setting_changed )
-        #settings.register( 'scrolling_labels_changed', lambda v:
-        #                   setattr( self.title_label, 'scrolling', v ) )
-
-        self.playlist.player.register( 'stopped', self.on_player_stopped )
-        self.playlist.player.register( 'playing', self.on_player_playing )
-        self.playlist.player.register( 'paused', self.on_player_paused )
-        #self.playlist.player.register( 'eof', self.on_player_eof )
-        self.playlist.register( 'end-of-playlist',
-                                  self.on_player_end_of_playlist )
-        self.playlist.register( 'new-track-loaded',
-                                  self.on_player_new_track )
-        self.playlist.register( 'new-metadata-available',
-                                  self.on_player_new_metadata )
-        self.playlist.register( 'reset-playlist',
-                                  self.on_player_reset_playlist )
+        self.playlist.register('stopped', self.on_player_stopped)
+        self.playlist.register('playing', self.on_player_playing)
+        self.playlist.register('paused', self.on_player_paused )
+        self.playlist.register('end-of-playlist', self.on_player_end_of_playlist)
+        self.playlist.register('new-track-loaded', self.on_player_new_track)
+        self.playlist.register('new-metadata-available', self.on_player_new_metadata)
+        self.playlist.register('reset-playlist', self.on_player_reset_playlist )
 
     def make_player_tab(self):
         main_vbox = gtk.VBox()
@@ -783,7 +770,7 @@ class PlayerTab(ObservableService, gtk.HBox):
 
         self.bookmarks_button = create_da(
                 gtkutil.generate_image('bookmark-new.png'),
-                self.playlist.player.add_bookmark_at_current_position,
+                self.playlist.add_bookmark_at_current_position,
                 gtkutil.generate_image(gtk.STOCK_JUMP_TO, True),
                 lambda *args: self.notify('select-current-item-request'))
         buttonbox.add(self.bookmarks_button)
@@ -842,6 +829,9 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.stop_progress_timer()
         self.set_controls_sensitivity(False)
         gtkutil.image(self.play_pause_button, 'media-playback-start.png')
+        if self.metadata:
+            estimated_length = self.metadata.get('length', 0)
+            self.set_progress_callback( 0, estimated_length )
 
     def on_player_playing(self):
         self.start_progress_timer()
@@ -862,12 +852,9 @@ class PlayerTab(ObservableService, gtk.HBox):
     def on_player_new_metadata(self):
         self.metadata = self.playlist.get_file_metadata()
         self.set_metadata(self.metadata)
-
-        if not self.playlist.player.playing:
-            position = self.playlist.get_current_position()
-            estimated_length = self.metadata.get('length', 0)
-            self.set_progress_callback( position, estimated_length )
-            self.playlist.player.set_position_duration(position, 0)
+        position = self.playlist.get_current_position()
+        estimated_length = self.metadata.get('length', 0)
+        self.set_progress_callback(position, estimated_length)
 
     def on_player_paused( self, position, duration ):
         self.stop_progress_timer() # This should save some power
@@ -876,7 +863,6 @@ class PlayerTab(ObservableService, gtk.HBox):
 
     def on_player_end_of_playlist(self, loop):
         if not loop:
-            self.playlist.player.stop(False)
             estimated_length = self.metadata.get('length', 0)
             self.set_progress_callback( 0, estimated_length )
 
@@ -902,20 +888,20 @@ class PlayerTab(ObservableService, gtk.HBox):
         if ( not self.config.getboolean("options", "lock_progress") and
                 event.type == gtk.gdk.BUTTON_PRESS and event.button == 1 ):
             new_fraction = event.x/float(widget.get_allocation().width)
-            resp = self.playlist.player.do_seek(percent=new_fraction)
+            resp = self.playlist.do_seek(percent=new_fraction)
             if resp:
                 # Preemptively update the progressbar to make seeking smoother
                 self.set_progress_callback( *resp )
 
     def on_btn_play_pause_clicked(self, widget=None):
-        self.playlist.player.play_pause_toggle()
+        self.playlist.play_pause_toggle()
 
     def cover_art_callback(self, widget, event):
         self.on_btn_play_pause_clicked(widget)
 
     def progress_timer_callback( self ):
-        if self.playlist.player.playing and not self.playlist.player.seeking:
-            pos_int, dur_int = self.playlist.player.get_position_duration()
+        if self.playlist.playing and not self.playlist.seeking:
+            pos_int, dur_int = self.playlist.get_position_duration()
             # This prevents bogus values from being set while seeking
             if ( pos_int > 10**9 ) and ( dur_int > 10**9 ):
                 self.set_progress_callback( pos_int, dur_int )
@@ -991,7 +977,7 @@ class PlayerTab(ObservableService, gtk.HBox):
                 tags[tag].show()
 
     def do_seek(self, seek_amount):
-        resp = self.playlist.do_seek(seek_amount*10**9)
+        resp = self.playlist.do_seek(from_current=seek_amount*10**9)
         if resp:
             # Preemptively update the progressbar to make seeking smoother
             self.set_progress_callback( *resp )

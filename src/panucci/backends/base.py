@@ -105,14 +105,13 @@ class BasePlayer(services.ObservableService):
         """
         return self._play()
 
-    def stop(self, player=True):
+    def stop(self):
         """ Stops playback.
 
-            Params: player, boolean if delete player
             Returns: Nothing
             Signals: Must emit the "stopped" signal.
         """
-        return self._stop(player)
+        return self._stop()
 
     def seek(self, position):
         """ Seek to an absolute position in the current file.
@@ -125,7 +124,7 @@ class BasePlayer(services.ObservableService):
     #############################################
     # Generic Functions
 
-    def do_seek(self, from_beginning=None, from_current=None, percent=None ):
+    def do_seek(self, from_beginning=None, from_current=None, percent=None):
         """ A very flexible function to seek in the current file
 
             Params: Requires ONE of the following keyword arguments
@@ -179,6 +178,16 @@ class BasePlayer(services.ObservableService):
     def paused(self):
         """ Is the player paused? """
         return self.get_state() == self.STATE_PAUSED
+
+    @property
+    def stopped(self):
+        """ Is the player stopped? """
+        return self.get_state() == self.STATE_STOPPED
+
+    @property
+    def null(self):
+        """ Is the player stopped? """
+        return self.get_state() == self.STATE_NULL
 
     def set_position_duration(self, pos, dur):
         """ used for setting pos and dur on startup"""

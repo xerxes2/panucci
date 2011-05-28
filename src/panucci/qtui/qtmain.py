@@ -325,11 +325,11 @@ class PlayerTab(ObservableService):
         self.config = gui_root.config
         self.playlist = gui_root.playlist
         ObservableService.__init__(self, self.signals, self.__log)
+        self.metadata = None
 
-        self.playlist.player.register( 'stopped', self.on_player_stopped )
-        self.playlist.player.register( 'playing', self.on_player_playing )
-        self.playlist.player.register( 'paused', self.on_player_paused )
-        #self.playlist.player.register( 'eof', self.on_player_eof )
+        self.playlist.register( 'stopped', self.on_player_stopped )
+        self.playlist.register( 'playing', self.on_player_playing )
+        self.playlist.register( 'paused', self.on_player_paused )
         self.playlist.register( 'end-of-playlist', self.on_player_end_of_playlist )
         self.playlist.register( 'new-track-loaded', self.on_player_new_track )
         self.playlist.register( 'new-metadata-available', self.on_player_new_metadata )
@@ -417,13 +417,16 @@ class PlayerTab(ObservableService):
         self.mainbox.addLayout(layout)
 
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(1000); 
+        self.timer.setInterval(1000)
         self.timer.timeout.connect(self.timer_callback)
 
     def on_player_stopped(self):
         self.stop_progress_timer()
-        #self.set_controls_sensitivity(False)
         self.button_play.setIcon(self.icon_play)
+        if self.metadata:
+            estimated_length = self.metadata.get('length', 0)
+            self.set_progress_callback( 0, estimated_length )
+        #self.set_controls_sensitivity(False)
 
     def on_player_playing(self):
         self.start_progress_timer()
@@ -432,8 +435,8 @@ class PlayerTab(ObservableService):
 
     def on_player_paused( self, position, duration ):
         self.stop_progress_timer()
-        #self.set_progress_callback( position, duration )
         self.button_play.setIcon(self.icon_play)
+        #self.set_progress_callback( position, duration )
 
     def on_player_new_track(self):
         for widget in [self.label_title, self.label_artist, self.label_album, self.label_cover]:
@@ -444,16 +447,12 @@ class PlayerTab(ObservableService):
     def on_player_new_metadata(self):
         self.metadata = self.playlist.get_file_metadata()
         self.set_metadata(self.metadata)
-        
-        if not self.playlist.player.playing:
-            position = self.playlist.get_current_position()
-            estimated_length = self.metadata.get('length', 0)
-            self.set_progress_callback( position, estimated_length )
-            self.playlist.player.set_position_duration(position, 0)
+        position = self.playlist.get_current_position()
+        estimated_length = self.metadata.get('length', 0)
+        self.set_progress_callback(position, estimated_length)
 
     def on_player_end_of_playlist(self, loop):
         if not loop:
-            self.playlist.player.stop(False)
             estimated_length = self.metadata.get('length', 0)
             self.set_progress_callback( 0, estimated_length )
 
@@ -473,7 +472,7 @@ class PlayerTab(ObservableService):
         self.do_seek(-1*self.config.getint("options", "seek_short"))
 
     def button_play_callback(self):
-        self.playlist.player.play_pause_toggle()
+        self.playlist.play_pause_toggle()
 
     def button_forward_callback(self):
         self.do_seek(self.config.getint("options", "seek_short"))
@@ -482,15 +481,14 @@ class PlayerTab(ObservableService):
          self.do_seek(self.config.getint("options", "seek_long"))
 
     def button_bookmark_callback(self):
-        self.playlist.player.add_bookmark_at_current_position()
+        self.playlist.add_bookmark_at_current_position()
 
     def label_cover_callback(self, event):
-        self.playlist.player.play_pause_toggle()
+        self.playlist.play_pause_toggle()
 
     def set_progress_callback(self, time_elapsed, total_time):
         """ times must be in nanoseconds """
-        time_string = "%s / %s" % ( util.convert_ns(time_elapsed),
-            util.convert_ns(total_time) )
+        time_string = "%s / %s" %(util.convert_ns(time_elapsed), util.convert_ns(total_time))
         self.progress.setFormat( time_string )
         fraction = float(time_elapsed) / float(total_time) if total_time else 0
         self.progress.setValue( int(fraction*100) )
@@ -499,14 +497,14 @@ class PlayerTab(ObservableService):
         if ( not self.config.getboolean("options", "lock_progress") and
                 event.button() == QtCore.Qt.MouseButton.LeftButton ):
             new_fraction = float(event.x())/float(self.progress.width())
-            resp = self.playlist.player.do_seek(percent=new_fraction)
+            resp = self.playlist.do_seek(percent=new_fraction)
             if resp:
                 # Preemptively update the progressbar to make seeking smoother
                 self.set_progress_callback( *resp )
 
     def timer_callback( self ):
-        if self.playlist.player.playing and not self.playlist.player.seeking:
-            pos_int, dur_int = self.playlist.player.get_position_duration()
+        if self.playlist.playing and not self.playlist.seeking:
+            pos_int, dur_int = self.playlist.get_position_duration()
             # This prevents bogus values from being set while seeking
             if ( pos_int > 10**9 ) and ( dur_int > 10**9 ):
                 self.set_progress_callback( pos_int, dur_int )
@@ -578,7 +576,7 @@ class PlayerTab(ObservableService):
                 tags[tag].show()
 
     def do_seek(self, seek_amount):
-        resp = self.playlist.do_seek(seek_amount*10**9)
+        resp = self.playlist.do_seek(from_current=seek_amount*10**9)
         if resp:
             # Preemptively update the progressbar to make seeking smoother
             self.set_progress_callback( *resp )
