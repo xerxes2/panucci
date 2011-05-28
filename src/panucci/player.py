@@ -43,13 +43,10 @@ class PanucciPlayer(ForwardingObservableService):
 
         self.__initialized = False
         self._start_position = 0
-        self._is_playing = None
         self.current_file = None
 
         # Forward the following signals
-        self.forward( self.__player,
-                      [ "playing", "paused", "stopped", "eof" ],
-                      PanucciPlayer )
+        self.forward(self.__player, [ "playing", "paused", "stopped", "eof" ], PanucciPlayer)
 
         #self.__player.register( "playing", self.on_playing )
         self.__player.register( "paused", self.on_paused )
@@ -92,9 +89,8 @@ class PanucciPlayer(ForwardingObservableService):
         pos_sec = max(0, pos / 10**9)
         dur_sec = max(0, dur / 10**9)
 
-        if self._is_playing and self.current_file:
+        if self.playing and self.current_file:
             interface.PlaybackStopped(self._start_position, pos_sec, dur_sec, self.current_file)
-            self._is_playing = False
 
         # Hand over the seek command to the backend
         return self.__player.do_seek(from_beginning, from_current, percent)
@@ -114,15 +110,12 @@ class PanucciPlayer(ForwardingObservableService):
 
         interface.PlaybackStarted(pos_sec, self.current_file)
         self._start_position = pos_sec
-        self._is_playing = True
 
     def on_paused(self, *args):
         self.on_stopped_paused()
-        self._is_playing = False
 
     def on_stopped(self, *args):
         self.on_stopped_paused()
-        self._is_playing = None
 
     def on_stopped_paused(self):
         pos, dur = self.get_position_duration()
@@ -133,7 +126,6 @@ class PanucciPlayer(ForwardingObservableService):
 
     def on_stop_requested(self):
         self.stop()
-        self._is_playing = False
 
     def on_reset_playlist(self):
         self.on_stop_requested()
