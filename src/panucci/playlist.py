@@ -307,7 +307,10 @@ class Playlist(ObservableService):
                     else:
                         self.__queue.current_item_position = 0
                 else:
-                    self.reset_playlist()
+                    if self.is_empty:
+                        self.reset_playlist()
+                    else:
+                        self.__queue.current_item_position = 0
             else:
                 item.delete_bookmark(None)
                 self.__queue.remove(item)
