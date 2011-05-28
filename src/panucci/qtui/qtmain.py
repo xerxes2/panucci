@@ -553,9 +553,9 @@ class PlayerTab(ObservableService):
             if tags.has_key(tag) and value is not None and value.strip():
                 value = value.decode('utf-8')
                 if tag == "artist":
-                    _str = '<big>' + cgi.escape(value) + '</big>'
+                    _str = '<big>' + value + '</big>'
                 elif tag == "album":
-                    _str = cgi.escape(value)
+                    _str = value
                 elif tag == "title":
                     _str = '<b><big>' + cgi.escape(value) + '</big></b>'
                     if not platform.MAEMO:
