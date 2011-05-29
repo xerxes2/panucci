@@ -32,13 +32,12 @@ class Player(base.BasePlayer):
     def __init__(self):
         base.BasePlayer.__init__(self)
         self.__log = logging.getLogger('panucci.backends.GStreamerPlayer')
-        self._player = None
-        self._current_uri = None
+        self.__player = None
 
     def _get_position_duration(self):
         try:
-            pos_int = self._player.query_position(gst.FORMAT_TIME, None)[0]
-            dur_int = self._player.query_duration(gst.FORMAT_TIME, None)[0]
+            pos_int = self.__player.query_position(gst.FORMAT_TIME, None)[0]
+            dur_int = self.__player.query_duration(gst.FORMAT_TIME, None)[0]
         except Exception, e:
             self.__log.exception('Error getting position...')
             pos_int = dur_int = 0
@@ -46,10 +45,10 @@ class Player(base.BasePlayer):
         return pos_int, dur_int
 
     def _get_state(self):
-        if self._player is None:
+        if self.__player is None:
             return self.STATE_NULL
         else:
-            state = self._player.get_state()[1]
+            state = self.__player.get_state()[1]
             return { gst.STATE_NULL    : self.STATE_STOPPED,
                      gst.STATE_PAUSED  : self.STATE_PAUSED,
                      gst.STATE_PLAYING : self.STATE_PLAYING
@@ -57,35 +56,38 @@ class Player(base.BasePlayer):
 
     def _load_media(self, uri):
         self.__setup_player()
-        self._player.set_property("uri", uri)
-        self._current_uri = uri
+        self.__player.set_property("uri", uri)
+        self.__player.set_state(gst.STATE_PAUSED)
+        self.current_uri = uri
 
     def _pause(self):
+        self.__player.set_state(gst.STATE_PAUSED)
         pos, dur = self.get_position_duration()
         self.notify('paused', pos, dur, caller=self.pause)
-        self._player.set_state(gst.STATE_PAUSED)
         return pos
 
     def _play(self):
-        if self._current_uri and (self._player or not self._load_media(self._current_uri)):
-            self._player.set_state(gst.STATE_PLAYING)
+        if self.current_uri and (self.__player or not self._load_media(self.current_uri)):
+            self.__player.set_state(gst.STATE_PLAYING)
             return True
         else:
             return False
 
-    def _stop(self):
+    def _stop(self, player):
         self.notify('stopped', caller=self.stop)
-
-        if self._player:
-            self._player.set_state(gst.STATE_NULL)
+        if self.__player:
+            self.__player.set_state(gst.STATE_NULL)
+            self.__player.set_state(gst.STATE_PAUSED)
             self.set_position_duration(0, 0)
-            self._player = None
+            if player:
+                self.__player.set_state(gst.STATE_NULL)
+                self.__player = None
 
     def _seek(self, position):
         self.seeking = True
         error = False
         try:
-            self._player.seek_simple(gst.FORMAT_TIME, gst.SEEK_FLAG_FLUSH, position)
+            self.__player.seek_simple(gst.FORMAT_TIME, gst.SEEK_FLAG_FLUSH, position)
         except Exception, e:
             self.__log.exception( 'Error seeking' )
             error = True
@@ -94,11 +96,13 @@ class Player(base.BasePlayer):
 
     def __setup_player(self):
         self.__log.debug("Creating playbin-based gstreamer player")
+        if self.__player:
+            self.__player.set_state(gst.STATE_NULL)
         try:
-            self._player = gst.element_factory_make('playbin2', 'player')
+            self.__player = gst.element_factory_make('playbin2', 'player')
         except:
-            self._player = gst.element_factory_make('playbin', 'player')
-        bus = self._player.get_bus()
+            self.__player = gst.element_factory_make('playbin', 'player')
+        bus = self.__player.get_bus()
         bus.add_signal_watch()
         bus.connect('message', self.__on_message)
 
@@ -115,6 +119,6 @@ class Player(base.BasePlayer):
             self.notify( "error", debug, caller=self.__on_message )
 
         elif t == gst.MESSAGE_STATE_CHANGED:
-            if ( message.src == self._player and
+            if ( message.src == self.__player and
                 message.structure['new-state'] == gst.STATE_PLAYING ):
                 self.notify('playing', caller=self.__on_message)

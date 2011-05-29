@@ -43,7 +43,6 @@ class PanucciPlayer(ForwardingObservableService):
 
         self.__initialized = False
         self._start_position = 0
-        self.current_file = None
 
         # Forward the following signals
         self.forward(self.__player, [ "playing", "paused", "stopped", "eof" ], PanucciPlayer)
@@ -81,7 +80,7 @@ class PanucciPlayer(ForwardingObservableService):
             if self.__initialized:
                 self.play()
 
-        self.current_file = filepath
+        #self.current_file = filepath
         self.__initialized = True
 
     def do_seek(self, from_beginning=None, from_current=None, percent=None):
@@ -89,8 +88,8 @@ class PanucciPlayer(ForwardingObservableService):
         pos_sec = max(0, pos / 10**9)
         dur_sec = max(0, dur / 10**9)
 
-        if self.playing and self.current_file:
-            interface.PlaybackStopped(self._start_position, pos_sec, dur_sec, self.current_file)
+        if self.playing and self.current_uri:
+            interface.PlaybackStopped(self._start_position, pos_sec, dur_sec, self.current_uri)
 
         # Hand over the seek command to the backend
         return self.__player.do_seek(from_beginning, from_current, percent)
@@ -108,7 +107,7 @@ class PanucciPlayer(ForwardingObservableService):
         pos_sec = pos / 10**9
         dur_sec = dur / 10**9
 
-        interface.PlaybackStarted(pos_sec, self.current_file)
+        interface.PlaybackStarted(pos_sec, self.current_uri)
         self._start_position = pos_sec
 
     def on_paused(self, *args):
@@ -121,14 +120,14 @@ class PanucciPlayer(ForwardingObservableService):
         pos, dur = self.get_position_duration()
         pos_sec = max(0, pos / 10**9)
         dur_sec = max(0, dur / 10**9)
-        if self.current_file is not None:
-            interface.PlaybackStopped(self._start_position, pos_sec, dur_sec, self.current_file)
+        if self.current_uri:
+            interface.PlaybackStopped(self._start_position, pos_sec, dur_sec, self.current_uri)
 
     def on_stop_requested(self):
         self.stop()
 
     def on_reset_playlist(self):
-        self.on_stop_requested()
+        self.stop(True)
         self.__player.reset_position_duration()
 
     def on_player_error(self, msg):

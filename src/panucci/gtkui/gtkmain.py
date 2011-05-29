@@ -158,7 +158,7 @@ class PanucciGUI(object):
         pos_int, dur_int = self.playlist.get_position_duration()
         # This prevents bogus values from being set while seeking
         if (pos_int > 10**9) and (dur_int > 10**9):
-            self.set_progress_callback(pos_int, dur_int)
+            self.__player_tab.set_progress_callback(pos_int, dur_int)
 
         gtk.main()
 

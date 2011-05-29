@@ -74,6 +74,8 @@ class Playlist(ObservableService):
         if filepath is None or not self.load( filepath ):
             self.load_last_played()
             self.set_position_duration(self.get_current_position(), 0)
+            self.do_seek(self.get_current_position())
+            self.set_seek_to(0)
         else:
             self.play()
 
@@ -204,9 +206,9 @@ class Playlist(ObservableService):
         self.__queue.current_item.seek_to = seek_position
 
         if same_pos:
-            if self.playing:
+            if self.playing or seek_position == 0:
                 self.do_seek(seek_position)
-            else:
+            if not self.playing:
                 self.play()
 
         return True
@@ -660,8 +662,8 @@ class Playlist(ObservableService):
               self.next(False)
 
     def on_player_playing(self):
-        self.notify("playing", caller=self.on_player_playing)
         self.__player.on_playing(self.get_seek_to())
+        self.notify("playing", caller=self.on_player_playing)
 
     def on_player_paused(self, position, duration):
         self.notify("paused", position, duration, caller=self.on_player_paused)
@@ -671,9 +673,9 @@ class Playlist(ObservableService):
 
     def do_seek(self, from_beginning=None, from_current=None,  percent=None):
         resp = None
-        if from_beginning:
+        if from_beginning is not None:
             resp = self.__player.do_seek(from_beginning=from_beginning)
-        elif from_current:
+        elif from_current is not None:
             if not self.config.getboolean("options", "seek_back") or self.start_of_playlist() or from_current > 0:
                 resp = self.__player.do_seek(from_current=from_current)
             else:
@@ -684,7 +686,7 @@ class Playlist(ObservableService):
                     self.prev()
                     pos_int, dur_int = self.get_position_duration()
                     resp = self.__player.do_seek(from_beginning=dur_int+from_current)
-        elif percent:
+        elif percent is not None:
             resp = self.__player.do_seek(percent=percent)
         return resp
 

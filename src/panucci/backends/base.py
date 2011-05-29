@@ -53,7 +53,7 @@ class BasePlayer(services.ObservableService):
         # Cached copies of position and duration
         self.__position, self.__duration = 0, 0
         self.seeking = False # Are we seeking?
-
+        self.current_uri = None
 
     #############################################
     # Functions to be implemented by subclasses
@@ -105,13 +105,14 @@ class BasePlayer(services.ObservableService):
         """
         return self._play()
 
-    def stop(self):
+    def stop(self, player=False):
         """ Stops playback.
 
+            Params: player, if true delete player
             Returns: Nothing
             Signals: Must emit the "stopped" signal.
         """
-        return self._stop()
+        return self._stop(player)
 
     def seek(self, position):
         """ Seek to an absolute position in the current file.
@@ -142,7 +143,7 @@ class BasePlayer(services.ObservableService):
 
         # if position and duration are 0 then player_get_position caught an
         # exception. Therefore self.__player isn't ready to be seeking.
-        if not duration or self.get_state == self.STATE_NULL:
+        if not duration or self.get_state() == self.STATE_NULL:
             error = True
         else:
             if from_beginning is not None:
