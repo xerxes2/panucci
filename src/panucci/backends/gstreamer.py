@@ -108,16 +108,12 @@ class Player(base.BasePlayer):
 
     def __on_message(self, bus, message):
         t = message.type
-        # self.__log.debug('Got message of type %s', t)
-
         if t == gst.MESSAGE_EOS:
             self.notify( "eof", caller=self.__on_message )
-
         elif t == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
             self.__log.critical( 'Error: %s %s', err, debug )
             self.notify( "error", debug, caller=self.__on_message )
-
         elif t == gst.MESSAGE_STATE_CHANGED:
             if ( message.src == self.__player and
                 message.structure['new-state'] == gst.STATE_PLAYING ):

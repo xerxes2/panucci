@@ -558,9 +558,9 @@ class PlayerTab(ObservableService):
                     _str = value
                 elif tag == "title":
                     _str = '<b><big>' + cgi.escape(value) + '</big></b>'
-                    if not platform.MAEMO:
+                    if not platform.HANDSET:
                         value += ' - Panucci'
-                    if platform.FREMANTLE and len(value) > 25:
+                    elif len(value) > 25:
                         value = value[:24] + '...'
                     self.__gui_root.main_window.setWindowTitle(value)
  
