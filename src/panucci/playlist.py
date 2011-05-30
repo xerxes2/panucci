@@ -547,9 +547,12 @@ class Playlist(ObservableService):
 
     def get_seek_to(self, reset=True):
         """Get the seek-to position for the current track"""
-        seek_to = self.__queue.current_item.seek_to
-        if reset:
-            self.get_current_item().seek_to = 0
+        if not self.is_empty:
+            seek_to = self.__queue.current_item.seek_to
+            if reset:
+                self.get_current_item().seek_to = 0
+        else:
+            seek_to = 0
         return seek_to
 
     def skip(self, loop=True, skip_by=None, skip_to=None, set_seek_to=True):
