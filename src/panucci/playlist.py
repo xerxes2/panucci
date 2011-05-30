@@ -545,6 +545,11 @@ class Playlist(ObservableService):
     def set_seek_to_from_current(self):
         self.set_seek_to(self.get_position_duration()[0])
 
+    def reset_all_seek_to(self):
+        self.set_seek_to(self.get_position_duration()[0])
+        for item in self.__queue.get_items():
+            item.seek_to = 0
+
     def get_seek_to(self, reset=True):
         """Get the seek-to position for the current track"""
         if not self.is_empty:
@@ -651,7 +656,7 @@ class Playlist(ObservableService):
         self.__player.on_stop_requested()
         if not self.is_empty and save_resume_point:
             self.get_current_item().save_bookmark(_('Auto Bookmark'), position, True)
-        if not self.is_empty and set_seek_to:
+        if not self.is_empty and set_seek_to and self.config.getboolean("options", "resume_all"):
             self.set_seek_to(position)
 
     def on_player_eof(self):

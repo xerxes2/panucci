@@ -99,6 +99,7 @@ class SettingsDialog():
         vb.pack_start(check_button_factory(self.main.action_scrolling_labels))
         vb.pack_start(check_button_factory(self.main.action_lock_progress))
         vb.pack_start(check_button_factory(self.main.action_dual_action_button))
+        vb.pack_start(check_button_factory(self.main.action_resume_all))
         vb.pack_start(check_button_factory(self.main.action_play_on_headset))
 
         vb.pack_start(gtk.Label('')) # Used as a spacer

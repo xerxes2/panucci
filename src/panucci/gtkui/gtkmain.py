@@ -203,6 +203,9 @@ class PanucciGUI(object):
         self.action_scrolling_labels = gtk.ToggleAction('scrolling_labels', _('Scrolling Labels'), None, None)
         self.action_scrolling_labels.connect("activate", self.scrolling_labels_callback)
         self.action_scrolling_labels.set_active(self.config.getboolean("options", "scrolling_labels"))
+        self.action_resume_all = gtk.ToggleAction('resume_all', _('Resume All'), None, None)
+        self.action_resume_all.connect("activate", self.resume_all_callback)
+        self.action_resume_all.set_active(self.config.getboolean("options", "resume_all"))
         self.action_play_on_headset = gtk.ToggleAction('play_on_headset', _('Play on Headset'), None, None)
         self.action_play_on_headset.connect("activate", self.set_boolean_config_callback)
         self.action_play_on_headset.set_active(self.config.getboolean("options", "play_on_headset"))
@@ -259,6 +262,7 @@ class PanucciGUI(object):
         settings_menu.append(self.action_stay_at_end.create_menu_item())
         settings_menu.append(self.action_seek_back.create_menu_item())
         settings_menu.append(self.action_scrolling_labels.create_menu_item())
+        settings_menu.append(self.action_resume_all.create_menu_item())
         play_mode_menu_item = self.action_play_mode.create_menu_item()
         settings_menu.append(play_mode_menu_item)
         play_mode_menu = gtk.Menu()
@@ -550,6 +554,11 @@ class PanucciGUI(object):
     def scrolling_labels_callback(self, w):
         self.set_boolean_config_callback(w)
         self.__player_tab.title_label.scrolling = w.get_active()
+
+    def resume_all_callback(self, w):
+        self.set_boolean_config_callback(w)
+        if not w.get_active():
+            self.playlist.reset_all_seek_to()
 
     def set_play_mode_callback(self, w):
         self.config.set("options", "play_mode", w.get_name())

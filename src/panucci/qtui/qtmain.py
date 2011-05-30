@@ -117,6 +117,10 @@ class PanucciGUI(object):
             statusTip="Scroll title labels when too long", triggered=self.scrolling_labels_callback)
         self.action_scrolling_labels.setCheckable(True)
         self.action_scrolling_labels.setChecked(self.config.getboolean("options", "scrolling_labels"))
+        self.action_resume_all = QtGui.QAction(_("Resume All").decode("utf-8"), self.main_window, shortcut="Ctrl+R",
+            statusTip="Resume all files automatically", triggered=self.resume_all_callback)
+        self.action_resume_all.setCheckable(True)
+        self.action_resume_all.setChecked(self.config.getboolean("options", "resume_all"))
         self.action_play_mode_all = QtGui.QAction(_("All").decode("utf-8"), self.main_window, statusTip="Set play mode",
             triggered=self.play_mode_all_callback)
         self.action_play_mode_all.setCheckable(True)
@@ -170,6 +174,7 @@ class PanucciGUI(object):
         self.menu_settings.addAction(self.action_stay_at_end)
         self.menu_settings.addAction(self.action_seek_back)
         self.menu_settings.addAction(self.action_scrolling_labels)
+        self.menu_settings.addAction(self.action_resume_all)
         self.menu_play_mode = self.menu_settings.addMenu(_("Play Mode").decode("utf-8"))
         self.menu_play_mode.addAction(self.action_play_mode_all)
         self.menu_play_mode.addAction(self.action_play_mode_single)
@@ -285,6 +290,11 @@ class PanucciGUI(object):
     def scrolling_labels_callback(self):
         self.set_config_option("scrolling_labels", str(self.action_scrolling_labels.isChecked()).lower())
         self.__player_tab.label_title.set_scrolling(self.config.getboolean("options", "scrolling_labels"))
+
+    def resume_all_callback(self):
+        self.set_config_option("resume_all", str(self.action_resume_all.isChecked()).lower())
+        if not self.action_resume_all.isChecked():
+            self.playlist.reset_all_seek_to()
 
     def play_mode_all_callback(self):
         self.set_config_option("play_mode", "all")

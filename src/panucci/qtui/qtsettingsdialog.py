@@ -72,6 +72,10 @@ class SettingsDialog:
         #self.box_seek_back.stateChanged.connect(self.seek_back_callback)
         layout.addWidget(self.box_seek_back)
 
+        self.box_resume_all = QtGui.QCheckBox(_("Resume All").decode("utf-8"))
+        self.box_resume_all.setChecked(self.main.action_resume_all.isChecked())
+        layout.addWidget(self.box_resume_all)
+
         layout.addSpacing(10)
         label = QtGui.QLabel(_("Play Mode").decode("utf-8"))
         label.setAlignment(QtCore.Qt.AlignHCenter)
@@ -118,10 +122,12 @@ class SettingsDialog:
 
         self.global_actions = [self.main.action_scrolling_labels, self.main.action_lock_progress,
             self.main.action_dual_action, self.main.action_stay_at_end, self.main.action_seek_back,
+            self.main.action_resume_all,
             self.main.action_play_mode_all, self.main.action_play_mode_single,
             self.main.action_play_mode_random, self.main.action_play_mode_repeat]
         self.local_actions = [self.box_scrolling_labels, self.box_lock_progress,
             self.box_dual_action, self.box_stay_at_end, self.box_seek_back,
+            self.box_resume_all,
             self.radio_play_mode_all, self.radio_play_mode_single,
             self.radio_play_mode_random, self.radio_play_mode_repeat]
         
