@@ -426,7 +426,6 @@ class Playlist(ObservableService):
             the appropriate loader function """
         self.__log.debug('Attempting to load %s', filepath)
         _play = self.is_empty or (self.end_of_playlist() and not self.get_position_duration()[0])
-        print self.get_position_duration()[0]
         if self.__queue.is_empty():
             _position = 0
         else:

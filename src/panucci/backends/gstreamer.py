@@ -63,7 +63,6 @@ class Player(base.BasePlayer):
         self.__setup_player()
         self.__player.set_property("uri", uri)
         self.__player.set_state(gst.STATE_PAUSED)
-        self.current_uri = uri
         self.initial_pause_position = True
 
     def _pause(self):
@@ -73,7 +72,7 @@ class Player(base.BasePlayer):
         return pos
 
     def _play(self):
-        if self.current_uri and (self.__player or not self._load_media(self.current_uri)):
+        if self.__player:
             self.__player.set_state(gst.STATE_PLAYING)
             self.initial_pause_position = False
             return True
