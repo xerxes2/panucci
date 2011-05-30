@@ -762,7 +762,6 @@ class PlayerTab(ObservableService, gtk.HBox):
         gtkutil.image(self.play_pause_button, 'media-playback-start.png')
         self.play_pause_button.connect( 'clicked',
                                         self.on_btn_play_pause_clicked )
-        self.play_pause_button.set_sensitive(False)
         buttonbox.add(self.play_pause_button)
 
         self.forward_button = create_da(
@@ -808,6 +807,7 @@ class PlayerTab(ObservableService, gtk.HBox):
                 w.unset_flags(gtk.CAN_FOCUS)
 
     def set_controls_sensitivity(self, sensitive):
+        return
         for button in self.forward_button, self.rewind_button, \
                       self.fforward_button, self.rrewind_button:
 
