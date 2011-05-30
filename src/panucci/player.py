@@ -80,7 +80,6 @@ class PanucciPlayer(ForwardingObservableService):
             if self.__initialized:
                 self.play()
 
-        #self.current_file = filepath
         self.__initialized = True
 
     def do_seek(self, from_beginning=None, from_current=None, percent=None):

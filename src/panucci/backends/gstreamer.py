@@ -33,10 +33,15 @@ class Player(base.BasePlayer):
         base.BasePlayer.__init__(self)
         self.__log = logging.getLogger('panucci.backends.GStreamerPlayer')
         self.__player = None
+        # Workaround for weird bug
+        self.initial_pause_position = True
 
     def _get_position_duration(self):
         try:
-            pos_int = self.__player.query_position(gst.FORMAT_TIME, None)[0]
+            if self.initial_pause_position == True:
+                pos_int = 0
+            else:
+                pos_int = self.__player.query_position(gst.FORMAT_TIME, None)[0]
             dur_int = self.__player.query_duration(gst.FORMAT_TIME, None)[0]
         except Exception, e:
             self.__log.exception('Error getting position...')
@@ -59,6 +64,7 @@ class Player(base.BasePlayer):
         self.__player.set_property("uri", uri)
         self.__player.set_state(gst.STATE_PAUSED)
         self.current_uri = uri
+        self.initial_pause_position = True
 
     def _pause(self):
         self.__player.set_state(gst.STATE_PAUSED)
@@ -69,6 +75,7 @@ class Player(base.BasePlayer):
     def _play(self):
         if self.current_uri and (self.__player or not self._load_media(self.current_uri)):
             self.__player.set_state(gst.STATE_PLAYING)
+            self.initial_pause_position = False
             return True
         else:
             return False
@@ -77,8 +84,9 @@ class Player(base.BasePlayer):
         self.notify('stopped', caller=self.stop)
         if self.__player:
             self.__player.set_state(gst.STATE_NULL)
-            self.__player.set_state(gst.STATE_PAUSED)
             self.set_position_duration(0, 0)
+            self.initial_pause_position = True
+            self.__player.set_state(gst.STATE_PAUSED)
             if player:
                 self.__player.set_state(gst.STATE_NULL)
                 self.__player = None
@@ -92,6 +100,7 @@ class Player(base.BasePlayer):
             self.__log.exception( 'Error seeking' )
             error = True
         self.seeking = False
+        self.initial_pause_position = False
         return not error
 
     def __setup_player(self):

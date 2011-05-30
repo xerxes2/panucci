@@ -425,7 +425,8 @@ class Playlist(ObservableService):
         """ Detects filepath's filetype then loads it using
             the appropriate loader function """
         self.__log.debug('Attempting to load %s', filepath)
-        _play = self.__queue.is_empty() or (self.end_of_playlist() and self.null)
+        _play = self.is_empty or (self.end_of_playlist() and not self.get_position_duration()[0])
+        print self.get_position_duration()[0]
         if self.__queue.is_empty():
             _position = 0
         else:
@@ -435,7 +436,7 @@ class Playlist(ObservableService):
         if os.path.isdir(filepath):
             self.load_directory(filepath, True)
         else:
-            parsers = { 'm3u': playlistformat.M3U_Playlist, 'pls': playlistformat.PLS_Playlist }
+            parsers = {'m3u': playlistformat.M3U_Playlist, 'pls': playlistformat.PLS_Playlist}
             extension = util.detect_filetype(filepath)
             if parsers.has_key(extension): # importing a playlist
                 self.__log.info('Loading playlist file (%s)', extension)
@@ -664,7 +665,6 @@ class Playlist(ObservableService):
         else:
             if self.end_of_playlist():
                 if not self.config.getboolean("options", "stay_at_end"):
-                   #self.next(False)
                    self.stop(set_seek_to=False)
             else:
                 self.next(loop=False, set_seek_to=False)
