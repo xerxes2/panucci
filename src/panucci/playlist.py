@@ -148,13 +148,7 @@ class Playlist(ObservableService):
         return self.save_to_new_playlist(panucci.PLAYLIST_FILE)
 
     def on_queue_current_item_changed(self):
-        if os.path.isfile(self.__queue.current_item.filepath):
-            self.new_track_loaded()
-            #self.notify( 'new-track-loaded', caller=self.on_queue_current_item_changed )
-            #self.notify('new-metadata-available', caller=self.on_queue_current_item_changed)
-        else:
-            #self.player.notify("eof", caller=self.on_queue_current_item_changed)
-            self.on_player_eof()
+        self.new_track_loaded()
 
     def send_metadata(self):
         self.notify( 'new-metadata-available', caller=self.send_metadata )
@@ -162,12 +156,12 @@ class Playlist(ObservableService):
     def start_of_playlist(self):
         """Checks if the currently played item is the first"""
         if self.__queue.current_item_position == 0:
-            return True 
+            return True
 
     def end_of_playlist(self):
         """Checks if the currently played item is the last"""
         if len(self.__queue.get_items()) - 1 == self.__queue.current_item_position:
-            return True 
+            return True
 
     def get_formatted_position(self, pos=None):
         """ Gets the current position and converts it to a human-readable str.
@@ -736,9 +730,12 @@ class Playlist(ObservableService):
         return self.__player.seeking
 
     def new_track_loaded(self):
-        self.__player.load_media(self.current_filepath)
-        self.notify('new-track-loaded', caller=self.new_track_loaded)
-        self.notify( 'new-metadata-available', caller=self.new_track_loaded )
+        if os.path.isfile(self.current_filepath):
+            self.__player.load_media(self.current_filepath)
+            self.notify('new-track-loaded', caller=self.new_track_loaded)
+            self.notify('new-metadata-available', caller=self.new_track_loaded)
+        elif not self.end_of_playlist():
+            self.on_player_eof()
 
     def reset_player(self):
         self.__player.on_reset_playlist()
