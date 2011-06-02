@@ -669,6 +669,7 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.recent_files = []
         self.make_player_tab()
         self.has_coverart = False
+        self.reset_progress()
 
         self.playlist.register('stopped', self.on_player_stopped)
         self.playlist.register('playing', self.on_player_playing)
@@ -882,7 +883,6 @@ class PlayerTab(ObservableService, gtk.HBox):
         self.reset_progress()
 
     def reset_progress(self):
-        self.progress.set_fraction(0)
         self.set_progress_callback(0,0)
         self.__gui_root.main_window.set_title("Panucci")
 

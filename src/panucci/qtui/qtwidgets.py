@@ -77,7 +77,7 @@ class ScrollingLabel(QtGui.QGraphicsView):
         self.setScene(self.scene)
         self.scene.setBackgroundBrush(self.palette().window())
 
-        self.text_item = self.scene.addText("Pannuci")
+        self.text_item = self.scene.addText("")
         color = QtGui.QColor("#" + self.config.get("options", "scrolling_color"))
         self.text_item.setDefaultTextColor(color)
         self.height = self.text_item.boundingRect().height() + 10

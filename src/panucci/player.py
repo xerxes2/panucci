@@ -65,13 +65,6 @@ class PanucciPlayer(ForwardingObservableService):
             self.__log.critical("No player available")
             raise AttributeError
 
-    def on_new_track(self, filepath):
-        """ New track callback; loads the new track. """
-        if filepath:
-            if filepath.startswith('/'):
-                filepath = 'file://' + filepath
-            self.load_media(filepath)
-
     def do_seek(self, from_beginning=None, from_current=None, percent=None):
         pos, dur = self.get_position_duration()
         pos_sec = max(0, pos / 10**9)

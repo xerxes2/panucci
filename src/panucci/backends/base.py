@@ -82,6 +82,8 @@ class BasePlayer(services.ObservableService):
                           Eg. file:///mnt/music/some-file.ogg
             Returns: Nothing
         """
+        if uri.startswith('/'):
+            uri = 'file://' + uri
         self.current_uri = uri
         return self._load_media(uri)
 

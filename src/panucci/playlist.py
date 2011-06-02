@@ -426,7 +426,7 @@ class Playlist(ObservableService):
             the appropriate loader function """
         self.__log.debug('Attempting to load %s', filepath)
         _play = self.is_empty or (self.end_of_playlist() and not self.get_position_duration()[0])
-        if self.__queue.is_empty():
+        if self.is_empty:
             _position = 0
         else:
             _position = len(self.__queue)
@@ -455,7 +455,7 @@ class Playlist(ObservableService):
         # happen if load_from_bookmark changes the current track), the player
         # will start playing and ingore the resume point
         self.__queue.modified = True
-        if _play:
+        if _play and not self.is_empty:
             if not self.null:
                 self.stop(False, False)
             if _position == 0:
@@ -736,7 +736,7 @@ class Playlist(ObservableService):
         return self.__player.seeking
 
     def new_track_loaded(self):
-        self.__player.on_new_track(self.current_filepath)
+        self.__player.load_media(self.current_filepath)
         self.notify('new-track-loaded', caller=self.new_track_loaded)
         self.notify( 'new-metadata-available', caller=self.new_track_loaded )
 
