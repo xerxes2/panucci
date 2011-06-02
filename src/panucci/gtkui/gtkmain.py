@@ -843,6 +843,7 @@ class PlayerTab(ObservableService, gtk.HBox):
             self.set_progress_callback( 0, estimated_length )
 
     def on_player_playing(self):
+        self.progress_timer_callback()
         self.start_progress_timer()
         gtkutil.image(self.play_pause_button, 'media-playback-pause.png')
         self.set_controls_sensitivity(True)
@@ -912,8 +913,8 @@ class PlayerTab(ObservableService, gtk.HBox):
         if self.playlist.playing and not self.playlist.seeking:
             pos_int, dur_int = self.playlist.get_position_duration()
             # This prevents bogus values from being set while seeking
-            if ( pos_int > 10**9 ) and ( dur_int > 10**9 ):
-                self.set_progress_callback( pos_int, dur_int )
+            if pos_int >= 0 and dur_int >= 0:
+                self.set_progress_callback(pos_int, dur_int)
         return True
 
     def start_progress_timer( self ):

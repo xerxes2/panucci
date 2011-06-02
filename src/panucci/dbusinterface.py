@@ -141,9 +141,10 @@ class panucciInterface(dbus.service.Object):
             #    self.gui.set_progress_indicator(new_file)
 
             if new_file:
-                self.playlist.load(uri)
-                self.playlist.last()
+                self.playlist.load(uri, play=False)
+                self.playlist.last(play=False)
                 self.playlist.set_seek_to(seconds, True)
+                self.playlist.play()
             elif not self.playlist.playing:
                 self.playlist.play_pause_toggle()
             #else:

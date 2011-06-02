@@ -66,21 +66,11 @@ class PanucciPlayer(ForwardingObservableService):
             raise AttributeError
 
     def on_new_track(self, filepath):
-        """ New track callback; stops the player and starts the new track. """
-
+        """ New track callback; loads the new track. """
         if filepath:
             if filepath.startswith('/'):
                 filepath = 'file://' + filepath
-
             self.load_media(filepath)
-
-            # This is just here to prevent the player from starting to play
-            # when it is first opened. The first time this function is called it
-            # doesn't run self.play(), but otherwise it will.
-            if self.__initialized:
-                self.play()
-
-        self.__initialized = True
 
     def do_seek(self, from_beginning=None, from_current=None, percent=None):
         pos, dur = self.get_position_duration()

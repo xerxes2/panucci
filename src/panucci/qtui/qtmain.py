@@ -439,6 +439,7 @@ class PlayerTab(ObservableService):
         #self.set_controls_sensitivity(False)
 
     def on_player_playing(self):
+        self.timer_callback()
         self.start_progress_timer()
         self.button_play.setIcon(self.icon_pause)
         #self.set_controls_sensitivity(True)
@@ -516,13 +517,13 @@ class PlayerTab(ObservableService):
         if self.playlist.playing and not self.playlist.seeking:
             pos_int, dur_int = self.playlist.get_position_duration()
             # This prevents bogus values from being set while seeking
-            if ( pos_int > 10**9 ) and ( dur_int > 10**9 ):
+            if pos_int >= 0 and dur_int >= 0:
                 self.set_progress_callback( pos_int, dur_int )
         return True
 
     def start_progress_timer( self ):
         self.timer.start()
-        
+
     def stop_progress_timer( self ):
         self.timer.stop()
 

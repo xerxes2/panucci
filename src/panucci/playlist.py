@@ -211,8 +211,8 @@ class Playlist(ObservableService):
         if same_pos:
             if self.playing or seek_position == 0:
                 self.do_seek(seek_position)
-            if not self.playing:
-                self.play()
+        if not self.playing:
+            self.play()
 
         return True
 
@@ -421,7 +421,7 @@ class Playlist(ObservableService):
     # File importing functions
     ##################################
 
-    def load(self, filepath):
+    def load(self, filepath, play=True):
         """ Detects filepath's filetype then loads it using
             the appropriate loader function """
         self.__log.debug('Attempting to load %s', filepath)
@@ -454,17 +454,20 @@ class Playlist(ObservableService):
         # if we let the queue emit a current_item_changed signal (which will
         # happen if load_from_bookmark changes the current track), the player
         # will start playing and ingore the resume point
+        self.__queue.modified = True
         if _play:
-            self.__queue.set_current_item_position(_position)
+            if not self.null:
+                self.stop(False, False)
             if _position == 0:
                 self.__queue.disable_notifications = True
                 self.load_from_resume_bookmark()
                 self.__queue.disable_notifications = False
-            self.__queue.modified = True
+            else:
+                self.__queue.set_current_item_position(_position)
             #self.notify( 'stop-requested', caller=self.load )
-            if not self.null:
-                self.stop(False, False)
             self.new_track_loaded()
+            if play:
+                self.play()
             #self.notify( 'new-track-loaded', caller=self.load )
             #self.notify( 'new-metadata-available', caller=self.load )
 
@@ -473,7 +476,7 @@ class Playlist(ObservableService):
     def load_last_played(self):
         recent = self.get_recent_files(max_files=1)
         if recent:
-            self.load(recent[0])
+            self.load(recent[0], False)
         return bool(recent)
 
     def __file_queued(self, filepath, successfull, notify):
@@ -560,7 +563,7 @@ class Playlist(ObservableService):
             seek_to = 0
         return seek_to
 
-    def skip(self, loop=True, skip_by=None, skip_to=None, set_seek_to=True):
+    def skip(self, loop=True, skip_by=None, skip_to=None, set_seek_to=True, play=True):
         """ Skip to another track in the playlist.
             Use either skip_by or skip_to, skip_by has precedence.
                 skip_to: skip to a known playlist position
@@ -604,8 +607,9 @@ class Playlist(ObservableService):
         #self.notify('stop-requested', caller=self.skip)
         self.stop(False, set_seek_to)
         self.__queue.current_item_position = skip
-        self.__log.debug( 'Skipping to file %d (%s)', skip,
-                          self.__queue.current_item.filepath )
+        self.__log.debug('Skipping to file %d (%s)', skip, self.__queue.current_item.filepath)
+        if play:
+            self.play()
 
         return True
 
@@ -618,10 +622,10 @@ class Playlist(ObservableService):
         """ Same as next() except moves to the previous track. """
         return self.skip(False, -1, None, set_seek_to)
 
-    def last(self, set_seek_to=True):
+    def last(self, set_seek_to=True, play=True):
         """ Plays last file in queue. """
         skip_to = len(self.__queue.get_items()) - 1
-        return self.skip(False, None, skip_to, set_seek_to)
+        return self.skip(False, None, skip_to, set_seek_to, play)
 
     def random(self, set_seek_to=True):
         """ Plays random file in queue. """
