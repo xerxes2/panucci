@@ -359,11 +359,6 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def player_play_callback(self):
         self.playlist.play_pause_toggle()
-        self.on_play_pause.emit()
-        if self.action_player_play.isChecked():
-            self.timer.start()
-        else:
-            self.timer.stop()
 
     def do_seek(self, seek_amount):
         resp = self.playlist.do_seek(from_current=seek_amount*10**9)
@@ -449,7 +444,8 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def on_player_stopped(self):
         self.timer.stop()
-        #self.button_play.setIcon(self.icon_play)
+        self.action_player_play.setChecked(False)
+        self.on_play_pause.emit()
         if self.metadata:
             estimated_length = self.metadata.get('length', 0)
             self.set_progress_callback( 0, estimated_length )
@@ -459,12 +455,14 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     def on_player_playing(self):
         self.timer_callback()
         self.timer.start()
-        #self.button_play.setIcon(self.icon_pause)
+        self.action_player_play.setChecked(True)
+        self.on_play_pause.emit()
         #self.set_controls_sensitivity(True)
 
     def on_player_paused( self, position, duration ):
         self.timer.stop()
-        #self.button_play.setIcon(self.icon_play)
+        self.action_player_play.setChecked(False)
+        self.on_play_pause.emit()
         #self.set_progress_callback( position, duration )
 
     def on_player_new_track(self):
@@ -474,6 +472,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         #self.label_cover.hide()
         self.on_set_progress.emit()
         self.on_set_metadata.emit()
+        self.main_window.setWindowTitle("Panucci")
 
     def on_player_new_metadata(self):
         self.metadata = self.playlist.get_file_metadata()
@@ -484,6 +483,10 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.on_set_progress.emit()
         self.on_set_metadata.emit()
         self.set_text_x()
+        _title = self.metadata["title"]
+        if len(_title) > 25:
+            _title = _title[:24] + '...'
+        self.main_window.setWindowTitle(_title)
 
     def on_player_end_of_playlist(self, loop):
         if not loop:
@@ -504,6 +507,6 @@ class ImageProvider(QtDeclarative.QDeclarativeImageProvider):
     def requestPixmap(self, id, size, requestedSize):
         size = requestedSize.width()
         pixmap = QtGui.QPixmap()
-        pixmap.loadFromData(self.__main.metadata['image'])    
+        pixmap.loadFromData(self.__main.metadata['image'])
         pixmap = pixmap.scaled(size, size, mode=QtCore.Qt.SmoothTransformation)
         return pixmap
