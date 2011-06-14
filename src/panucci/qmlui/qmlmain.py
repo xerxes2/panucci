@@ -17,6 +17,7 @@
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+import os
 import logging
 
 from PySide import QtCore
@@ -27,6 +28,7 @@ import panucci
 from panucci import util
 from panucci import platform
 from panucci import playlist
+from panucci import about
 from panucci.dbusinterface import interface
 from panucci.services import ObservableService
 
@@ -104,26 +106,35 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         # File menu
         self.action_add_file = QtGui.QAction(QtGui.QIcon(':/actions/add.png'), _("Add File").decode("utf-8"), self.main_window, shortcut="Ctrl+A",
             statusTip="Add file to playlist", triggered=self.add_file_callback)
+        self.context.setContextProperty('action_add_file', self.action_add_file)
         self.action_add_folder = QtGui.QAction(QtGui.QIcon(':/images/open.png'), _("Add Folder").decode("utf-8"), self.main_window, shortcut="Ctrl+D",
             statusTip="Add folder to playlist", triggered=self.add_folder_callback)
+        self.context.setContextProperty('action_add_folder', self.action_add_folder)
         self.action_play_one = QtGui.QAction(QtGui.QIcon(''), _("Play One").decode("utf-8"), self.main_window, shortcut="Ctrl+O",
             statusTip="Play one file", triggered=self.play_one_callback)
+        self.context.setContextProperty('action_play_one', self.action_play_one)
         self.action_save_playlist = QtGui.QAction(QtGui.QIcon(':/images/save.png'), _("Save Playlist").decode("utf-8"), self.main_window, shortcut="Ctrl+W",
             statusTip="Save current playlist as m3u", triggered=self.save_playlist_callback)
+        self.context.setContextProperty('action_save_playlist', self.action_save_playlist)
         self.action_clear_playlist = QtGui.QAction(QtGui.QIcon(':/images/trashcan.png'), _("Clear Playlist").decode("utf-8"), self.main_window, shortcut="Ctrl+H",
             statusTip="Clear current playlist", triggered=self.clear_playlist_callback)
+        self.context.setContextProperty('action_clear_playlist', self.action_clear_playlist)
         self.action_delete_bookmarks = QtGui.QAction(QtGui.QIcon(':/images/trashcan.png'), _("Delete All Bookmarks").decode("utf-8"), self.main_window, shortcut="Ctrl+K",
             statusTip="Delete all bookmarks", triggered=self.delete_bookmarks_callback)
+        self.context.setContextProperty('action_delete_bookmarks', self.action_delete_bookmarks)
         self.action_quit = QtGui.QAction(QtGui.QIcon('/usr/share/icons/gnome/16x16/actions/exit.png'), "Quit", self.main_window, shortcut="Ctrl+Q",
             statusTip="Exit the application", triggered=self.quit_panucci)
         self.context.setContextProperty('action_quit', self.action_quit)
         # Tools menu
         self.action_playlist = QtGui.QAction(_("Playlist"), self.main_window, shortcut="Ctrl+P",
             statusTip=_("Open playlist"), triggered=self.playlist_callback)
+        self.context.setContextProperty('action_playlist', self.action_playlist)
         self.action_settings = QtGui.QAction(_("Settings"), self.main_window, shortcut="Ctrl+C",
             statusTip=_("Open settings dialog"), triggered=self.settings_callback)
+        self.context.setContextProperty('action_setings', self.action_settings)
         self.action_timer = QtGui.QAction(_("Sleep Timer"), self.main_window, shortcut="Ctrl+T",
             statusTip=_("Start a timed shutdown"), triggered=self.create_timer_dialog)
+        self.context.setContextProperty('action_timer', self.action_timer)
         # Settings menu
         self.action_lock_progress = QtGui.QAction(_("Lock Progress Bar").decode("utf-8"), self.main_window, shortcut="Ctrl+L",
             statusTip="Lock progress bar", triggered=self.lock_progress_callback)
@@ -178,6 +189,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         # help menu
         self.action_about = QtGui.QAction(QtGui.QIcon('about.png'), _("About").decode("utf-8"), self.main_window,
             statusTip="Show about dialog", triggered=self.about_callback)
+        self.context.setContextProperty('action_about', self.action_about)
         # Player
         self.action_player_rrewind = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.main_window,
             triggered=self.player_rrewind_callback)
@@ -201,6 +213,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.action_player_skip_forward = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.main_window,
             triggered=self.player_skip_forward_callback)
         self.context.setContextProperty('action_player_skip_forward', self.action_player_skip_forward)
+        self.action_bookmark = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.main_window,
+            triggered=self.bookmark_callback)
+        self.context.setContextProperty('action_bookmark', self.action_bookmark)
 
     def create_menus(self):
         # Player menu
@@ -235,6 +250,10 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def show_main_window(self):
         self.main_window.activateWindow()
+
+    def show_context_menu(self, actions):
+        self.context_menu_actions = actions
+        self.root.open_context_menu(self.context_menu_actions)
 
     def add_file_callback(self):
         filenames = qtutil.get_file_from_filechooser(self)
@@ -327,8 +346,10 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.set_config_option("play_mode", "repeat")
 
     def about_callback(self):
-        from panucci.qtui import qtaboutdialog
-        qtaboutdialog.AboutDialog(self.main_window, panucci.__version__)
+        #from panucci.qtui import qtaboutdialog
+        #qtaboutdialog.AboutDialog(self.main_window, panucci.__version__)
+        self.view.rootObject().openAboutDialog([about.about_name+" "+panucci.__version__, about.about_text,
+                                                about.about_copyright, about.about_website])
 
     def set_config_option(self, option, value):
         self.config.set("options", option, value)
@@ -359,6 +380,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def player_play_callback(self):
         self.playlist.play_pause_toggle()
+
+    def bookmark_callback(self):
+        self.view.rootObject().openContextMenu([self.action_about, self.action_about, self.action_about, self.action_about])
 
     def do_seek(self, seek_amount):
         resp = self.playlist.do_seek(from_current=seek_amount*10**9)
@@ -498,6 +522,10 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.on_player_new_track()
         self.reset_progress()
         self.main_window.setWindowTitle("Panucci")
+
+    @QtCore.Slot(str)
+    def open_external_url(self, url):
+        os.system("xdg-open " + url)
 
 class ImageProvider(QtDeclarative.QDeclarativeImageProvider):
     def __init__(self, main):

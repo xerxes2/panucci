@@ -39,7 +39,7 @@ if not os.path.exists('data/panucci.service') and 'clean' not in sys.argv:
 
 DATA_FILES = [
     ('share/panucci', glob.glob('icons/*.png')),
-    ('share/panucci', glob.glob('data/ui/qml/*.qml')),
+    ('share/panucci', glob.glob('data/ui/qml/*')),
     ('share/panucci', ['data/panucci.conf', 'data/panucci-all.conf']),
     ('share/applications', ['data/panucci.desktop']),
     ('share/icons/hicolor/scalable/apps', ['data/panucci.svg']),

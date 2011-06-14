@@ -1,11 +1,24 @@
 
 import Qt 4.7
 
+import 'config.js' as Config
+
 Rectangle {
+    id: root
     color: "#" + config.background
     width: config.main_width
     height: config.main_height
 
+    function openContextMenu(items) {
+        contextMenu.state = 'opened'
+        contextMenu.items = [action_add_file, action_add_folder, 
+            action_play_one, action_save_playlist, action_clear_playlist, action_delete_bookmarks,
+            action_about, action_quit]
+    }
+    function openAboutDialog(items) {
+        aboutDialog.state = 'opened'
+        aboutDialog.items = items
+    }
     function set_text_x() {
         if (cover.source == "") {
             artist.x = (config.main_width - artist.width) / 2
@@ -13,7 +26,6 @@ Rectangle {
             title_rect.x = 5
             title_rect.width = config.main_width - 10
             title.x = (config.main_width - title.width) / 2
-            
         }
         else {
             artist.x = config.cover_height + 5
@@ -87,7 +99,7 @@ Rectangle {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: action_player_play.trigger()
+            onClicked: {action_player_play.trigger()}
         }
     }
     Text {
@@ -157,7 +169,6 @@ Rectangle {
         font.pixelSize: config.font_size
         text: main.time_string
         verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignRight
     }
     Rectangle {
         x: 0
@@ -298,6 +309,103 @@ Rectangle {
         anchors.centerIn: parent
         smooth: true
         source: "bookmark-new.png"
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: action_bookmark.trigger()
+        }
+    }
+    ContextMenu {
+        id: contextMenu
+        width: parent.width
+        opacity: 0
+
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+        }
+
+        onClose: contextMenu.state = 'closed'
+        //onResponse: controller.contextMenuResponse(index)
+
+        state: 'closed'
+
+        Behavior on opacity { NumberAnimation { duration: Config.fadeTransition } }
+
+        states: [
+            State {
+                name: 'opened'
+                PropertyChanges {
+                    target: contextMenu
+                    opacity: 1
+                }
+                AnchorChanges {
+                    target: contextMenu
+                    anchors.right: root.right
+                }
+            },
+            State {
+                name: 'closed'
+                PropertyChanges {
+                    target: contextMenu
+                    opacity: 0
+                }
+                AnchorChanges {
+                    target: contextMenu
+                    anchors.right: root.left
+                }
+                StateChangeScript {
+                    //script: controller.contextMenuClosed()
+                }
+            }
+        ]
+
+        transitions: Transition {
+            AnchorAnimation { duration: Config.slowTransition }
+        }
+    }
+    AboutDialog {
+        id: aboutDialog
+        width: parent.width
+        opacity: 0
+
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+        }
+        onClose: aboutDialog.state = 'closed'
+        state: 'closed'
+        Behavior on opacity { NumberAnimation { duration: Config.fadeTransition } }
+
+        states: [
+            State {
+                name: 'opened'
+                PropertyChanges {
+                    target: aboutDialog
+                    opacity: 1
+                }
+                AnchorChanges {
+                    target: aboutDialog
+                    anchors.right: root.right
+                }
+            },
+            State {
+                name: 'closed'
+                PropertyChanges {
+                    target: aboutDialog
+                    opacity: 0
+                }
+                AnchorChanges {
+                    target: aboutDialog
+                    anchors.right: root.left
+                }
+                StateChangeScript {
+                    //script: controller.contextMenuClosed()
+                }
+            }
+        ]
+        transitions: Transition {
+            AnchorAnimation { duration: Config.slowTransition }
         }
     }
 }
