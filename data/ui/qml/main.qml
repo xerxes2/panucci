@@ -15,7 +15,7 @@ Rectangle {
         contextMenu.state = 'opened'
         contextMenu.items = [action_add_media, action_playlist, action_settings,
             action_play_one, action_save_playlist, action_clear_playlist, action_delete_bookmarks,
-            action_about, action_quit]
+            action_timer, action_about, action_quit]
     }
     function openAboutDialog(items) {
         aboutDialog.state = 'opened'
@@ -35,6 +35,9 @@ Rectangle {
         filechooser.path = path
         if (action)
             filechooser.action = action
+    }
+    function openSleepTimer() {
+        sleepTimer.state = 'opened'
     }
     function set_text_x() {
         if (cover.source == "") {
@@ -166,9 +169,9 @@ Rectangle {
         MouseArea {
             anchors.fill: parent
             onClicked: main.on_progress_clicked(mouseX / progressBar.width)
-            //onClicked: console.log(mouseX / progressBar.width)
         }
         Rectangle {
+            width: parent.width*main.progress
             color: "#" + config.progress_color
             clip: true
             anchors {
@@ -176,7 +179,6 @@ Rectangle {
                 bottom: parent.bottom
                 left: parent.left
             }
-            width: parent.width*main.progress
         }
     }
     Text {
@@ -545,6 +547,50 @@ Rectangle {
                 }
                 AnchorChanges {
                     target: settings
+                    anchors.right: root.left
+                }
+                StateChangeScript {
+                    //script: controller.contextMenuClosed()
+                }
+            }
+        ]
+        transitions: Transition {
+            AnchorAnimation { duration: 150 }
+        }
+    }
+    SleepTimer {
+        id: sleepTimer
+        width: parent.width
+        opacity: 0
+
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+        }
+        onClose: sleepTimer.state = 'closed'
+        state: 'closed'
+        Behavior on opacity { NumberAnimation { duration: 300 } }
+
+        states: [
+            State {
+                name: 'opened'
+                PropertyChanges {
+                    target: sleepTimer
+                    opacity: 1
+                }
+                AnchorChanges {
+                    target: sleepTimer
+                    anchors.right: root.right
+                }
+            },
+            State {
+                name: 'closed'
+                PropertyChanges {
+                    target: sleepTimer
+                    opacity: 0
+                }
+                AnchorChanges {
+                    target: sleepTimer
                     anchors.right: root.left
                 }
                 StateChangeScript {

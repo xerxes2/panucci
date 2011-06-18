@@ -102,8 +102,10 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             statusTip=_("Open settings dialog"), triggered=self.settings_callback)
         self.context.setContextProperty('action_settings', self.action_settings)
         self.action_timer = QtGui.QAction(_("Sleep Timer"), self.main_window, shortcut="Ctrl+T",
-            statusTip=_("Start a timed shutdown"), triggered=self.create_timer_dialog)
+            statusTip=_("Start a timed shutdown"), triggered=self.sleep_timer_callback)
         self.context.setContextProperty('action_timer', self.action_timer)
+        self.shutdown_str = _("Shutdown time in minutes")
+        self.context.setContextProperty('shutdown_str', self.shutdown_str)
         # Settings menu
         self.main_window_str = _("Main Window")
         self.context.setContextProperty('main_window_str', self.main_window_str)
@@ -220,12 +222,6 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.config_qml["button_width"] = (self.config_qml["main_width"] / 6) - 7
         return self.config_qml
 
-    def create_timer_dialog(self):
-        response = QtGui.QInputDialog.getInteger(self.main_window, _("Sleep Timer"), _("Shutdown time in minutes"),
-                       value=5, minValue=1)
-        if response[1]:
-            QtCore.QTimer.singleShot(60000*response[0], self.quit_panucci)
-
     def quit_panucci(self):
         self.main_window.hide()
         self.playlist.quit()
@@ -303,6 +299,13 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def clear_playlist_callback(self):
         self.playlist.reset_playlist()
+
+    def sleep_timer_callback(self):
+        self.view.rootObject().openSleepTimer()
+
+    @QtCore.Slot(str)
+    def start_timed_shutdown(self, _minutes):
+        QtCore.QTimer.singleShot(60000*int(_minutes), self.quit_panucci)
 
     @QtCore.Slot(str, str)
     def remove_callback(self, _id, _bid):

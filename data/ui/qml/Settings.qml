@@ -342,9 +342,9 @@ Item {
         smooth: true
 
         Image {
-        anchors.centerIn: parent
-        smooth: true
-        source: "apply.png"
+            anchors.centerIn: parent
+            smooth: true
+            source: "apply.png"
         }
         MouseArea {
             anchors.fill: parent
