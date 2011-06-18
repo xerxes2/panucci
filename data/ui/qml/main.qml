@@ -1,23 +1,40 @@
 
 import Qt 4.7
 
-import 'config.js' as Config
-
 Rectangle {
     id: root
     color: "#" + config.background
     width: config.main_width
     height: config.main_height
 
-    function openContextMenu(items) {
+    MouseArea {
+        anchors.fill: parent
+        onClicked: openContextMenu()
+    }
+    function openContextMenu() {
         contextMenu.state = 'opened'
-        contextMenu.items = [action_add_file, action_add_folder, 
+        contextMenu.items = [action_add_media, action_playlist, action_settings,
             action_play_one, action_save_playlist, action_clear_playlist, action_delete_bookmarks,
             action_about, action_quit]
     }
     function openAboutDialog(items) {
         aboutDialog.state = 'opened'
         aboutDialog.items = items
+    }
+    function openPlaylist(open, items) {
+        if (open)
+            playlist.state = 'opened'
+        playlist.items = items
+    }
+    function openSettings() {
+        settings.state = 'opened'
+    }
+    function openFilechooser(items, path, action) {
+        filechooser.state = 'opened'
+        filechooser.items = items
+        filechooser.path = path
+        if (action)
+            filechooser.action = action
     }
     function set_text_x() {
         if (cover.source == "") {
@@ -138,7 +155,6 @@ Rectangle {
             property int scrolling_margin
         }
     }
-    
     Rectangle {
         id: progressBar
         x: 0
@@ -178,14 +194,14 @@ Rectangle {
         height: config.button_height
         border.color: "#" + config.button_border_color
         border.width: config.button_border_width
-        radius: 10
+        radius: config.button_radius
         smooth: true
 
         Image {
-        id: image_back
-        anchors.centerIn: parent
-        smooth: true
-        source: "media-skip-backward.png"
+            id: image_back
+            anchors.centerIn: parent
+            smooth: true
+            source: "media-skip-backward.png"
         }
         MouseArea {
             anchors.fill: parent
@@ -208,13 +224,13 @@ Rectangle {
         height: config.button_height
         border.color: "#" + config.button_border_color
         border.width: config.button_border_width
-        radius: 10
+        radius: config.button_radius
         smooth: true
 
         Image {
-        anchors.centerIn: parent
-        smooth: true
-        source: "media-seek-backward.png"
+            anchors.centerIn: parent
+            smooth: true
+            source: "media-seek-backward.png"
         }
         MouseArea {
             anchors.fill: parent
@@ -229,14 +245,14 @@ Rectangle {
         height: config.button_height
         border.color: "#" + config.button_border_color
         border.width: config.button_border_width
-        radius: 10
+        radius: config.button_radius
         smooth: true
 
         Image {
-        id: player_play
-        anchors.centerIn: parent
-        smooth: true
-        source: main.play_pause_icon_path
+            id: player_play
+            anchors.centerIn: parent
+            smooth: true
+            source: main.play_pause_icon_path
         }
         MouseArea {
             anchors.fill: parent
@@ -251,13 +267,13 @@ Rectangle {
         height: config.button_height
         border.color: "#" + config.button_border_color
         border.width: config.button_border_width
-        radius: 10
+        radius: config.button_radius
         smooth: true
 
         Image {
-        anchors.centerIn: parent
-        smooth: true
-        source: "media-seek-forward.png"
+            anchors.centerIn: parent
+            smooth: true
+            source: "media-seek-forward.png"
         }
         MouseArea {
             anchors.fill: parent
@@ -272,14 +288,14 @@ Rectangle {
         height: config.button_height
         border.color: "#" + config.button_border_color
         border.width: config.button_border_width
-        radius: 10
+        radius: config.button_radius
         smooth: true
 
         Image {
-        id: image_forward
-        anchors.centerIn: parent
-        smooth: true
-        source: "media-skip-forward.png"
+            id: image_forward
+            anchors.centerIn: parent
+            smooth: true
+            source: "media-skip-forward.png"
         }
         MouseArea {
             anchors.fill: parent
@@ -302,17 +318,17 @@ Rectangle {
         height: config.button_height
         border.color: "#" + config.button_border_color
         border.width: config.button_border_width
-        radius: 10
+        radius: config.button_radius
         smooth: true
 
         Image {
-        anchors.centerIn: parent
-        smooth: true
-        source: "bookmark-new.png"
+            anchors.centerIn: parent
+            smooth: true
+            source: "bookmark-new.png"
         }
         MouseArea {
             anchors.fill: parent
-            onClicked: action_bookmark.trigger()
+            onClicked: main.bookmark_callback()
         }
     }
     ContextMenu {
@@ -330,7 +346,7 @@ Rectangle {
 
         state: 'closed'
 
-        Behavior on opacity { NumberAnimation { duration: Config.fadeTransition } }
+        Behavior on opacity { NumberAnimation { duration: 300 } }
 
         states: [
             State {
@@ -361,7 +377,7 @@ Rectangle {
         ]
 
         transitions: Transition {
-            AnchorAnimation { duration: Config.slowTransition }
+            AnchorAnimation { duration: 150 }
         }
     }
     AboutDialog {
@@ -375,7 +391,7 @@ Rectangle {
         }
         onClose: aboutDialog.state = 'closed'
         state: 'closed'
-        Behavior on opacity { NumberAnimation { duration: Config.fadeTransition } }
+        Behavior on opacity { NumberAnimation { duration: 300 } }
 
         states: [
             State {
@@ -405,7 +421,139 @@ Rectangle {
             }
         ]
         transitions: Transition {
-            AnchorAnimation { duration: Config.slowTransition }
+            AnchorAnimation { duration: 150 }
+        }
+    }
+    Playlist {
+        id: playlist
+        width: parent.width
+        opacity: 0
+
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+        }
+        onClose: playlist.state = 'closed'
+        state: 'closed'
+        Behavior on opacity { NumberAnimation { duration: 300 } }
+
+        states: [
+            State {
+                name: 'opened'
+                PropertyChanges {
+                    target: playlist
+                    opacity: 1
+                }
+                AnchorChanges {
+                    target: playlist
+                    anchors.right: root.right
+                }
+            },
+            State {
+                name: 'closed'
+                PropertyChanges {
+                    target: playlist
+                    opacity: 0
+                }
+                AnchorChanges {
+                    target: playlist
+                    anchors.right: root.left
+                }
+                StateChangeScript {
+                    //script: controller.contextMenuClosed()
+                }
+            }
+        ]
+        transitions: Transition {
+            AnchorAnimation { duration: 150 }
+        }
+    }
+    Filechooser {
+        id: filechooser
+        width: parent.width
+        opacity: 0
+
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+        }
+        onClose: filechooser.state = 'closed'
+        state: 'closed'
+        Behavior on opacity { NumberAnimation { duration: 300 } }
+
+        states: [
+            State {
+                name: 'opened'
+                PropertyChanges {
+                    target: filechooser
+                    opacity: 1
+                }
+                AnchorChanges {
+                    target: filechooser
+                    anchors.right: root.right
+                }
+            },
+            State {
+                name: 'closed'
+                PropertyChanges {
+                    target: filechooser
+                    opacity: 0
+                }
+                AnchorChanges {
+                    target: filechooser
+                    anchors.right: root.left
+                }
+                StateChangeScript {
+                    //script: controller.contextMenuClosed()
+                }
+            }
+        ]
+        transitions: Transition {
+            AnchorAnimation { duration: 150 }
+        }
+    }
+    Settings {
+        id: settings
+        width: parent.width
+        opacity: 0
+
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+        }
+        onClose: settings.state = 'closed'
+        state: 'closed'
+        Behavior on opacity { NumberAnimation { duration: 300 } }
+
+        states: [
+            State {
+                name: 'opened'
+                PropertyChanges {
+                    target: settings
+                    opacity: 1
+                }
+                AnchorChanges {
+                    target: settings
+                    anchors.right: root.right
+                }
+            },
+            State {
+                name: 'closed'
+                PropertyChanges {
+                    target: settings
+                    opacity: 0
+                }
+                AnchorChanges {
+                    target: settings
+                    anchors.right: root.left
+                }
+                StateChangeScript {
+                    //script: controller.contextMenuClosed()
+                }
+            }
+        ]
+        transitions: Transition {
+            AnchorAnimation { duration: 150 }
         }
     }
 }

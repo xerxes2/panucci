@@ -293,7 +293,7 @@ class Playlist(ObservableService):
             self.__log.info('Cannot find item with id: %s', item_id)
             return False
 
-        if bookmark_id is None:
+        if not bookmark_id:
             if self.__queue.current_item_position == self.__queue.index(item):
                 is_end = self.end_of_playlist()
                 self.stop()

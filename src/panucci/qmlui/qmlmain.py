@@ -28,7 +28,6 @@ import panucci
 from panucci import util
 from panucci import platform
 from panucci import playlist
-from panucci import about
 from panucci.dbusinterface import interface
 from panucci.services import ObservableService
 
@@ -54,10 +53,10 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.context.setContextProperty('config', self.make_config())
         self.create_actions()
         engine = self.context.engine()
-        ip = ImageProvider(self)
-        engine.addImageProvider("cover", ip)
+        self.image_provider = ImageProvider(self)
+        engine.addImageProvider("cover", self.image_provider)
         self.view.setSource(util.find_data_file("main.qml"))
-        
+
         self.playlist.register( 'stopped', self.on_player_stopped )
         self.playlist.register( 'playing', self.on_player_playing )
         self.playlist.register( 'paused', self.on_player_paused )
@@ -75,41 +74,11 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.main_window.show()
         self.app.exec_()
 
-    def make_config(self):
-        self.config_qml = {}
-        self.config_qml["background"] = self.config.get("options", "background")
-        self.config_qml["foreground"] = self.config.get("options", "foreground")
-        self.config_qml["main_width"] = self.config.getint("options", "main_width")
-        self.config_qml["main_height"] = self.config.getint("options", "main_height")
-        self.config_qml["button_height"] = self.config.getint("options", "button_height")
-        self.config_qml["button_color"] = self.config.get("options", "button_color")
-        self.config_qml["button_border_color"] = self.config.get("options", "button_border_color")
-        self.config_qml["button_border_width"] = self.config.getint("options", "button_border_width")
-        self.config_qml["cover_height"] = self.config.getint("options", "cover_height")
-        self.config_qml["progress_height"] = self.config.getint("options", "progress_height")
-        self.config_qml["progress_color"] = self.config.get("options", "progress_color")
-        self.config_qml["progress_bg_color"] = self.config.get("options", "progress_background_color")
-        self.config_qml["font_size"] = self.config.getint("options", "font_size")
-        self.config_qml["dual_delay"] = self.config.getfloat("options", "dual_action_button_delay") * 1000
-        self.config_qml["scrolling"] = self.config.getboolean("options", "scrolling_labels") * 1000
-        bwidth = (self.config_qml["main_width"] / 6) - 7
-        self.config_qml["button_width"] = (self.config_qml["main_width"] / 6) - 7
-        return self.config_qml
-
-    def quit_panucci(self):
-        self.main_window.hide()
-        self.playlist.quit()
-        util.write_config(self.config)
-        self.app.exit()
-
     def create_actions(self):
         # File menu
-        self.action_add_file = QtGui.QAction(QtGui.QIcon(':/actions/add.png'), _("Add File").decode("utf-8"), self.main_window, shortcut="Ctrl+A",
-            statusTip="Add file to playlist", triggered=self.add_file_callback)
-        self.context.setContextProperty('action_add_file', self.action_add_file)
-        self.action_add_folder = QtGui.QAction(QtGui.QIcon(':/images/open.png'), _("Add Folder").decode("utf-8"), self.main_window, shortcut="Ctrl+D",
-            statusTip="Add folder to playlist", triggered=self.add_folder_callback)
-        self.context.setContextProperty('action_add_folder', self.action_add_folder)
+        self.action_add_media = QtGui.QAction(QtGui.QIcon(''), _("Add Media").decode("utf-8"), self.main_window, shortcut="Ctrl+A",
+            statusTip="Add file to playlist", triggered=self.add_media_callback)
+        self.context.setContextProperty('action_add_media', self.action_add_media)
         self.action_play_one = QtGui.QAction(QtGui.QIcon(''), _("Play One").decode("utf-8"), self.main_window, shortcut="Ctrl+O",
             statusTip="Play one file", triggered=self.play_one_callback)
         self.context.setContextProperty('action_play_one', self.action_play_one)
@@ -131,47 +100,63 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.context.setContextProperty('action_playlist', self.action_playlist)
         self.action_settings = QtGui.QAction(_("Settings"), self.main_window, shortcut="Ctrl+C",
             statusTip=_("Open settings dialog"), triggered=self.settings_callback)
-        self.context.setContextProperty('action_setings', self.action_settings)
+        self.context.setContextProperty('action_settings', self.action_settings)
         self.action_timer = QtGui.QAction(_("Sleep Timer"), self.main_window, shortcut="Ctrl+T",
             statusTip=_("Start a timed shutdown"), triggered=self.create_timer_dialog)
         self.context.setContextProperty('action_timer', self.action_timer)
         # Settings menu
+        self.main_window_str = _("Main Window")
+        self.context.setContextProperty('main_window_str', self.main_window_str)
         self.action_lock_progress = QtGui.QAction(_("Lock Progress Bar").decode("utf-8"), self.main_window, shortcut="Ctrl+L",
             statusTip="Lock progress bar", triggered=self.lock_progress_callback)
         self.action_lock_progress.setCheckable(True)
         self.action_lock_progress.setChecked(self.config.getboolean("options", "lock_progress"))
+        self.context.setContextProperty('action_lock_progress', self.action_lock_progress)
         self.action_dual_action = QtGui.QAction(_("Dual Action Button").decode("utf-8"), self.main_window, shortcut="Ctrl+B",
             statusTip="Set dual action button", triggered=self.dual_action_callback)
         self.action_dual_action.setCheckable(True)
         self.action_dual_action.setChecked(self.config.getboolean("options", "dual_action_button"))
-        self.action_stay_at_end = QtGui.QAction(_("Stay at End").decode("utf-8"), self.main_window, shortcut="Ctrl+E",
-            statusTip="Stay at file end", triggered=self.stay_at_end_callback)
-        self.action_stay_at_end.setCheckable(True)
-        self.action_stay_at_end.setChecked(self.config.getboolean("options", "stay_at_end"))
-        self.action_seek_back = QtGui.QAction(_("Seek Back").decode("utf-8"), self.main_window, shortcut="Ctrl+S",
-            statusTip="Seek back to previous file", triggered=self.seek_back_callback)
-        self.action_seek_back.setCheckable(True)
-        self.action_seek_back.setChecked(self.config.getboolean("options", "seek_back"))
+        self.context.setContextProperty('action_dual_action', self.action_dual_action)
         self.action_scrolling_labels = QtGui.QAction(_("Scrolling Labels").decode("utf-8"), self.main_window, shortcut="Ctrl+V",
             statusTip="Scroll title labels when too long", triggered=self.scrolling_labels_callback)
         self.action_scrolling_labels.setCheckable(True)
         self.action_scrolling_labels.setChecked(self.config.getboolean("options", "scrolling_labels"))
+        self.context.setContextProperty('action_scrolling_labels', self.action_scrolling_labels)
+        self.playback_str = _("Playback")
+        self.context.setContextProperty('playback_str', self.playback_str)
+        self.action_stay_at_end = QtGui.QAction(_("Stay at End").decode("utf-8"), self.main_window, shortcut="Ctrl+E",
+            statusTip="Stay at file end", triggered=self.stay_at_end_callback)
+        self.action_stay_at_end.setCheckable(True)
+        self.action_stay_at_end.setChecked(self.config.getboolean("options", "stay_at_end"))
+        self.context.setContextProperty('action_stay_at_end', self.action_stay_at_end)
+        self.action_seek_back = QtGui.QAction(_("Seek Back").decode("utf-8"), self.main_window, shortcut="Ctrl+S",
+            statusTip="Seek back to previous file", triggered=self.seek_back_callback)
+        self.action_seek_back.setCheckable(True)
+        self.action_seek_back.setChecked(self.config.getboolean("options", "seek_back"))
+        self.context.setContextProperty('action_seek_back', self.action_seek_back)
         self.action_resume_all = QtGui.QAction(_("Resume All").decode("utf-8"), self.main_window, shortcut="Ctrl+R",
             statusTip="Resume all files automatically", triggered=self.resume_all_callback)
         self.action_resume_all.setCheckable(True)
         self.action_resume_all.setChecked(self.config.getboolean("options", "resume_all"))
+        self.context.setContextProperty('action_resume_all', self.action_resume_all)
+        self.play_mode_str = _("Play Mode")
+        self.context.setContextProperty('play_mode_str', self.play_mode_str)
         self.action_play_mode_all = QtGui.QAction(_("All").decode("utf-8"), self.main_window, statusTip="Set play mode",
             triggered=self.play_mode_all_callback)
         self.action_play_mode_all.setCheckable(True)
+        self.context.setContextProperty('action_play_mode_all', self.action_play_mode_all)
         self.action_play_mode_single = QtGui.QAction(_("Single").decode("utf-8"), self.main_window, statusTip="Set play mode",
             triggered=self.play_mode_single_callback)
         self.action_play_mode_single.setCheckable(True)
+        self.context.setContextProperty('action_play_mode_single', self.action_play_mode_single)
         self.action_play_mode_random = QtGui.QAction(_("Random").decode("utf-8"), self.main_window, statusTip="Set play mode",
             triggered=self.play_mode_random_callback)
         self.action_play_mode_random.setCheckable(True)
+        self.context.setContextProperty('action_play_mode_random', self.action_play_mode_random)
         self.action_play_mode_repeat = QtGui.QAction(_("Repeat").decode("utf-8"), self.main_window, statusTip="Set play mode",
             triggered=self.play_mode_repeat_callback)
         self.action_play_mode_repeat.setCheckable(True)
+        self.context.setContextProperty('action_play_mode_repeat', self.action_play_mode_repeat)
         actiongroup = QtGui.QActionGroup(self.main_window)
         actiongroup.setExclusive(True)
         self.action_play_mode_all.setActionGroup(actiongroup)
@@ -213,26 +198,28 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.action_player_skip_forward = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.main_window,
             triggered=self.player_skip_forward_callback)
         self.context.setContextProperty('action_player_skip_forward', self.action_player_skip_forward)
-        self.action_bookmark = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.main_window,
-            triggered=self.bookmark_callback)
-        self.context.setContextProperty('action_bookmark', self.action_bookmark)
 
-    def create_menus(self):
-        # Player menu
-        self.menu_player = self.main_window.menuBar().addMenu("Player")
-        self.menu_player.addAction(self.action_settings)
-        self.menu_player.addAction(self.action_playlist)
-        self.menu_player.addAction(self.action_add_file)
-        self.menu_player.addAction(self.action_add_folder)
-        self.menu_player.addAction(self.action_play_one)
-        self.menu_player.addAction(self.action_clear_playlist)
-        self.menu_player.addAction(self.action_timer)
-        self.menu_player.addAction(self.action_about)
-        # Playlist menu
-        self.menu_playlist = self.__playlist_tab.main_window.menuBar().addMenu("Playlist")
-        self.menu_playlist.addAction(self.action_save_playlist)
-        self.menu_playlist.addAction(self.action_delete_bookmarks)
- 
+    def make_config(self):
+        self.config_qml = {}
+        self.config_qml["background"] = self.config.get("options", "background")
+        self.config_qml["foreground"] = self.config.get("options", "foreground")
+        self.config_qml["main_width"] = self.config.getint("options", "main_width")
+        self.config_qml["main_height"] = self.config.getint("options", "main_height")
+        self.config_qml["button_height"] = self.config.getint("options", "button_height")
+        self.config_qml["button_color"] = self.config.get("options", "button_color")
+        self.config_qml["button_border_color"] = self.config.get("options", "button_border_color")
+        self.config_qml["button_border_width"] = self.config.getint("options", "button_border_width")
+        self.config_qml["button_radius"] = self.config.getint("options", "button_radius")
+        self.config_qml["cover_height"] = self.config.getint("options", "cover_height")
+        self.config_qml["progress_height"] = self.config.getint("options", "progress_height")
+        self.config_qml["progress_color"] = self.config.get("options", "progress_color")
+        self.config_qml["progress_bg_color"] = self.config.get("options", "progress_background_color")
+        self.config_qml["font_size"] = self.config.getint("options", "font_size")
+        self.config_qml["dual_delay"] = self.config.getfloat("options", "dual_action_button_delay") * 1000
+        self.config_qml["scrolling"] = self.config.getboolean("options", "scrolling_labels") * 1000
+        self.config_qml["button_width"] = (self.config_qml["main_width"] / 6) - 7
+        return self.config_qml
+
     def create_timer_dialog(self):
         response = QtGui.QInputDialog.getInteger(self.main_window, _("Sleep Timer"), _("Shutdown time in minutes"),
                        value=5, minValue=1)
@@ -251,66 +238,101 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     def show_main_window(self):
         self.main_window.activateWindow()
 
-    def show_context_menu(self, actions):
-        self.context_menu_actions = actions
-        self.root.open_context_menu(self.context_menu_actions)
+    def add_media_callback(self):
+        self.view.rootObject().openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
+                                               self.config.get("options", "default_folder").decode('utf-8'), "add")
 
-    def add_file_callback(self):
-        filenames = qtutil.get_file_from_filechooser(self)
-        if filenames:
-            self._play_file(filenames[0].encode('utf-8'))
+    @QtCore.Slot(str, str)
+    def filechooser_callback(self, action, value):
+        value = value.encode('utf-8')
+        if action == "open":
+            if os.path.isdir(os.path.expanduser(value)):
+                self.config.set("options", "default_folder", value)
+                self.view.rootObject().openFilechooser(self.get_filechooser_items(value), value.decode('utf-8'), False)
+        elif action == "up":
+            value = value.rsplit("/", 1)[0]
+            self.config.set("options", "default_folder", value)
+            self.view.rootObject().openFilechooser(self.get_filechooser_items(value), value.decode('utf-8'), False)
+        elif action == "add":
+            if os.path.exists(os.path.expanduser(value)):
+                self.playlist.load(os.path.abspath(os.path.expanduser(value)))
+                self.view.rootObject().openPlaylist(False, self.get_playlist_items())
+        elif action == "save":
+            ext = util.detect_filetype(os.path.expanduser(value))
+            if not self.playlist.save_to_new_playlist(os.path.expanduser(value), ext):
+                self.notify(_('Error saving playlist...'))
+        elif action == "play_one":
+            if os.path.exists(os.path.expanduser(value)):
+                self.clear_playlist_callback()
+                self.playlist.load(os.path.abspath(os.path.expanduser(value)))
 
-    def add_folder_callback(self):
-        filenames = qtutil.get_file_from_filechooser(self, folder=True)
-        if filenames:
-            self._play_file(filenames[0].encode('utf-8'))
+    def get_filechooser_items(self, folder):
+        _dir = os.path.expanduser(folder)
+        dirlist = os.listdir(_dir)
+        dir_list = []
+        file_list = []
+
+        for i in dirlist:
+            if _dir == "/":
+                _path = "/" + i
+            else:
+                _path = _dir + "/" + i
+            if not i.startswith("."):
+                if os.path.isdir(_path):
+                    dir_list.append(i)
+                else:
+                    file_list.append(i)
+
+        dir_list.sort(lambda x,y : cmp (x.lower(), y.lower()))
+        file_list.sort(lambda x,y : cmp (x.lower(), y.lower()))
+        self.filechooser_items = []
+        for i in dir_list:
+            self.filechooser_items.append(FilechooserItem(i, folder, True))
+        for i in file_list:
+            self.filechooser_items.append(FilechooserItem(i, folder, False))
+
+        return self.filechooser_items
 
     def play_one_callback(self):
-        filenames = qtutil.get_file_from_filechooser(self)
-        if filenames:
-            self.clear_playlist_callback()
-            self._play_file(filenames[0].encode('utf-8'))
+        self.view.rootObject().openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
+                                               self.config.get("options", "default_folder").decode('utf-8'), "play_one")
 
     def save_playlist_callback(self):
-        filenames = qtutil.get_file_from_filechooser(self, save_file=True, save_to=True)
-        if not filenames:
-            return False
-
-        filename = filenames[0]
-        if os.path.isfile(filename):
-            response = qtutil.dialog(self.main_window,  _('File already exists!'),
-                _('The file %s already exists. You can choose another name or '
-                  'overwrite the existing file.') % os.path.basename(filename), False, True, True, True)
-
-            if response == QtGui.QMessageBox.Cancel:
-                return None
-            elif response == QtGui.QMessageBox.Discard:
-                return self.save_playlist_callback()
-
-        ext = util.detect_filetype(filename)
-        if not self.playlist.save_to_new_playlist(filename, ext):
-            self.notify(_('Error saving playlist...'))
-            return False
-
-        return True
+        self.view.rootObject().openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
+                                               self.config.get("options", "default_folder").decode('utf-8'), "save")
 
     def clear_playlist_callback(self):
         self.playlist.reset_playlist()
-        self.__playlist_tab.clear_model()
+
+    @QtCore.Slot(str, str)
+    def remove_callback(self, _id, _bid):
+        self.playlist.remove_bookmark(_id, _bid)
+        self.playlist_callback()
+
+    @QtCore.Slot(str, str)
+    def jump_to_callback(self, _id, _bid):
+        self.playlist.load_from_bookmark_id(_id, _bid)
 
     def delete_bookmarks_callback(self):
-        response = qtutil.dialog(self.main_window,  _('Delete all bookmarks?'),
-                _('By accepting all bookmarks in the database will be deleted.'), True, False, True, False)
-        if response == QtGui.QMessageBox.Ok:
-            self.playlist.delete_all_bookmarks()
-            self.__playlist_tab.update_model()
+        self.playlist.delete_all_bookmarks()
 
     def playlist_callback(self):
-        self.__playlist_tab.main_window.show()
+        self.view.rootObject().openPlaylist(True, self.get_playlist_items())
+
+    def get_playlist_items(self):
+        self.playlist_items = []
+        for item, data in self.playlist.get_playlist_item_ids():
+            self.playlist_items.append(PlaylistItem(item, data.get('title'), "", ""))
+
+            for bid, bname, bpos in self.playlist.get_bookmarks_from_item_id( item ):
+                self.playlist_items.append(PlaylistItem(item, bname, bid, util.convert_ns(bpos)))
+
+        return self.playlist_items
 
     def settings_callback(self):
-        from panucci.qtui.qtsettingsdialog import SettingsDialog
-        SettingsDialog(self)
+        self.view.rootObject().openSettings()
+        #from panucci.qtui.qtsettingsdialog import SettingsDialog
+        #SettingsDialog(self)
 
     def lock_progress_callback(self):
         self.set_config_option("lock_progress", str(self.action_lock_progress.isChecked()).lower())
@@ -346,8 +368,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.set_config_option("play_mode", "repeat")
 
     def about_callback(self):
-        #from panucci.qtui import qtaboutdialog
-        #qtaboutdialog.AboutDialog(self.main_window, panucci.__version__)
+        from panucci import about
         self.view.rootObject().openAboutDialog([about.about_name+" "+panucci.__version__, about.about_text,
                                                 about.about_copyright, about.about_website])
 
@@ -381,8 +402,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     def player_play_callback(self):
         self.playlist.play_pause_toggle()
 
+    @QtCore.Slot()
     def bookmark_callback(self):
-        self.view.rootObject().openContextMenu([self.action_about, self.action_about, self.action_about, self.action_about])
+        self.playlist.add_bookmark_at_current_position()
 
     def do_seek(self, seek_amount):
         resp = self.playlist.do_seek(from_current=seek_amount*10**9)
@@ -391,11 +413,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             self.on_set_progress.emit()
 
     def set_progress_callback(self, time_elapsed, total_time):
-        """ times must be in nanoseconds """
         self.time_str = "%s / %s" %(util.convert_ns(time_elapsed), util.convert_ns(total_time))
-        #self.progress.setFormat( time_string )
         self.progress_fraction = float(time_elapsed) / float(total_time) if total_time else 0
-        #self.progress.setValue( int(fraction*100) )
+        self.on_set_progress.emit()
 
     @QtCore.Slot(float)
     def on_progress_clicked(self, new_fraction):
@@ -403,7 +423,6 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             resp = self.playlist.do_seek(percent=new_fraction)
             if resp:
                 self.set_progress_callback( *resp )
-                self.on_set_progress.emit()
 
     def timer_callback( self ):
         if self.playlist.playing and not self.playlist.seeking:
@@ -411,7 +430,6 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             # This prevents bogus values from being set while seeking
             if pos_int >= 0 and dur_int >= 0:
                 self.set_progress_callback( pos_int, dur_int )
-            self.on_set_progress.emit()
         return True
 
     def get_play_pause_icon_path(self):
@@ -423,19 +441,19 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def get_artist_str(self):
         if self.metadata:
-            return self.metadata.get('artist', 0)
+            return self.metadata.get('artist', 0).decode('utf-8')
         else:
             return ""
 
     def get_album_str(self):
         if self.metadata:
-            return self.metadata.get('album', 0)
+            return self.metadata.get('album', 0).decode('utf-8')
         else:
             return ""
 
     def get_title_str(self):
         if self.metadata:
-            return self.metadata.get('title', 0)
+            return self.metadata.get('title', 0).decode('utf-8')
         else:
             return ""
 
@@ -445,7 +463,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def get_cover_str(self):
         if self.metadata and self.metadata.has_key('image') and self.metadata['image']:
-            return "image://cover"
+            return "image://cover/" + os.urandom(10)
         else:
             return ""
 
@@ -473,7 +491,6 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         if self.metadata:
             estimated_length = self.metadata.get('length', 0)
             self.set_progress_callback( 0, estimated_length )
-            self.on_set_progress.emit()
         #self.set_controls_sensitivity(False)
 
     def on_player_playing(self):
@@ -493,14 +510,12 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.time_str = "00:00 / 00:00"
         self.progress_fraction = 0
         self.metadata = None
-        #self.label_cover.hide()
         self.on_set_progress.emit()
         self.on_set_metadata.emit()
         self.main_window.setWindowTitle("Panucci")
 
     def on_player_new_metadata(self):
         self.metadata = self.playlist.get_file_metadata()
-        #self.set_metadata(self.metadata)
         position = self.playlist.get_current_position()
         estimated_length = self.metadata.get('length', 0)
         self.set_progress_callback(position, estimated_length)
@@ -510,7 +525,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         _title = self.metadata["title"]
         if len(_title) > 25:
             _title = _title[:24] + '...'
-        self.main_window.setWindowTitle(_title)
+        self.main_window.setWindowTitle(_title.decode('utf-8'))
 
     def on_player_end_of_playlist(self, loop):
         if not loop:
@@ -520,8 +535,6 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     def on_player_reset_playlist(self):
         self.on_player_stopped()
         self.on_player_new_track()
-        self.reset_progress()
-        self.main_window.setWindowTitle("Panucci")
 
     @QtCore.Slot(str)
     def open_external_url(self, url):
@@ -538,3 +551,59 @@ class ImageProvider(QtDeclarative.QDeclarativeImageProvider):
         pixmap.loadFromData(self.__main.metadata['image'])
         pixmap = pixmap.scaled(size, size, mode=QtCore.Qt.SmoothTransformation)
         return pixmap
+
+class PlaylistItem(QtCore.QObject):
+    def __init__(self, _id, _caption, _bookmark, _position):
+        QtCore.QObject.__init__(self)
+        if isinstance(_caption, str):
+            _caption = _caption.decode('utf-8')
+        self._caption = _caption
+        self._id = _id
+        self._bookmark = _bookmark
+        self._position = _position
+
+    changed = QtCore.Signal()
+
+    def _get_id(self):
+        return self._id
+    
+    def _get_caption(self):
+        return self._caption
+
+    def _get_bookmark(self):
+        return self._bookmark
+
+    def _get_position(self):
+        return self._position
+
+    item_id = QtCore.Property(str, _get_id, notify=changed)
+    caption = QtCore.Property(unicode, _get_caption, notify=changed)
+    bookmark_id = QtCore.Property(str, _get_bookmark, notify=changed)
+    position = QtCore.Property(str, _get_position, notify=changed)
+
+class FilechooserItem(QtCore.QObject):
+    def __init__(self, _caption, _path, _directory):
+        QtCore.QObject.__init__(self)
+        if isinstance(_caption, str):
+            _caption = _caption.decode('utf-8')
+        if isinstance(_path, str):
+            _path = _path.decode('utf-8')
+
+        self._caption = _caption
+        self._path = _path
+        self._directory = _directory
+
+    changed = QtCore.Signal()
+
+    def _get_caption(self):
+        return self._caption
+
+    def _get_path(self):
+        return self._path
+
+    def _get_directory(self):
+        return self._directory
+
+    caption = QtCore.Property(unicode, _get_caption, notify=changed)
+    path = QtCore.Property(unicode, _get_path, notify=changed)
+    directory = QtCore.Property(bool, _get_directory, notify=changed)

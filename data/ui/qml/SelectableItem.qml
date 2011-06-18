@@ -1,23 +1,21 @@
 
 import Qt 4.7
 
-import 'config.js' as Config
-
 Item {
     id: selectableItem
     signal selected(variant item)
     signal contextMenu(variant item)
 
-    height: Config.listItemHeight
+    height: config.font_size * 5
     width: parent.width
 
     Rectangle {
         id: highlight
-        opacity: mouseArea.pressed?.2:0
-        color: "white"
+        opacity: mouseArea.pressed?.5:0
+        color: "#" + config.progress_color
         anchors.fill: parent
 
-        Behavior on opacity { NumberAnimation { duration: Config.slowTransition } }
+        Behavior on opacity { NumberAnimation { duration: 150 } }
     }
 
     MouseArea {

@@ -1,8 +1,6 @@
 
 import Qt 4.7
 
-import 'config.js' as Config
-
 Item {
     id: contextMenuArea
     property variant items: []
@@ -13,32 +11,41 @@ Item {
         anchors.fill: parent
     }
     Rectangle {
-        color: "black"
+        color: "#" + config.background
         anchors.fill: parent
         opacity: .9
     }
     ListView {
         model: contextMenuArea.items
         anchors.fill: parent
-        header: Item { height: Config.headerHeight * 2 }
-        footer: Item { height: Config.headerHeight }
+        header: Item { height: config.font_size * 5
+                       width: parent.width
+                       MouseArea { anchors.fill: parent
+                                   onClicked: contextMenuArea.close()
+                       }
+                }
+        footer: Item { height: config.font_size * 5
+                       width: parent.width
+                       MouseArea { anchors.fill: parent
+                                   onClicked: contextMenuArea.close()
+                       }
+                }
 
         delegate: SelectableItem {
             ShadowText {
-                anchors.leftMargin: Config.switcherWidth
                 anchors {
                     left: parent.left
                     right: parent.right
                     verticalCenter: parent.verticalCenter
+                    leftMargin: config.font_size * 5
                 }
-                color: "white"
+                color: "#" + config.foreground
                 font.pixelSize: parent.height * .3
-                text: items[index].text
+                text: modelData.text
             }
             onSelected: {
-                contextMenuArea.response(index)
                 contextMenuArea.close()
-                items[index].trigger()
+                modelData.trigger()
             }
         }
     }

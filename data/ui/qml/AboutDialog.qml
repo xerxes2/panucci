@@ -70,7 +70,7 @@ Item {
         Image {
         anchors.centerIn: parent
         smooth: true
-        source: "gtk-close.png"
+        source: "close.png"
         }
         MouseArea {
             anchors.fill: parent
