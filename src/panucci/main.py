@@ -38,11 +38,9 @@ platform.detect()
 
 def run(opts, args):
     if args:
-        if '://' in args[0]:
-            # Assume a URL (HTTP, HTTPs, etc...)
-            filepath = args[0]
-        else:
-            filepath = os.path.abspath(args[0])
+        filepath = args[0]
+        if not '://' in filepath:
+            filepath = os.path.abspath(filepath)
     elif opts.queue_filename:
         filepath = os.path.abspath(opts.queue_filename)
     else:
