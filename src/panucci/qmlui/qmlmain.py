@@ -205,6 +205,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.config_qml = {}
         self.config_qml["background"] = self.config.get("options", "background")
         self.config_qml["foreground"] = self.config.get("options", "foreground")
+        self.config_qml["highlight"] = self.config.get("options", "highlight")
         self.config_qml["main_width"] = self.config.getint("options", "main_width")
         self.config_qml["main_height"] = self.config.getint("options", "main_height")
         self.config_qml["button_height"] = self.config.getint("options", "button_height")

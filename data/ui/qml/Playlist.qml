@@ -23,7 +23,7 @@ Item {
         header: Item { height: config.font_size }
         footer: Item { height: config.font_size }
         
-        highlight: Rectangle { color: "#" + config.progress_color
+        highlight: Rectangle { color: "#" + config.highlight
                                width: playlistView.width
                                height: config.font_size * 3
                                y: playlistView.currentItem.y

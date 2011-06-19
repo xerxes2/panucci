@@ -39,7 +39,7 @@ Item {
             y: config.font_size * 3.5
             anchors.horizontalCenter: parent.horizontalCenter
             color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: config.font_size * 14
+            width: parent.width / 2
             height: config.font_size * 4
             radius: config.button_radius
             smooth: true
@@ -68,7 +68,7 @@ Item {
             y: config.font_size * 8.5
             anchors.horizontalCenter: parent.horizontalCenter
             color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: config.font_size * 14
+            width: parent.width / 2
             height: config.font_size * 4
             radius: config.button_radius
             smooth: true
@@ -97,7 +97,7 @@ Item {
             y: config.font_size * 13.5
             anchors.horizontalCenter: parent.horizontalCenter
             color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: config.font_size * 14
+            width: parent.width / 2
             height: config.font_size * 4
             radius: config.button_radius
             smooth: true
@@ -134,7 +134,7 @@ Item {
             y: config.font_size * 21.5
             anchors.horizontalCenter: parent.horizontalCenter
             color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: config.font_size * 14
+            width: parent.width / 2
             height: config.font_size * 4
             radius: config.button_radius
             smooth: true
@@ -163,7 +163,7 @@ Item {
             y: config.font_size * 26.5
             anchors.horizontalCenter: parent.horizontalCenter
             color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: config.font_size * 14
+            width: parent.width / 2
             height: config.font_size * 4
             radius: config.button_radius
             smooth: true
@@ -192,7 +192,7 @@ Item {
             y: config.font_size * 31.5
             anchors.horizontalCenter: parent.horizontalCenter
             color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: config.font_size * 14
+            width: parent.width / 2
             height: config.font_size * 4
             radius: config.button_radius
             smooth: true
