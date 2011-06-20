@@ -26,6 +26,10 @@ Rectangle {
             playlist.state = 'opened'
         playlist.items = items
     }
+    function openPlaylistItemInfo(metadata) {
+        playlistItemInfo.state = 'opened'
+        playlistItemInfo.metadata = metadata
+    }
     function openSettings() {
         settings.state = 'opened'
     }
@@ -459,6 +463,50 @@ Rectangle {
                 }
                 AnchorChanges {
                     target: playlist
+                    anchors.right: root.left
+                }
+                StateChangeScript {
+                    //script: controller.contextMenuClosed()
+                }
+            }
+        ]
+        transitions: Transition {
+            AnchorAnimation { duration: 150 }
+        }
+    }
+    PlaylistItemInfo {
+        id: playlistItemInfo
+        width: parent.width
+        opacity: 0
+
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+        }
+        onClose: playlistItemInfo.state = 'closed'
+        state: 'closed'
+        Behavior on opacity { NumberAnimation { duration: 300 } }
+
+        states: [
+            State {
+                name: 'opened'
+                PropertyChanges {
+                    target: playlistItemInfo
+                    opacity: 1
+                }
+                AnchorChanges {
+                    target: playlistItemInfo
+                    anchors.right: root.right
+                }
+            },
+            State {
+                name: 'closed'
+                PropertyChanges {
+                    target: playlistItemInfo
+                    opacity: 0
+                }
+                AnchorChanges {
+                    target: playlistItemInfo
                     anchors.right: root.left
                 }
                 StateChangeScript {

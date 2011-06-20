@@ -200,6 +200,19 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.action_player_skip_forward = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.main_window,
             triggered=self.player_skip_forward_callback)
         self.context.setContextProperty('action_player_skip_forward', self.action_player_skip_forward)
+        # Playlist info
+        self.info_header_str = _('Playlist item details').decode("utf-8")
+        self.context.setContextProperty('info_header_str', self.info_header_str)
+        self.info_title_str = _('Title:').decode("utf-8")
+        self.context.setContextProperty('info_title_str', self.info_title_str)
+        self.info_length_str = _('Length:').decode("utf-8")
+        self.context.setContextProperty('info_length_str', self.info_length_str)
+        self.info_artist_str = _('Artist:').decode("utf-8")
+        self.context.setContextProperty('info_artist_str', self.info_artist_str)
+        self.info_album_str = _('Album:').decode("utf-8")
+        self.context.setContextProperty('info_album_str', self.info_album_str)
+        self.info_filepath_str = _('Filepath:').decode("utf-8")
+        self.context.setContextProperty('info_filepath_str', self.info_filepath_str)
 
     def make_config(self):
         self.config_qml = {}
@@ -332,6 +345,19 @@ class PanucciGUI(QtCore.QObject, ObservableService):
                 self.playlist_items.append(PlaylistItem(item, bname, bid, util.convert_ns(bpos)))
 
         return self.playlist_items
+
+    @QtCore.Slot(str)
+    def playlist_item_info_callback(self, item_id):
+        playlist_item = self.playlist.get_item_by_id(item_id)
+        metadata = playlist_item.metadata
+        metadata["length"] = util.convert_ns(metadata["length"])
+        metadata["path"] = playlist_item.filepath.decode("utf-8")
+        for i in ["title", "artist", "album"]:
+            if metadata[i]:
+                metadata[i] = metadata[i].decode("utf-8")
+            else:
+                metadata[i] = " "
+        self.view.rootObject().openPlaylistItemInfo(metadata)
 
     def settings_callback(self):
         self.view.rootObject().openSettings()

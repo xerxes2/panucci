@@ -133,7 +133,9 @@ Item {
         }
         MouseArea {
             anchors.fill: parent
-            onClicked: {playlistArea.close()}
+            onClicked: { if (playlistView.currentItem)
+                main.playlist_item_info_callback(playlistView.currentItem.item.item_id)
+            }
         }
     }
     Rectangle {

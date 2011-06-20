@@ -51,7 +51,7 @@ Item {
         x: 90
         y: about_copyright.y + config.font_size + 11
         font.pixelSize: config.font_size + 1
-        color: "#" + config.foreground
+        color: "#" + config.highlight
         text: "<a href=\"" + items[3] + "\">" + items[3] + "</a>"
         onLinkActivated: main.open_external_url(link)
     }
