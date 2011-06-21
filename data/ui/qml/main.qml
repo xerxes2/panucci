@@ -94,14 +94,14 @@ Rectangle {
          interval: config.dual_delay
          running: false
          repeat: false
-         onTriggered: image_back.source = "gtk-goto-first-ltr.png"
+         onTriggered: button_back.image = "gtk-goto-first-ltr.png"
     }
     Timer {
          id: timer_forward
          interval: config.dual_delay
          running: false
          repeat: false
-         onTriggered: image_forward.source = "gtk-goto-last-ltr.png"
+         onTriggered: button_forward.image = "gtk-goto-last-ltr.png"
     }
     Timer {
          id: timer_scrolling
@@ -192,150 +192,61 @@ Rectangle {
         text: main.time_string
         verticalAlignment: Text.AlignVCenter
     }
-    Rectangle {
+    AppButton {
+        id: button_back
         x: 0
         y: config.main_height - config.button_height
-        color: "#" + config.button_color
-        width: config.button_width
-        height: config.button_height
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            id: image_back
-            anchors.centerIn: parent
-            smooth: true
-            source: "media-skip-backward.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onReleased: image_back.source = "media-skip-backward.png"
-            onPressed: timer_back.start()
-            onClicked: { if (timer_back.running == true) {
-                             timer_back.stop()
-                             action_player_rrewind.trigger()
-                         }
-                         else
-                             action_player_skip_back.trigger()
-                             image_back.source = "media-skip-backward.png" }
+        image: "media-skip-backward.png"
+        onReleased: image = "media-skip-backward.png"
+        onPressed: timer_back.start()
+        onClicked: { if (timer_back.running == true) {
+                         timer_back.stop()
+                         action_player_rrewind.trigger()
+                     }
+                     else
+                         action_player_skip_back.trigger()
+                         image = "media-skip-backward.png"
         }
     }
-    Rectangle {
+    AppButton {
         x: config.button_width + config.button_border_width + 2
         y: config.main_height - config.button_height
-        color: "#" + config.button_color
-        width: config.button_width
-        height: config.button_height
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            anchors.centerIn: parent
-            smooth: true
-            source: "media-seek-backward.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: action_player_rewind.trigger()
-        }
+        image: "media-seek-backward.png"
+        onClicked: action_player_rewind.trigger()
     }
-    Rectangle {
+    AppButton {
         x: (config.button_width + config.button_border_width + 2) * 2
         y: config.main_height - config.button_height
-        color: "#" + config.button_color
-        width: config.button_width
-        height: config.button_height
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            id: player_play
-            anchors.centerIn: parent
-            smooth: true
-            source: main.play_pause_icon_path
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: action_player_play.trigger()
-        }
+        image: main.play_pause_icon_path
+        onClicked: action_player_play.trigger()
     }
-    Rectangle {
+    AppButton {
         x: (config.button_width + config.button_border_width + 2) * 3
         y: config.main_height - config.button_height
-        color: "#" + config.button_color
-        width: config.button_width
-        height: config.button_height
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            anchors.centerIn: parent
-            smooth: true
-            source: "media-seek-forward.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: action_player_forward.trigger()
-        }
+        image: "media-seek-forward.png"
+        onClicked: action_player_forward.trigger()
     }
-    Rectangle {
+    AppButton {
+        id: button_forward
         x: (config.button_width + config.button_border_width + 2) * 4
         y: config.main_height - config.button_height
-        color: "#" + config.button_color
-        width: config.button_width
-        height: config.button_height
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            id: image_forward
-            anchors.centerIn: parent
-            smooth: true
-            source: "media-skip-forward.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onReleased: image_forward.source = "media-skip-forward.png"
-            onPressed: timer_forward.start()
-            onClicked: { if (timer_forward.running == true) {
-                             timer_forward.stop()
-                             action_player_fforward.trigger()
-                         }
-                         else
-                             action_player_skip_forward.trigger()
-                             image_forward.source = "media-skip-forward.png" }
+        image: "media-skip-forward.png"
+        onReleased: image = "media-skip-forward.png"
+        onPressed: timer_forward.start()
+        onClicked: { if (timer_forward.running == true) {
+                         timer_forward.stop()
+                         action_player_fforward.trigger()
+                     }
+                     else
+                         action_player_skip_forward.trigger()
+                         image = "media-skip-forward.png"
         }
     }
-    Rectangle {
+    AppButton {
         x: (config.button_width + config.button_border_width + 2) * 5
         y: config.main_height - config.button_height
-        color: "#" + config.button_color
-        width: config.button_width
-        height: config.button_height
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            anchors.centerIn: parent
-            smooth: true
-            source: "bookmark-new.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: main.bookmark_callback()
-        }
+        image: "bookmark-new.png"
+        onClicked: main.bookmark_callback()
     }
     ContextMenu {
         id: contextMenu

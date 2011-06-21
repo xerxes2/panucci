@@ -80,140 +80,52 @@ Item {
         font.pixelSize: config.font_size
         text: filechooserArea.path
     }
-    Rectangle {
+    AppButton {
         x: 0
         y: root.height - config.button_height
-        color: "#" + config.button_color
-        width: config.button_width
-        height: config.button_height
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            anchors.centerIn: parent
-            smooth: true
-            source: "home.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: { filechooserView.currentIndex = -1
-                         main.filechooser_callback("open", "~")
-                       }
+        image: "home.png"
+        onClicked: { filechooserView.currentIndex = -1
+                     main.filechooser_callback("open", "~")
         }
     }
-    Rectangle {
+    AppButton {
         x: (config.button_width + config.button_border_width + 2)
         y: root.height - config.button_height
-        color: "#" + config.button_color
-        width: config.button_width
-        height: config.button_height
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            anchors.centerIn: parent
-            smooth: true
-            source: "left.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-        }
+        image: "left.png"
+        
     }
-    Rectangle {
+    AppButton {
         x: (config.button_width + config.button_border_width + 2) * 2
         y: root.height - config.button_height
-        color: "#" + config.button_color
-        width: config.button_width
-        height: config.button_height
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            anchors.centerIn: parent
-            smooth: true
-            source: "right.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-        }
+        image: "right.png"
+        
     }
-    Rectangle {
+    AppButton {
         x: (config.button_width + config.button_border_width + 2) * 3
         y: root.height - config.button_height
-        color: "#" + config.button_color
-        width: config.button_width
-        height: config.button_height
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            anchors.centerIn: parent
-            smooth: true
-            source: "up.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: { filechooserView.currentIndex = -1
-                         if (filechooserView.currentItem)
-                             main.filechooser_callback("up", filechooserView.currentItem.item.path)
-                         else
-                             main.filechooser_callback("up", filechooserArea.path)
-                       }
+        image: "up.png"
+        onClicked: { filechooserView.currentIndex = -1
+                     if (filechooserView.currentItem)
+                         main.filechooser_callback("up", filechooserView.currentItem.item.path)
+                     else
+                         main.filechooser_callback("up", filechooserArea.path)
         }
     }
-    Rectangle {
+    AppButton {
         x: (config.button_width + config.button_border_width + 2) * 4
         y: root.height - config.button_height
-        color: "#" + config.button_color
-        width: config.button_width
-        height: config.button_height
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            anchors.centerIn: parent
-            smooth: true
-            source: "cancel.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: { filechooserView.currentIndex = -1
-                         filechooserArea.close()
-                       }
+        image: "cancel.png"
+        onClicked: { filechooserView.currentIndex = -1
+                     filechooserArea.close()
         }
     }
-    Rectangle {
+    AppButton {
         x: (config.button_width + config.button_border_width + 2) * 5
         y: root.height - config.button_height
-        color: "#" + config.button_color
-        width: config.button_width
-        height: config.button_height
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            anchors.centerIn: parent
-            smooth: true
-            source: "apply.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: { filechooserArea.close()
-                         filechooserView.currentIndex = -1
-                         main.filechooser_callback(filechooserArea.action, textinput.text)
-                       }
+        image: "apply.png"
+        onClicked: { filechooserArea.close()
+                     filechooserView.currentIndex = -1
+                     main.filechooser_callback(filechooserArea.action, textinput.text)
         }
     }
 }

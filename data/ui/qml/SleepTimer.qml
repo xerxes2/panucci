@@ -53,27 +53,12 @@ Item {
         font.pixelSize: config.font_size * 1.5
         color: "#" + config.foreground
     }
-    Rectangle {
+    AppButton {
         anchors.horizontalCenter: parent.horizontalCenter
         y: config.font_size * 7.5
-        width: config.button_width
-        height: config.button_height
-        color: "#" + config.button_color
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            anchors.centerIn: parent
-            smooth: true
-            source: "apply.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: { sleepTimerArea.close()
-                         main.start_timed_shutdown(value.text)
-                       }
-        }
+        image: "apply.png"
+        onClicked: { sleepTimerArea.close()
+                     main.start_timed_shutdown(value.text)
+                   }
     }
 }

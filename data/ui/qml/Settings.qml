@@ -330,32 +330,17 @@ Item {
             }
         }
     }
-    Rectangle {
+    AppButton {
         x: root.width - config.button_width - config.button_border_width
         y: root.height - config.button_height
-        width: config.button_width
-        height: config.button_height
-        color: "#" + config.button_color
-        border.color: "#" + config.button_border_color
-        border.width: config.button_border_width
-        radius: config.button_radius
-        smooth: true
-
-        Image {
-            anchors.centerIn: parent
-            smooth: true
-            source: "apply.png"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: { var i=0
-                         for (i=0;i<settingsArea.actions.length;i++) {
-                             if (settingsArea.actions[i].checked != settingsArea.buttons[i].checked)
-                                 settingsArea.actions[i].trigger()
-                         }
-                         settingsArea.close()
-                       }
-        }
+        image: "apply.png"
+        onClicked: { var i=0
+                     for (i=0;i<settingsArea.actions.length;i++) {
+                         if (settingsArea.actions[i].checked != settingsArea.buttons[i].checked)
+                             settingsArea.actions[i].trigger()
+                     }
+                     settingsArea.close()
+                   }
     }
     property variant actions: [action_scrolling_labels, action_lock_progress,
             action_dual_action, action_stay_at_end, action_seek_back,
