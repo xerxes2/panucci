@@ -6,6 +6,8 @@ Item {
     signal close
     property variant items: []
     property variant path: ""
+    property variant back: ""
+    property variant forward: ""
     property variant action: ""
 
     MouseArea {
@@ -25,14 +27,14 @@ Item {
         currentIndex: -1
         header: Item { height: config.font_size }
         footer: Item { height: config.font_size }
-        
+
         highlight: Rectangle { color: "#" + config.highlight
                                width: filechooserView.width
                                height: config.font_size * 3
                                y: filechooserView.currentItem?filechooserView.currentItem.y:root.height
                    }
         highlightFollowsCurrentItem: false
-        
+
         delegate: FilechooserItem {
             property variant item: modelData
             Image {
@@ -58,8 +60,8 @@ Item {
                 filechooserArea.path = modelData.path + "/" + modelData.caption
                 if (modelData.directory == true) {
                     filechooserView.currentIndex = -1
+                    filechooserArea.back = modelData.path
                     main.filechooser_callback("open", filechooserArea.path)
-                    
                 }
             }
         }
@@ -92,19 +94,30 @@ Item {
         x: (config.button_width + config.button_border_width + 2)
         y: root.height - config.button_height
         image: "left.png"
-        
+        onClicked: { filechooserView.currentIndex = -1
+                     if (filechooserArea.back != "" && filechooserArea.back != filechooserArea.path) {
+                         filechooserArea.forward = filechooserArea.path
+                         main.filechooser_callback("open", filechooserArea.back)
+                     }
+        }
     }
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 2
         y: root.height - config.button_height
         image: "right.png"
-        
+        onClicked: { filechooserView.currentIndex = -1
+                     if (filechooserArea.forward != "" && filechooserArea.forward != filechooserArea.path) {
+                         filechooserArea.back = filechooserArea.path
+                         main.filechooser_callback("open", filechooserArea.forward)
+                     }
+        }
     }
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 3
         y: root.height - config.button_height
         image: "up.png"
         onClicked: { filechooserView.currentIndex = -1
+                     filechooserArea.back = filechooserArea.path
                      if (filechooserView.currentItem)
                          main.filechooser_callback("up", filechooserView.currentItem.item.path)
                      else

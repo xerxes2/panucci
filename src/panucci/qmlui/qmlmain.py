@@ -95,19 +95,19 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             statusTip="Exit the application", triggered=self.quit_panucci)
         self.context.setContextProperty('action_quit', self.action_quit)
         # Tools menu
-        self.action_playlist = QtGui.QAction(_("Playlist"), self.main_window, shortcut="Ctrl+P",
+        self.action_playlist = QtGui.QAction(_("Playlist").decode("utf-8"), self.main_window, shortcut="Ctrl+P",
             statusTip=_("Open playlist"), triggered=self.playlist_callback)
         self.context.setContextProperty('action_playlist', self.action_playlist)
-        self.action_settings = QtGui.QAction(_("Settings"), self.main_window, shortcut="Ctrl+C",
+        self.action_settings = QtGui.QAction(_("Settings").decode("utf-8"), self.main_window, shortcut="Ctrl+C",
             statusTip=_("Open settings dialog"), triggered=self.settings_callback)
         self.context.setContextProperty('action_settings', self.action_settings)
-        self.action_timer = QtGui.QAction(_("Sleep Timer"), self.main_window, shortcut="Ctrl+T",
+        self.action_timer = QtGui.QAction(_("Sleep Timer").decode("utf-8"), self.main_window, shortcut="Ctrl+T",
             statusTip=_("Start a timed shutdown"), triggered=self.sleep_timer_callback)
         self.context.setContextProperty('action_timer', self.action_timer)
-        self.shutdown_str = _("Shutdown time in minutes")
+        self.shutdown_str = _("Shutdown time in minutes").decode("utf-8")
         self.context.setContextProperty('shutdown_str', self.shutdown_str)
         # Settings menu
-        self.main_window_str = _("Main Window")
+        self.main_window_str = _("Main Window").decode("utf-8")
         self.context.setContextProperty('main_window_str', self.main_window_str)
         self.action_lock_progress = QtGui.QAction(_("Lock Progress Bar").decode("utf-8"), self.main_window, shortcut="Ctrl+L",
             statusTip="Lock progress bar", triggered=self.lock_progress_callback)
@@ -124,7 +124,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.action_scrolling_labels.setCheckable(True)
         self.action_scrolling_labels.setChecked(self.config.getboolean("options", "scrolling_labels"))
         self.context.setContextProperty('action_scrolling_labels', self.action_scrolling_labels)
-        self.playback_str = _("Playback")
+        self.playback_str = _("Playback").decode("utf-8")
         self.context.setContextProperty('playback_str', self.playback_str)
         self.action_stay_at_end = QtGui.QAction(_("Stay at End").decode("utf-8"), self.main_window, shortcut="Ctrl+E",
             statusTip="Stay at file end", triggered=self.stay_at_end_callback)
@@ -141,7 +141,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.action_resume_all.setCheckable(True)
         self.action_resume_all.setChecked(self.config.getboolean("options", "resume_all"))
         self.context.setContextProperty('action_resume_all', self.action_resume_all)
-        self.play_mode_str = _("Play Mode")
+        self.play_mode_str = _("Play Mode").decode("utf-8")
         self.context.setContextProperty('play_mode_str', self.play_mode_str)
         self.action_play_mode_all = QtGui.QAction(_("All").decode("utf-8"), self.main_window, statusTip="Set play mode",
             triggered=self.play_mode_all_callback)
@@ -270,7 +270,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         elif action == "save":
             ext = util.detect_filetype(os.path.expanduser(value))
             if not self.playlist.save_to_new_playlist(os.path.expanduser(value), ext):
-                self.notify(_('Error saving playlist...'))
+                # FIX ME!
+                #self.notify(_('Error saving playlist...'))
+                print _('Error saving playlist...')
         elif action == "play_one":
             if os.path.exists(os.path.expanduser(value)):
                 self.clear_playlist_callback()
