@@ -229,7 +229,7 @@ Item {
             y: config.font_size * 47.5
             x: (parent.width / 25 * 4) + (width * 3)
             text: "Custom"
-            checked: config.theme + " " == text.toLowerCase() ? true : false
+            checked: config.theme == text.toLowerCase() ? true : false
             onClicked: { theme_black.checked = false
                          theme_blue.checked = false
                          theme_pink.checked = false
