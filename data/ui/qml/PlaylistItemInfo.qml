@@ -5,7 +5,9 @@ Item {
     id: playlistItemInfoArea
     signal close
     property variant metadata: {"artist":"","title":"","length":"","album":"","path":""}
-
+    onClose: { playlistItemInfoFlick.contentX = 0
+               playlistItemInfoFlick.contentY = 0
+    }
     MouseArea {
         anchors.fill: parent
         onClicked: playlistItemInfoArea.close()
@@ -28,14 +30,14 @@ Item {
         height: root.height - config.font_size - 3.5
         x: 0
         y: config.font_size * 3.5
-        contentWidth: root.width * 2
+        //contentWidth: root.width * 2
+        contentWidth: leftColumn.width + rightColumn.width + (config.font_size * 2.5)
         clip: true
 
         MouseArea {
         anchors.fill: parent
         onClicked: playlistItemInfoArea.close()
         }
-    
         Column {
             id: leftColumn
             x: config.font_size
