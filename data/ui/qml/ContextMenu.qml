@@ -11,7 +11,7 @@ Item {
         anchors.fill: parent
     }
     Rectangle {
-        color: "#" + config.background
+        color: themeController.background
         anchors.fill: parent
         opacity: .9
     }
@@ -39,7 +39,7 @@ Item {
                     verticalCenter: parent.verticalCenter
                     leftMargin: config.font_size * 5
                 }
-                color: "#" + config.foreground
+                color: themeController.foreground
                 font.pixelSize: parent.height * .3
                 text: modelData.text
             }

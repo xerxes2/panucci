@@ -30,6 +30,11 @@ if not os.path.exists(panucci.SETTINGS_FILE):
     _filepath = util.find_data_file("panucci.conf")
     shutil.copy(_filepath, panucci.HOME)
 
+if not os.path.exists(panucci.THEME_FILE):
+    import shutil
+    _filepath = util.find_data_file("theme.conf")
+    shutil.copy(_filepath, panucci.HOME)
+
 class Settings(object):
     def __init__(self):
         self.__log = logging.getLogger('panucci.settings.Settings')
@@ -38,7 +43,7 @@ class Settings(object):
         _file = open(util.find_data_file("panucci-all.conf"))
         self.config.readfp(_file)
         _file.close()
-        # Parse non editable 
+        # Parse non editable
         if os.path.exists(panucci.HOME + '/panucci-noedit.conf'):
             _file = open(panucci.HOME + "/panucci-noedit.conf")
             self.config.readfp(_file)

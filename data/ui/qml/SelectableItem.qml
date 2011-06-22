@@ -12,7 +12,7 @@ Item {
     Rectangle {
         id: highlight
         opacity: mouseArea.pressed?.5:0
-        color: "#" + config.highlight
+        color: themeController.highlight
         anchors.fill: parent
 
         Behavior on opacity { NumberAnimation { duration: 150 } }

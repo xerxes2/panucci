@@ -9,9 +9,9 @@ Rectangle {
     id: appButton
     width: config.button_width
     height: config.button_height
-    color: "#" + config.button_color
+    color: themeController.button_color
     border.width: config.button_border_width
-    border.color: "#" + config.button_border_color
+    border.color: themeController.button_border_color
     radius: config.button_radius
     smooth: true
     

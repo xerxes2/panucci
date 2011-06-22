@@ -3,7 +3,7 @@ import Qt 4.7
 
 Rectangle {
     id: root
-    color: "#" + config.background
+    color: themeController.background
     width: config.main_width
     height: config.main_height
 
@@ -131,7 +131,7 @@ Rectangle {
         x: config.cover_height + 5
         y: config.cover_height / 4
         font.pixelSize: config.font_size + 1
-        color: "#" + config.foreground
+        color: themeController.foreground
         text: main.artist_string
     }
     Text {
@@ -139,7 +139,7 @@ Rectangle {
         x: config.cover_height + 5
         y: (config.cover_height / 4) + config.font_size + 21
         font.pixelSize: config.font_size - 1
-        color: "#" + config.foreground
+        color: themeController.foreground
         text: main.album_string
     }
     Rectangle {
@@ -148,13 +148,13 @@ Rectangle {
         height: config.font_size + 3
         x: config.cover_height + 5
         y: (config.cover_height / 4) + ((config.font_size*2)) + 42
-        color: "#" + config.background
+        color: themeController.background
         clip: true
         Text {
             id: title
             font.pixelSize: config.font_size + 1
             font.weight: Font.Bold
-            color: "#" + config.foreground
+            color: themeController.foreground
             text: main.title_string
             property bool direction
             direction: true
@@ -168,7 +168,7 @@ Rectangle {
         y: config.main_height - config.button_height - config.progress_height - config.button_border_width
         width: config.main_width
         height: config.progress_height
-        color: "#" + config.progress_bg_color
+        color: themeController.progress_bg_color
 
         MouseArea {
             anchors.fill: parent
@@ -176,7 +176,7 @@ Rectangle {
         }
         Rectangle {
             width: parent.width*main.progress
-            color: "#" + config.progress_color
+            color: themeController.progress_color
             clip: true
             anchors {
                 top: parent.top
@@ -187,7 +187,7 @@ Rectangle {
     }
     Text {
         anchors.centerIn: progressBar
-        color: "#" + config.foreground
+        color: themeController.foreground
         font.pixelSize: config.font_size
         text: main.time_string
         verticalAlignment: Text.AlignVCenter

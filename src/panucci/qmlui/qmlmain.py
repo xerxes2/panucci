@@ -19,6 +19,7 @@
 import sys
 import os
 import logging
+import ConfigParser
 
 from PySide import QtCore
 from PySide import QtGui
@@ -51,6 +52,8 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.context = self.view.rootContext()
         self.context.setContextProperty('main', self)
         self.context.setContextProperty('config', self.make_config())
+        self.theme_controller = ThemeController(self.config)
+        self.context.setContextProperty('themeController', self.theme_controller)
         self.create_actions()
         engine = self.context.engine()
         self.image_provider = ImageProvider(self)
@@ -173,6 +176,8 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             self.action_play_mode_repeat.setChecked(True)
         else:
             self.action_play_mode_all.setChecked(True)
+        self.theme_str = _('Theme').decode("utf-8")
+        self.context.setContextProperty('theme_str', self.theme_str)
         # help menu
         self.action_about = QtGui.QAction(QtGui.QIcon('about.png'), _("About").decode("utf-8"), self.main_window,
             statusTip="Show about dialog", triggered=self.about_callback)
@@ -234,6 +239,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.config_qml["dual_delay"] = self.config.getfloat("options", "dual_action_button_delay") * 1000
         self.config_qml["scrolling"] = self.config.getboolean("options", "scrolling_labels") * 1000
         self.config_qml["button_width"] = (self.config_qml["main_width"] / 6) - 7
+        self.config_qml["theme"] = self.config.get("options", "theme")
         return self.config_qml
 
     def quit_panucci(self):
@@ -639,3 +645,51 @@ class FilechooserItem(QtCore.QObject):
     caption = QtCore.Property(unicode, _get_caption, notify=changed)
     path = QtCore.Property(unicode, _get_path, notify=changed)
     directory = QtCore.Property(bool, _get_directory, notify=changed)
+
+class ThemeController(QtCore.QObject):
+    def __init__(self, config):
+        QtCore.QObject.__init__(self)
+
+        self.config = config
+        self.config_theme = ConfigParser.SafeConfigParser()
+        #_file = open(util.find_data_file("theme-all.conf"))
+        #self.config.readfp(_file)
+        #_file.close()
+        _file = open(panucci.THEME_FILE)
+        self.config_theme.readfp(_file)
+        _file.close()
+
+    @QtCore.Slot(str)
+    def set_theme(self, theme):
+        self.config.set("options", "theme", theme.strip().lower())
+        self.changed.emit()
+
+    def _get_background(self):
+        return "#" + self.config_theme.get(self.config.get("options", "theme"), "background")
+
+    def _get_foreground(self):
+        return "#" + self.config_theme.get(self.config.get("options", "theme"), "foreground")
+
+    def _get_highlight(self):
+        return "#" + self.config_theme.get(self.config.get("options", "theme"), "highlight")
+
+    def _get_button_color(self):
+        return "#" + self.config_theme.get(self.config.get("options", "theme"), "button_color")
+
+    def _get_button_border_color(self):
+        return "#" + self.config_theme.get(self.config.get("options", "theme"), "button_border_color")
+
+    def _get_progress_color(self):
+        return "#" + self.config_theme.get(self.config.get("options", "theme"), "progress_color")
+
+    def _get_progress_bg_color(self):
+        return "#" + self.config_theme.get(self.config.get("options", "theme"), "progress_background_color")
+
+    changed = QtCore.Signal()
+    background = QtCore.Property(str, _get_background, notify=changed)
+    foreground = QtCore.Property(str, _get_foreground, notify=changed)
+    highlight = QtCore.Property(str, _get_highlight, notify=changed)
+    button_color = QtCore.Property(str, _get_button_color, notify=changed)
+    button_border_color = QtCore.Property(str, _get_button_border_color, notify=changed)
+    progress_color = QtCore.Property(str, _get_progress_color, notify=changed)
+    progress_bg_color = QtCore.Property(str, _get_progress_bg_color, notify=changed)

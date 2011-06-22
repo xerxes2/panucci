@@ -10,7 +10,7 @@ Item {
         onClicked: sleepTimerArea.close()
     }
     Rectangle {
-        color: "#" + config.background
+        color: themeController.background
         anchors.fill: parent
         opacity: .9
     }
@@ -19,7 +19,7 @@ Item {
         y: config.font_size
         anchors.horizontalCenter: parent.horizontalCenter
         font.pixelSize: config.font_size * 1.5
-        color: "#" + config.foreground
+        color: themeController.foreground
     }
     Rectangle {
         id: valuebar
@@ -27,7 +27,7 @@ Item {
         height: config.font_size * 3
         y: config.font_size * 3.5
         anchors.horizontalCenter: parent.horizontalCenter
-        color: "#" + config.progress_bg_color
+        color: themeController.progress_bg_color
 
         MouseArea {
             anchors.fill: parent
@@ -38,7 +38,7 @@ Item {
         Rectangle {
             id: progress
             width: 0
-            color: "#" + config.progress_color
+            color: themeController.progress_color
             anchors {
                 top: parent.top
                 bottom: parent.bottom
@@ -51,7 +51,7 @@ Item {
         text: "1"
         anchors.centerIn: valuebar
         font.pixelSize: config.font_size * 1.5
-        color: "#" + config.foreground
+        color: themeController.foreground
     }
     AppButton {
         anchors.horizontalCenter: parent.horizontalCenter

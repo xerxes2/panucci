@@ -14,7 +14,7 @@ Item {
         anchors.fill: parent
     }
     Rectangle {
-        color: "#" + config.background
+        color: themeController.background
         anchors.fill: parent
         opacity: .9
     }
@@ -28,7 +28,7 @@ Item {
         header: Item { height: config.font_size }
         footer: Item { height: config.font_size }
 
-        highlight: Rectangle { color: "#" + config.highlight
+        highlight: Rectangle { color: themeController.highlight
                                width: filechooserView.width
                                height: config.font_size * 3
                                y: filechooserView.currentItem?filechooserView.currentItem.y:root.height
@@ -51,7 +51,7 @@ Item {
                     verticalCenter: parent.verticalCenter
                     leftMargin: 40
                 }
-                color: "#" + config.foreground
+                color: themeController.foreground
                 font.pixelSize: config.font_size
                 text: modelData.caption
             }
@@ -71,14 +71,14 @@ Item {
         height: config.font_size * 1.1
         x: 0
         y: root.height - config.button_height - textinput.height - config.button_border_width
-        color: "#" + config.progress_bg_color
+        color: themeController.progress_bg_color
     }
     TextInput {
         id: textinput
         width: root.width
         x: 5
         y: root.height - config.button_height - textinput.height - config.button_border_width
-        color: "#" + config.foreground
+        color: themeController.foreground
         font.pixelSize: config.font_size
         text: filechooserArea.path
     }

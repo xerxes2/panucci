@@ -10,7 +10,7 @@ Item {
         onClicked: settingsArea.close()
     }
     Rectangle {
-        color: "#" + config.background
+        color: themeController.background
         anchors.fill: parent
         opacity: .9
     }
@@ -18,7 +18,7 @@ Item {
         width: root.width - config.button_width - config.button_border_width
         height: root.height
         contentWidth: root.width - config.button_width - config.button_border_width
-        contentHeight: config.font_size * 44.5
+        contentHeight: config.font_size * 52.5
         clip: true
 
         MouseArea {
@@ -30,93 +30,45 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             text: main_window_str
             font.pixelSize: config.font_size * 1.5
-            color: "#" + config.foreground
+            color: themeController.foreground
         }
-        Rectangle {
+        SettingsButton {
             id: action_scrolling_labels_button
-            property bool checked
             checked: action_scrolling_labels.checked
             y: config.font_size * 3.5
-            anchors.horizontalCenter: parent.horizontalCenter
-            color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: parent.width / 2
-            height: config.font_size * 4
-            radius: config.button_radius
-            smooth: true
-
-            Text {
-                anchors.centerIn: parent
-                text: action_scrolling_labels.text
-                font.pixelSize: config.font_size
-                color: "#" + config.foreground
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: { if (action_scrolling_labels_button.checked) {
-                                 action_scrolling_labels_button.checked = false
-                             }
-                             else {
-                                 action_scrolling_labels_button.checked = true
-                             }
-                           }
+            text: action_scrolling_labels.text
+            onClicked: { if (action_scrolling_labels_button.checked) {
+                             action_scrolling_labels_button.checked = false
+                         }
+                         else {
+                             action_scrolling_labels_button.checked = true
+                         }
             }
         }
-        Rectangle {
+        SettingsButton {
             id: action_lock_progress_button
-            property bool checked
             checked: action_lock_progress.checked
             y: config.font_size * 8.5
-            anchors.horizontalCenter: parent.horizontalCenter
-            color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: parent.width / 2
-            height: config.font_size * 4
-            radius: config.button_radius
-            smooth: true
-
-            Text {
-                anchors.centerIn: parent
-                text: action_lock_progress.text
-                font.pixelSize: config.font_size
-                color: "#" + config.foreground
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: { if (action_lock_progress_button.checked) {
-                                 action_lock_progress_button.checked = false
-                             }
-                             else {
-                                 action_lock_progress_button.checked = true
-                             }
-                           }
+            text: action_lock_progress.text
+            onClicked: { if (action_lock_progress_button.checked) {
+                             action_lock_progress_button.checked = false
+                         }
+                         else {
+                             action_lock_progress_button.checked = true
+                         }
             }
         }
-        Rectangle {
+        SettingsButton {
             id: action_dual_action_button
-            property bool checked
             checked: action_dual_action.checked
             y: config.font_size * 13.5
-            anchors.horizontalCenter: parent.horizontalCenter
-            color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: parent.width / 2
-            height: config.font_size * 4
-            radius: config.button_radius
-            smooth: true
-
-            Text {
-                anchors.centerIn: parent
-                text: action_dual_action.text
-                font.pixelSize: config.font_size
-                color: "#" + config.foreground
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: { if (action_dual_action_button.checked) {
-                                 action_dual_action_button.checked = false
-                             }
-                             else {
-                                 action_dual_action_button.checked = true
-                             }
-                           }
+            text: action_dual_action.text
+            onClicked: { if (action_dual_action_button.checked) {
+                             action_dual_action_button.checked = false
+                         }
+                         else {
+                             action_dual_action_button.checked = true
+                         }
             }
         }
         Text {
@@ -124,94 +76,45 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             text: playback_str
             font.pixelSize: config.font_size * 1.5
-            color: "#" + config.foreground
+            color: themeController.foreground
         }
-        
-        Rectangle {
+        SettingsButton {
             id: action_stay_at_end_button
-            property bool checked
             checked: action_stay_at_end.checked
             y: config.font_size * 21.5
-            anchors.horizontalCenter: parent.horizontalCenter
-            color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: parent.width / 2
-            height: config.font_size * 4
-            radius: config.button_radius
-            smooth: true
-
-            Text {
-                anchors.centerIn: parent
-                text: action_stay_at_end.text
-                font.pixelSize: config.font_size
-                color: "#" + config.foreground
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: { if (action_stay_at_end_button.checked) {
-                                 action_stay_at_end_button.checked = false
-                             }
-                             else {
-                                 action_stay_at_end_button.checked = true
-                             }
-                           }
+            text: action_stay_at_end.text
+            onClicked: { if (action_stay_at_end_button.checked) {
+                             action_stay_at_end_button.checked = false
+                         }
+                         else {
+                             action_stay_at_end_button.checked = true
+                         }
             }
         }
-        Rectangle {
+        SettingsButton {
             id: action_seek_back_button
-            property bool checked
             checked: action_seek_back.checked
             y: config.font_size * 26.5
-            anchors.horizontalCenter: parent.horizontalCenter
-            color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: parent.width / 2
-            height: config.font_size * 4
-            radius: config.button_radius
-            smooth: true
-
-            Text {
-                anchors.centerIn: parent
-                text: action_seek_back.text
-                font.pixelSize: config.font_size
-                color: "#" + config.foreground
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: { if (action_seek_back_button.checked) {
-                                 action_seek_back_button.checked = false
-                             }
-                             else {
-                                 action_seek_back_button.checked = true
-                             }
-                           }
+            text: action_seek_back.text
+            onClicked: { if (action_seek_back_button.checked) {
+                             action_seek_back_button.checked = false
+                         }
+                         else {
+                             action_seek_back_button.checked = true
+                         }
             }
         }
-        Rectangle {
+        SettingsButton {
             id: action_resume_all_button
-            property bool checked
             checked: action_resume_all.checked
             y: config.font_size * 31.5
-            anchors.horizontalCenter: parent.horizontalCenter
-            color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: parent.width / 2
-            height: config.font_size * 4
-            radius: config.button_radius
-            smooth: true
-
-            Text {
-                anchors.centerIn: parent
-                text: action_resume_all.text
-                font.pixelSize: config.font_size
-                color: "#" + config.foreground
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: { if (action_resume_all_button.checked) {
-                                 action_resume_all_button.checked = false
-                             }
-                             else {
-                                 action_resume_all_button.checked = true
-                             }
-                           }
+            text: action_resume_all.text
+            onClicked: { if (action_resume_all_button.checked) {
+                             action_resume_all_button.checked = false
+                         }
+                         else {
+                             action_resume_all_button.checked = true
+                         }
             }
         }
         Text {
@@ -219,114 +122,119 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             text: play_mode_str
             font.pixelSize: config.font_size * 1.5
-            color: "#" + config.foreground
+            color: themeController.foreground
         }
-        Rectangle {
+        SettingsButtonSmall {
             id: action_play_mode_all_button
-            property bool checked
             checked: action_play_mode_all.checked
             y: config.font_size * 39.5
             x: parent.width / 25
-            color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            width: parent.width / 5
-            height: config.font_size * 4
-            radius: config.button_radius
-            smooth: true
-
-            Text {
-                anchors.centerIn: parent
-                text: action_play_mode_all.text
-                font.pixelSize: config.font_size
-                color: "#" + config.foreground
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: { action_play_mode_all_button.checked = true
-                             action_play_mode_single_button.checked = false
-                             action_play_mode_random_button.checked = false
-                             action_play_mode_repeat_button.checked = false
-                           }
-            }
+            text: action_play_mode_all.text
+            onClicked: { action_play_mode_all_button.checked = true
+                         action_play_mode_single_button.checked = false
+                         action_play_mode_random_button.checked = false
+                         action_play_mode_repeat_button.checked = false
+           }
         }
-        Rectangle {
+        SettingsButtonSmall {
             id: action_play_mode_single_button
-            property bool checked
             checked: action_play_mode_single.checked
             width: parent.width / 5
             height: config.font_size * 4
             y: config.font_size * 39.5
             x: (parent.width / 25 * 2) + width
-            color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            radius: config.button_radius
-            smooth: true
-
-            Text {
-                anchors.centerIn: parent
-                text: action_play_mode_single.text
-                font.pixelSize: config.font_size
-                color: "#" + config.foreground
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: { action_play_mode_all_button.checked = false
-                             action_play_mode_single_button.checked = true
-                             action_play_mode_random_button.checked = false
-                             action_play_mode_repeat_button.checked = false
-                           }
+            text: action_play_mode_single.text
+            onClicked: { action_play_mode_all_button.checked = false
+                         action_play_mode_single_button.checked = true
+                         action_play_mode_random_button.checked = false
+                         action_play_mode_repeat_button.checked = false
             }
         }
-        Rectangle {
+        SettingsButtonSmall {
             id: action_play_mode_random_button
-            property bool checked
             checked: action_play_mode_random.checked
             width: parent.width / 5
             height: config.font_size * 4
             y: config.font_size * 39.5
             x: (parent.width / 25 * 3) + (width * 2)
-            color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            radius: config.button_radius
-            smooth: true
-
-            Text {
-                anchors.centerIn: parent
-                text: action_play_mode_random.text
-                font.pixelSize: config.font_size
-                color: "#" + config.foreground
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: { action_play_mode_all_button.checked = false
-                             action_play_mode_single_button.checked = false
-                             action_play_mode_random_button.checked = true
-                             action_play_mode_repeat_button.checked = false
-                           }
+            text: action_play_mode_random.text
+            onClicked: { action_play_mode_all_button.checked = false
+                         action_play_mode_single_button.checked = false
+                         action_play_mode_random_button.checked = true
+                         action_play_mode_repeat_button.checked = false
             }
         }
-        Rectangle {
+        SettingsButtonSmall {
             id: action_play_mode_repeat_button
-            property bool checked
             checked: action_play_mode_repeat.checked
             width: parent.width / 5
             height: config.font_size * 4
             y: config.font_size * 39.5
             x: (parent.width / 25 * 4) + (width * 3)
-            color: checked ? "#" + config.progress_color : "#" + config.progress_bg_color
-            radius: config.button_radius
-            smooth: true
-
-            Text {
-                anchors.centerIn: parent
-                text: action_play_mode_repeat.text
-                font.pixelSize: config.font_size
-                color: "#" + config.foreground
+            text: action_play_mode_repeat.text
+            onClicked: { action_play_mode_all_button.checked = false
+                         action_play_mode_single_button.checked = false
+                         action_play_mode_random_button.checked = false
+                         action_play_mode_repeat_button.checked = true
             }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: { action_play_mode_all_button.checked = false
-                             action_play_mode_single_button.checked = false
-                             action_play_mode_random_button.checked = false
-                             action_play_mode_repeat_button.checked = true
-                           }
+        }
+        Text {
+            y: config.font_size * 45
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: theme_str
+            font.pixelSize: config.font_size * 1.5
+            color: themeController.foreground
+        }
+        SettingsButtonSmall {
+            id: theme_black
+            y: config.font_size * 47.5
+            x: parent.width / 25
+            text: "Black "
+            checked: config.theme + " " == text.toLowerCase() ? true : false
+            onClicked: { theme_black.checked = true
+                         theme_blue.checked = false
+                         theme_pink.checked = false
+                         theme_custom.checked = false
+                         themeController.set_theme(text)
+            }
+        }
+        SettingsButtonSmall {
+            id: theme_blue
+            y: config.font_size * 47.5
+            x: (parent.width / 25 * 2) + width
+            text: "Blue "
+            checked: config.theme + " " == text.toLowerCase() ? true : false
+            onClicked: { theme_black.checked = false
+                         theme_blue.checked = true
+                         theme_pink.checked = false
+                         theme_custom.checked = false
+                         themeController.set_theme(text)
+            }
+        }
+        SettingsButtonSmall {
+            id: theme_pink
+            y: config.font_size * 47.5
+            x: (parent.width / 25 * 3) + (width * 2)
+            text: "Pink "
+            checked: config.theme + " " == text.toLowerCase() ? true : false
+            onClicked: { theme_black.checked = false
+                         theme_blue.checked = false
+                         theme_pink.checked = true
+                         theme_custom.checked = false
+                         themeController.set_theme(text)
+            }
+        }
+        SettingsButtonSmall {
+            id: theme_custom
+            y: config.font_size * 47.5
+            x: (parent.width / 25 * 4) + (width * 3)
+            text: "Custom"
+            checked: config.theme + " " == text.toLowerCase() ? true : false
+            onClicked: { theme_black.checked = false
+                         theme_blue.checked = false
+                         theme_pink.checked = false
+                         theme_custom.checked = true
+                         themeController.set_theme(text)
             }
         }
     }

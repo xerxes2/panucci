@@ -13,7 +13,7 @@ Item {
         onClicked: playlistItemInfoArea.close()
     }
     Rectangle {
-        color: "#" + config.background
+        color: themeController.background
         anchors.fill: parent
         opacity: .9
     }
@@ -22,7 +22,7 @@ Item {
         y: config.font_size
         anchors.horizontalCenter: parent.horizontalCenter
         font.pixelSize: config.font_size * 1.5
-        color: "#" + config.foreground
+        color: themeController.foreground
     }
     Flickable {
         id: playlistItemInfoFlick
@@ -48,31 +48,31 @@ Item {
                 text: info_title_str
                 anchors.right: parent.right
                 font.pixelSize: config.font_size
-                color: "#" + config.foreground
+                color: themeController.foreground
             }
             Text {
                 text: info_length_str
                 anchors.right: parent.right
                 font.pixelSize: config.font_size
-                color: "#" + config.foreground
+                color: themeController.foreground
             }
             Text {
                 text: info_artist_str
                 anchors.right: parent.right
                 font.pixelSize: config.font_size
-                color: "#" + config.foreground
+                color: themeController.foreground
             }
             Text {
                 text: info_album_str
                 anchors.right: parent.right
                 font.pixelSize: config.font_size
-                color: "#" + config.foreground
+                color: themeController.foreground
             }
             Text {
                 text: info_filepath_str
                 anchors.right: parent.right
                 font.pixelSize: config.font_size
-                color: "#" + config.foreground
+                color: themeController.foreground
             }
         }
         Column {
@@ -86,27 +86,27 @@ Item {
             Text {
                 text: playlistItemInfoArea.metadata["title"]
                 font.pixelSize: config.font_size
-                color: "#" + config.foreground
+                color: themeController.foreground
             }
             Text {
                 text: playlistItemInfoArea.metadata["length"]
                 font.pixelSize: config.font_size
-                color: "#" + config.foreground
+                color: themeController.foreground
             }
             Text {
                 text: playlistItemInfoArea.metadata["artist"]
                 font.pixelSize: config.font_size
-                color: "#" + config.foreground
+                color: themeController.foreground
             }
             Text {
                 text: playlistItemInfoArea.metadata["album"]
                 font.pixelSize: config.font_size
-                color: "#" + config.foreground
+                color: themeController.foreground
             }
             Text {
                 text: playlistItemInfoArea.metadata["path"]
                 font.pixelSize: config.font_size
-                color: "#" + config.foreground
+                color: themeController.foreground
             }
         }
     }

@@ -10,7 +10,7 @@ Item {
         anchors.fill: parent
     }
     Rectangle {
-        color: "#" + config.background
+        color: themeController.background
         anchors.fill: parent
         opacity: .9
     }
@@ -23,7 +23,7 @@ Item {
         header: Item { height: config.font_size }
         footer: Item { height: config.font_size }
         
-        highlight: Rectangle { color: "#" + config.highlight
+        highlight: Rectangle { color: themeController.highlight
                                width: playlistView.width
                                height: config.font_size * 3
                                y: playlistView.currentItem.y
@@ -39,7 +39,7 @@ Item {
                     verticalCenter: parent.verticalCenter
                     leftMargin: modelData.bookmark_id == "" ? config.font_size : config.font_size * 2
                 }
-                color: "#" + config.foreground
+                color: themeController.foreground
                 font.pixelSize: config.font_size
                 text: modelData.caption
             }
