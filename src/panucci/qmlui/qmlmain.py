@@ -221,20 +221,13 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def make_config(self):
         self.config_qml = {}
-        self.config_qml["background"] = self.config.get("options", "background")
-        self.config_qml["foreground"] = self.config.get("options", "foreground")
-        self.config_qml["highlight"] = self.config.get("options", "highlight")
         self.config_qml["main_width"] = self.config.getint("options", "main_width")
         self.config_qml["main_height"] = self.config.getint("options", "main_height")
         self.config_qml["button_height"] = self.config.getint("options", "button_height")
-        self.config_qml["button_color"] = self.config.get("options", "button_color")
-        self.config_qml["button_border_color"] = self.config.get("options", "button_border_color")
         self.config_qml["button_border_width"] = self.config.getint("options", "button_border_width")
         self.config_qml["button_radius"] = self.config.getint("options", "button_radius")
         self.config_qml["cover_height"] = self.config.getint("options", "cover_height")
         self.config_qml["progress_height"] = self.config.getint("options", "progress_height")
-        self.config_qml["progress_color"] = self.config.get("options", "progress_color")
-        self.config_qml["progress_bg_color"] = self.config.get("options", "progress_background_color")
         self.config_qml["font_size"] = self.config.getint("options", "font_size")
         self.config_qml["dual_delay"] = self.config.getfloat("options", "dual_action_button_delay") * 1000
         self.config_qml["scrolling"] = self.config.getboolean("options", "scrolling_labels") * 1000
