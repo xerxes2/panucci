@@ -54,6 +54,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.context.setContextProperty('config', self.make_config())
         self.theme_controller = ThemeController(self.config)
         self.context.setContextProperty('themeController', self.theme_controller)
+        self.context.setContextProperty('themes', self.theme_controller.get_themes())
         self.create_actions()
         engine = self.context.engine()
         self.image_provider = ImageProvider(self)
@@ -656,6 +657,11 @@ class ThemeController(QtCore.QObject):
     def set_theme(self, theme):
         self.config.set("options", "theme", theme.strip().lower())
         self.changed.emit()
+
+    def get_themes(self):
+        self.sections = self.config_theme.sections()
+        self.sections.sort(lambda x,y : cmp (x.lower(), y.lower()))
+        return self.sections
 
     def _get_background(self):
         return "#" + self.config_theme.get(self.config.get("options", "theme"), "background")

@@ -1,5 +1,6 @@
 
 import Qt 4.7
+import "themeGenerator.js" as Generator
 
 Item {
     id: settingsArea
@@ -15,10 +16,11 @@ Item {
         opacity: .9
     }
     Flickable {
+        id: settingsFlick
         width: root.width - config.button_width - config.button_border_width
         height: root.height
         contentWidth: root.width - config.button_width - config.button_border_width
-        contentHeight: config.font_size * 52.5
+        contentHeight: (config.font_size * 52.5)
         clip: true
 
         MouseArea {
@@ -185,58 +187,6 @@ Item {
             font.pixelSize: config.font_size * 1.5
             color: themeController.foreground
         }
-        SettingsButtonSmall {
-            id: theme_black
-            y: config.font_size * 47.5
-            x: parent.width / 25
-            text: "Black "
-            checked: config.theme + " " == text.toLowerCase() ? true : false
-            onClicked: { theme_black.checked = true
-                         theme_blue.checked = false
-                         theme_pink.checked = false
-                         theme_custom.checked = false
-                         themeController.set_theme(text)
-            }
-        }
-        SettingsButtonSmall {
-            id: theme_blue
-            y: config.font_size * 47.5
-            x: (parent.width / 25 * 2) + width
-            text: "Blue "
-            checked: config.theme + " " == text.toLowerCase() ? true : false
-            onClicked: { theme_black.checked = false
-                         theme_blue.checked = true
-                         theme_pink.checked = false
-                         theme_custom.checked = false
-                         themeController.set_theme(text)
-            }
-        }
-        SettingsButtonSmall {
-            id: theme_pink
-            y: config.font_size * 47.5
-            x: (parent.width / 25 * 3) + (width * 2)
-            text: "Pink "
-            checked: config.theme + " " == text.toLowerCase() ? true : false
-            onClicked: { theme_black.checked = false
-                         theme_blue.checked = false
-                         theme_pink.checked = true
-                         theme_custom.checked = false
-                         themeController.set_theme(text)
-            }
-        }
-        SettingsButtonSmall {
-            id: theme_custom
-            y: config.font_size * 47.5
-            x: (parent.width / 25 * 4) + (width * 3)
-            text: "Custom"
-            checked: config.theme == text.toLowerCase() ? true : false
-            onClicked: { theme_black.checked = false
-                         theme_blue.checked = false
-                         theme_pink.checked = false
-                         theme_custom.checked = true
-                         themeController.set_theme(text)
-            }
-        }
     }
     AppButton {
         x: root.width - config.button_width - config.button_border_width
@@ -249,6 +199,15 @@ Item {
                      }
                      settingsArea.close()
                    }
+    }
+    Component.onCompleted: Generator.createThemeButtons()
+    function themeButtonClicked(button) {
+        var i
+        for (i=0;i<themes.length;i++) {
+            Generator.themeButtons[i].checked = false
+        }
+        button.checked = true
+        themeController.set_theme(button.text)
     }
     property variant actions: [action_scrolling_labels, action_lock_progress,
             action_dual_action, action_stay_at_end, action_seek_back,

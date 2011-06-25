@@ -5,7 +5,7 @@ Rectangle {
     id: settingsButtonSmall
     property bool checked: false
     property variant text: ""
-    signal clicked
+    signal clicked(variant button)
     color: checked ? themeController.progress_color : themeController.progress_bg_color
     width: parent.width / 5
     height: config.font_size * 4
@@ -20,6 +20,6 @@ Rectangle {
     }
     MouseArea {
         anchors.fill: parent
-        onClicked: settingsButtonSmall.clicked()
+        onClicked: settingsButtonSmall.clicked(settingsButtonSmall)
     }
 }
