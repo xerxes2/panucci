@@ -75,6 +75,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.timer_callback)
         self.main_window.setCentralWidget(self.view)
+        self.main_window.setAttribute(QtCore.Qt.WA_LockLandscapeOrientation)
         self.main_window.show()
         self.app.exec_()
 
