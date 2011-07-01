@@ -6,6 +6,7 @@ Rectangle {
     color: themeController.background
     width: config.main_width
     height: config.main_height
+    clip: true
 
     MouseArea {
         anchors.fill: parent
