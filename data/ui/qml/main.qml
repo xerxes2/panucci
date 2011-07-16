@@ -16,7 +16,7 @@ Rectangle {
         contextMenu.state = 'opened'
         contextMenu.items = [action_add_media, action_playlist, action_settings,
             action_play_one, action_save_playlist, action_clear_playlist, action_delete_bookmarks,
-            action_timer, action_about, action_quit]
+            action_volume_control, action_timer, action_about, action_quit]
     }
     function openAboutDialog(items) {
         aboutDialog.state = 'opened'
@@ -43,6 +43,10 @@ Rectangle {
     }
     function openSleepTimer() {
         sleepTimer.state = 'opened'
+    }
+    function openVolumeControl(percent) {
+        volumeControl.state = 'opened'
+        volumeControl.value = percent
     }
     function set_text_x() {
         if (cover.source == "") {
@@ -551,6 +555,50 @@ Rectangle {
                 }
                 AnchorChanges {
                     target: sleepTimer
+                    anchors.right: root.left
+                }
+                StateChangeScript {
+                    //script: controller.contextMenuClosed()
+                }
+            }
+        ]
+        transitions: Transition {
+            AnchorAnimation { duration: 150 }
+        }
+    }
+    VolumeControl {
+        id: volumeControl
+        width: parent.width
+        opacity: 0
+
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+        }
+        onClose: volumeControl.state = 'closed'
+        state: 'closed'
+        Behavior on opacity { NumberAnimation { duration: 300 } }
+
+        states: [
+            State {
+                name: 'opened'
+                PropertyChanges {
+                    target: volumeControl
+                    opacity: 1
+                }
+                AnchorChanges {
+                    target: volumeControl
+                    anchors.right: root.right
+                }
+            },
+            State {
+                name: 'closed'
+                PropertyChanges {
+                    target: volumeControl
+                    opacity: 0
+                }
+                AnchorChanges {
+                    target: volumeControl
                     anchors.right: root.left
                 }
                 StateChangeScript {

@@ -124,6 +124,12 @@ class BasePlayer(services.ObservableService):
         """
         return self._seek(position)
 
+    def get_volume_level(self):
+        return self._get_volume_level()
+
+    def set_volume_level(self, percent):
+        self._set_volume_level(percent)
+
     #############################################
     # Generic Functions
 

@@ -112,6 +112,11 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.context.setContextProperty('action_timer', self.action_timer)
         self.shutdown_str = _("Shutdown time in minutes").decode("utf-8")
         self.context.setContextProperty('shutdown_str', self.shutdown_str)
+        self.action_volume_control = QtGui.QAction(_("Volume Control").decode("utf-8"), self.view, shortcut="Ctrl+V",
+            statusTip=_(""), triggered=self.volume_control_callback)
+        self.context.setContextProperty('action_volume_control', self.action_volume_control)
+        self.volume_level_str = _('Volume level in percent').decode("utf-8")
+        self.context.setContextProperty('volume_level_str', self.volume_level_str)
         # Settings menu
         self.main_window_str = _("Main Window").decode("utf-8")
         self.context.setContextProperty('main_window_str', self.main_window_str)
@@ -125,7 +130,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.action_dual_action.setCheckable(True)
         self.action_dual_action.setChecked(self.config.getboolean("options", "dual_action_button"))
         self.context.setContextProperty('action_dual_action', self.action_dual_action)
-        self.action_scrolling_labels = QtGui.QAction(_("Scrolling Labels").decode("utf-8"), self.view, shortcut="Ctrl+V",
+        self.action_scrolling_labels = QtGui.QAction(_("Scrolling Labels").decode("utf-8"), self.view, shortcut="Ctrl+D",
             statusTip="Scroll title labels when too long", triggered=self.scrolling_labels_callback)
         self.action_scrolling_labels.setCheckable(True)
         self.action_scrolling_labels.setChecked(self.config.getboolean("options", "scrolling_labels"))
@@ -324,6 +329,13 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     @QtCore.Slot(str)
     def start_timed_shutdown(self, _minutes):
         QtCore.QTimer.singleShot(60000*int(_minutes), self.quit_panucci)
+
+    def volume_control_callback(self):
+        self.view.rootObject().openVolumeControl(str(self.playlist.get_volume_level()))
+
+    @QtCore.Slot(str)
+    def set_volume_level(self, _percent):
+        self.playlist.set_volume_level(int(_percent))
 
     @QtCore.Slot(str, str)
     def remove_callback(self, _id, _bid):

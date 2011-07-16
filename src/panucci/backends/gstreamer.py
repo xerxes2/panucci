@@ -102,6 +102,14 @@ class Player(base.BasePlayer):
         self.initial_pause_position = False
         return not error
 
+    def _get_volume_level(self):
+        if self.__player:
+            return int(self.__player.get_property("volume") * 100)
+
+    def _set_volume_level(self, percent):
+        if self.__player:
+            self.__player.set_property("volume", float(percent) / 100)
+
     def __setup_player(self):
         self.__log.debug("Creating playbin-based gstreamer player")
         if self.__player:

@@ -51,13 +51,13 @@ data/panucci.service
 data/panucci.service.in
 data/panucci.svg
 data/panucci.xcf
+data/theme.conf
 data/po/cs.po
 data/po/de.po
 data/po/es.po
 data/po/fr.po
 data/po/pl.po
 data/po/sv.po
-data/theme.conf
 data/ui/qml/AboutDialog.qml
 data/ui/qml/AppButton.qml
 data/ui/qml/ContextMenu.qml
@@ -73,6 +73,7 @@ data/ui/qml/SettingsButton.qml
 data/ui/qml/SettingsButtonSmall.qml
 data/ui/qml/ShadowText.qml
 data/ui/qml/SleepTimer.qml
+data/ui/qml/VolumeControl.qml
 data/ui/qml/themeGenerator.js
 icons/add.png
 icons/apply.png

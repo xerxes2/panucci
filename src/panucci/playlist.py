@@ -740,6 +740,12 @@ class Playlist(ObservableService):
     def reset_player(self):
         self.__player.on_reset_playlist()
 
+    def get_volume_level(self):
+        return self.__player.get_volume_level()
+
+    def set_volume_level(self, percent):
+        self.__player.set_volume_level(percent)
+
 class Queue(list, ObservableService):
     """ A Simple list of PlaylistItems """
 
