@@ -70,17 +70,23 @@ Item {
         width: root.width
         height: config.font_size * 1.1
         x: 0
-        y: root.height - config.button_height - textinput.height - config.button_border_width
+        y: textinput.focus ? 0: root.height - config.button_height - textinput.height - config.button_border_width
         color: themeController.progress_bg_color
     }
     TextInput {
         id: textinput
         width: root.width
         x: 5
-        y: root.height - config.button_height - textinput.height - config.button_border_width
+        y: textinput.focus ? 0: root.height - config.button_height - textinput.height - config.button_border_width
         color: themeController.foreground
         font.pixelSize: config.font_size
         text: filechooserArea.path
+
+        Keys.onPressed: {
+            if (event.key == Qt.Key_Return) {
+                textinput.focus = false
+            }
+        }
     }
     AppButton {
         x: 0
