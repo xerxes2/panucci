@@ -15,7 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-#
 
 from distutils.core import setup
 
@@ -63,7 +62,7 @@ sys.path.insert(0, SRC_DIR)
 import panucci
 
 setup(
-        name='Panucci',
+        name='panucci',
         version=panucci.__version__,
         description='Resuming audiobook and podcast player',
         author='Thomas Perl',
