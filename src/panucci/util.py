@@ -79,6 +79,7 @@ def find_data_file(filename):
             os.path.join(bin_dir, '..', 'icons'),
             os.path.join(bin_dir, '..', 'data'),
             '/opt/panucci',
+            os.path.join(bin_dir, '..', 'data/ui/qml'),
     ]
 
     for location in locations:
