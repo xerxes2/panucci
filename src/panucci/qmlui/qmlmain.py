@@ -74,7 +74,10 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.timer_callback)
         self.view.setAttribute(QtCore.Qt.WA_LockLandscapeOrientation)
-        self.view.show()
+        if platform.HANDSET:
+            self.view.showFullScreen()
+        else:
+            self.view.show()
         self.app.exec_()
 
     def create_actions(self):
