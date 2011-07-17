@@ -37,7 +37,7 @@ Item {
         }
         Rectangle {
             id: progress
-            width: 0
+            width: (Math.pow(5, 0.1) - 1) * parent.width
             color: themeController.progress_color
             anchors {
                 top: parent.top
@@ -48,7 +48,7 @@ Item {
     }
     Text {
         id: value
-        text: "1"
+        text: "5"
         anchors.centerIn: valuebar
         font.pixelSize: config.font_size * 1.5
         color: themeController.foreground
