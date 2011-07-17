@@ -25,7 +25,7 @@ Item {
         id: about_name
         x: 90
         y: 10
-        font.pixelSize: config.font_size + 3
+        font.pixelSize: config.font_size * 1.3
         font.weight: Font.Bold
         color: themeController.foreground
         text: items[0]
@@ -33,24 +33,25 @@ Item {
     Text {
         id: about_text
         x: 90
-        y: about_name.y + config.font_size + 13
-        font.pixelSize: config.font_size + 1
+        y: about_name.y + (config.font_size * 1.3) + config.font_size
+        font.pixelSize: config.font_size * 1.1
         color: themeController.foreground
         text: items[1]
     }
     Text {
         id: about_copyright
         x: 90
-        y: about_text.y + config.font_size + 11
-        font.pixelSize: config.font_size + 1
+        y: about_text.y + (config.font_size * 1.1) + config.font_size
+        font.pixelSize: config.font_size * 1.1
         color: themeController.foreground
         text: items[2]
     }
     Text {
         id: about_website
         x: 90
-        y: about_copyright.y + config.font_size + 11
-        font.pixelSize: config.font_size + 1
+        y: about_copyright.y + (config.font_size * 1.1) + config.font_size
+        font.pixelSize: config.font_size * 1.3
+        font.weight: Font.Bold
         color: themeController.highlight
         text: "<a href=\"" + items[3] + "\">" + items[3] + "</a>"
         onLinkActivated: main.open_external_url(link)
