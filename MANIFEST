@@ -75,6 +75,10 @@ data/ui/qml/ShadowText.qml
 data/ui/qml/SleepTimer.qml
 data/ui/qml/VolumeControl.qml
 data/ui/qml/themeGenerator.js
+doc/dbus-api.txt
+doc/dbus-howto.txt
+doc/devices.txt
+doc/signal-api.txt
 icons/add.png
 icons/apply.png
 icons/bookmark-new.png
