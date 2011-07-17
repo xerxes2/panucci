@@ -226,6 +226,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.context.setContextProperty('info_album_str', self.info_album_str)
         self.info_filepath_str = _('Filepath:').decode("utf-8")
         self.context.setContextProperty('info_filepath_str', self.info_filepath_str)
+        # Misc
+        self.disabled_str = _('Disabled').decode("utf-8")
+        self.context.setContextProperty('disabled_str', self.disabled_str)
 
     def make_config(self):
         self.config_qml = {}
