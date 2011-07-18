@@ -134,30 +134,30 @@ Rectangle {
     Text {
         id: artist
         x: config.cover_height + 5
-        y: config.cover_height / 4
-        font.pixelSize: config.font_size + 1
+        y: (config.cover_height - (config.font_size * 5.4)) / 2
+        font.pixelSize: config.font_size * 1.1
         color: themeController.foreground
         text: main.artist_string
     }
     Text {
         id: album
         x: config.cover_height + 5
-        y: (config.cover_height / 4) + config.font_size + 21
-        font.pixelSize: config.font_size - 1
+        y: ((config.cover_height - (config.font_size * 5.4)) / 2) + (config.font_size * 2.1)
+        font.pixelSize: config.font_size * .9
         color: themeController.foreground
         text: main.album_string
     }
     Rectangle {
         id: title_rect
         width: config.main_width - 10
-        height: config.font_size + 3
+        height: config.font_size * 1.2
         x: config.cover_height + 5
-        y: (config.cover_height / 4) + ((config.font_size*2)) + 42
+        y: ((config.cover_height - (config.font_size * 5.4)) / 2) + (config.font_size * 4.1)
         color: themeController.background
         clip: true
         Text {
             id: title
-            font.pixelSize: config.font_size + 1
+            font.pixelSize: config.font_size * 1.1
             font.weight: Font.Bold
             color: themeController.foreground
             text: main.title_string
@@ -194,6 +194,7 @@ Rectangle {
         anchors.centerIn: progressBar
         color: themeController.foreground
         font.pixelSize: config.font_size
+        font.weight: Font.Bold
         text: main.time_string
         verticalAlignment: Text.AlignVCenter
     }
