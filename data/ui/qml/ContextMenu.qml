@@ -40,7 +40,7 @@ Item {
                     leftMargin: config.font_size * 5
                 }
                 color: themeController.foreground
-                font.pixelSize: parent.height * .3
+                font.pixelSize: config.font_size * 1.4
                 text: modelData.text
             }
             onSelected: {

@@ -6,7 +6,7 @@ Item {
     signal selected(variant item)
     signal contextMenu(variant item)
 
-    height: config.font_size * 5
+    height: config.font_size * 4.5
     width: parent.width
 
     Rectangle {
@@ -15,7 +15,7 @@ Item {
         color: themeController.highlight
         anchors.fill: parent
 
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Behavior on opacity { NumberAnimation { duration: 500 } }
     }
 
     MouseArea {
@@ -29,6 +29,6 @@ Item {
                 selectableItem.contextMenu(modelData)
             }
         }
-        onPressAndHold: selectableItem.contextMenu(modelData)
+        //onPressAndHold: selectableItem.contextMenu(modelData)
     }
 }
