@@ -1,0 +1,3 @@
+include README COPYING MANIFEST.in makefile setup.py
+recursive-include data *
+recursive-include doc *
