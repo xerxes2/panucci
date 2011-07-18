@@ -242,7 +242,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.config_qml["font_size"] = self.config.getint("options", "font_size")
         self.config_qml["dual_delay"] = self.config.getfloat("options", "dual_action_button_delay") * 1000
         self.config_qml["scrolling"] = self.config.getboolean("options", "scrolling_labels") * 1000
-        self.config_qml["button_width"] = (self.config_qml["main_width"] / 6) - 7
+        self.config_qml["button_width"] = int(float((self.config_qml["main_width"]) / 6.0)) - self.config_qml["button_border_width"] - 1
         self.config_qml["theme"] = self.config.get("options", "theme")
         return self.config_qml
 
