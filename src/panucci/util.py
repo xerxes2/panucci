@@ -75,11 +75,11 @@ def pretty_filename(filename):
 def find_data_file(filename):
     bin_dir = os.path.dirname(argv[0])
     locations = [
-            os.path.join(bin_dir, '..', 'share', 'panucci'),
             os.path.join(bin_dir, '..', 'icons'),
             os.path.join(bin_dir, '..', 'data'),
-            '/opt/panucci',
             os.path.join(bin_dir, '..', 'data/ui/qml'),
+            os.path.join(bin_dir, '..', 'share', 'panucci'),
+            '/opt/panucci',
     ]
 
     for location in locations:
