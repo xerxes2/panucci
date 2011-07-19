@@ -53,14 +53,13 @@ if len(args) > 1 or ( opts.queue_filename and len(args) ):
     parser.print_help()
     sys.exit(1)
 
-# add src/ to the PYTHONPATH
 local_module_dir = os.path.join(os.path.dirname(sys.argv[0]), '..', 'src')
 if os.path.isdir(local_module_dir):
     sys.path.insert(0, local_module_dir)
-
-optified_install_path = '/opt/panucci/lib/'
-if os.path.isdir(optified_install_path):
-    sys.path.append(optified_install_path)
+if os.path.isdir('/opt/panucci/lib/'):
+    sys.path.append('/opt/panucci/lib/')
+else:
+    sys.path.append('/usr/share/panucci/lib/')
 
 from panucci import main
 main.run(opts, args)
