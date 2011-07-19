@@ -204,8 +204,10 @@ Rectangle {
         y: config.main_height - config.button_height
         image: "media-skip-backward.png"
         onReleased: image = "media-skip-backward.png"
-        onPressed: timer_back.start()
-        onClicked: { if (timer_back.running == true) {
+        onPressed: { if (action_dual_action.checked == true)
+                         timer_back.start()
+                   }
+        onClicked: { if (timer_back.running == true || action_dual_action.checked == false) {
                          timer_back.stop()
                          action_player_rrewind.trigger()
                      }
@@ -238,8 +240,10 @@ Rectangle {
         y: config.main_height - config.button_height
         image: "media-skip-forward.png"
         onReleased: image = "media-skip-forward.png"
-        onPressed: timer_forward.start()
-        onClicked: { if (timer_forward.running == true) {
+        onPressed: { if (action_dual_action.checked == true)
+                         timer_forward.start()
+                   }
+        onClicked: { if (timer_forward.running == true || action_dual_action.checked == false) {
                          timer_forward.stop()
                          action_player_fforward.trigger()
                      }
