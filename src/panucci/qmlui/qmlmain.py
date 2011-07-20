@@ -172,6 +172,11 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.action_resume_all.setCheckable(True)
         self.action_resume_all.setChecked(self.config.getboolean("options", "resume_all"))
         self.context.setContextProperty('action_resume_all', self.action_resume_all)
+        self.action_play_on_headset = QtGui.QAction(_("Play on Headset").decode("utf-8"), self.view, shortcut="Ctrl+B",
+            statusTip="Start playback automatically when connecting headset", triggered=self.play_on_headset_callback)
+        self.action_play_on_headset.setCheckable(True)
+        self.action_play_on_headset.setChecked(self.config.getboolean("options", "play_on_headset"))
+        self.context.setContextProperty('action_play_on_headset', self.action_play_on_headset)
         self.play_mode_str = _("Play Mode").decode("utf-8")
         self.context.setContextProperty('play_mode_str', self.play_mode_str)
         self.action_play_mode_all = QtGui.QAction(_("All").decode("utf-8"), self.view, statusTip="Set play mode",
@@ -190,12 +195,12 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             triggered=self.play_mode_repeat_callback)
         self.action_play_mode_repeat.setCheckable(True)
         self.context.setContextProperty('action_play_mode_repeat', self.action_play_mode_repeat)
-        actiongroup = QtGui.QActionGroup(self.view)
-        actiongroup.setExclusive(True)
-        self.action_play_mode_all.setActionGroup(actiongroup)
-        self.action_play_mode_single.setActionGroup(actiongroup)
-        self.action_play_mode_random.setActionGroup(actiongroup)
-        self.action_play_mode_repeat.setActionGroup(actiongroup)
+        actiongroup_play_mode = QtGui.QActionGroup(self.view)
+        actiongroup_play_mode.setExclusive(True)
+        self.action_play_mode_all.setActionGroup(actiongroup_play_mode)
+        self.action_play_mode_single.setActionGroup(actiongroup_play_mode)
+        self.action_play_mode_random.setActionGroup(actiongroup_play_mode)
+        self.action_play_mode_repeat.setActionGroup(actiongroup_play_mode)
         if self.config.get("options", "play_mode") == "single":
             self.action_play_mode_single.setChecked(True)
         elif self.config.get("options", "play_mode") == "random":
@@ -204,6 +209,31 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             self.action_play_mode_repeat.setChecked(True)
         else:
             self.action_play_mode_all.setChecked(True)
+        self.headset_button_str = _("Headset Button").decode("utf-8")
+        self.context.setContextProperty('headset_button_str', self.headset_button_str)
+        self.action_headset_button_short = QtGui.QAction(_("Short").decode("utf-8"), self.view,
+            triggered=self.headset_button_short_callback)
+        self.action_headset_button_short.setCheckable(True)
+        self.context.setContextProperty('action_headset_button_short', self.action_headset_button_short)
+        self.action_headset_button_long = QtGui.QAction(_("Long").decode("utf-8"), self.view,
+            triggered=self.headset_button_long_callback)
+        self.action_headset_button_long.setCheckable(True)
+        self.context.setContextProperty('action_headset_button_long', self.action_headset_button_long)
+        self.action_headset_button_switch = QtGui.QAction(_("Switch").decode("utf-8"), self.view,
+            triggered=self.headset_button_switch_callback)
+        self.action_headset_button_switch.setCheckable(True)
+        self.context.setContextProperty('action_headset_button_switch', self.action_headset_button_switch)
+        actiongroup_headset_button = QtGui.QActionGroup(self.view)
+        actiongroup_headset_button.setExclusive(True)
+        self.action_headset_button_short.setActionGroup(actiongroup_headset_button)
+        self.action_headset_button_long.setActionGroup(actiongroup_headset_button)
+        self.action_headset_button_switch.setActionGroup(actiongroup_headset_button)
+        if self.config.get("options", "headset_button") == "short":
+            self.action_headset_button_short.setChecked(True)
+        elif self.config.get("options", "headset_button") == "long":
+            self.action_headset_button_long.setChecked(True)
+        else:
+            self.action_headset_button_switch.setChecked(True)
         self.theme_str = _('Theme').decode("utf-8")
         self.context.setContextProperty('theme_str', self.theme_str)
         # help menu
@@ -424,6 +454,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         if not self.action_resume_all.isChecked():
             self.playlist.reset_all_seek_to()
 
+    def play_on_headset_callback(self):
+        self.set_config_option("play_on_headset", str(self.action_play_on_headset.isChecked()).lower())
+
     def play_mode_all_callback(self):
         self.set_config_option("play_mode", "all")
 
@@ -435,6 +468,15 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def play_mode_repeat_callback(self):
         self.set_config_option("play_mode", "repeat")
+
+    def headset_button_short_callback(self):
+        self.set_config_option("headset_button", "short")
+
+    def headset_button_long_callback(self):
+        self.set_config_option("headset_button", "long")
+
+    def headset_button_switch_callback(self):
+        self.set_config_option("headset_button", "switch")
 
     def about_callback(self):
         from panucci import about

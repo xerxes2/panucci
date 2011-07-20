@@ -5,7 +5,7 @@ function createThemeButtons() {
     var component
     component = Qt.createComponent("SettingsButtonSmall.qml")
     var button
-    var ypos = config.font_size * 47.5
+    var ypos = theme_text.y + (config.font_size * 2.5)
     var count = 0
     var i
     for (i=0;i<themes.length;i++) {

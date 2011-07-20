@@ -20,7 +20,6 @@ Item {
         width: root.width - config.button_width - config.button_border_width
         height: root.height
         contentWidth: root.width - config.button_width - config.button_border_width
-        contentHeight: (config.font_size * 52.5)
         clip: true
 
         MouseArea {
@@ -28,6 +27,7 @@ Item {
             onClicked: settingsArea.close()
         }
         Text {
+            id: main_window_text
             y: config.font_size
             anchors.horizontalCenter: parent.horizontalCenter
             text: main_window_str
@@ -37,7 +37,7 @@ Item {
         SettingsButton {
             id: action_scrolling_labels_button
             checked: action_scrolling_labels.checked
-            y: config.font_size * 3.5
+            y: main_window_text.y + (config.font_size * 2.5)
             text: action_scrolling_labels.text
             onClicked: { if (action_scrolling_labels_button.checked) {
                              action_scrolling_labels_button.checked = false
@@ -50,7 +50,7 @@ Item {
         SettingsButton {
             id: action_lock_progress_button
             checked: action_lock_progress.checked
-            y: config.font_size * 8.5
+            y: action_scrolling_labels_button.y + (config.font_size * 5)
             text: action_lock_progress.text
             onClicked: { if (action_lock_progress_button.checked) {
                              action_lock_progress_button.checked = false
@@ -63,7 +63,7 @@ Item {
         SettingsButton {
             id: action_dual_action_button
             checked: action_dual_action.checked
-            y: config.font_size * 13.5
+            y: action_lock_progress_button.y + (config.font_size * 5)
             text: action_dual_action.text
             onClicked: { if (action_dual_action_button.checked) {
                              action_dual_action_button.checked = false
@@ -74,7 +74,8 @@ Item {
             }
         }
         Text {
-            y: config.font_size * 19
+            id: playback_text
+            y: action_dual_action_button.y + (config.font_size * 5.5)
             anchors.horizontalCenter: parent.horizontalCenter
             text: playback_str
             font.pixelSize: config.font_size * 1.5
@@ -83,7 +84,7 @@ Item {
         SettingsButton {
             id: action_stay_at_end_button
             checked: action_stay_at_end.checked
-            y: config.font_size * 21.5
+            y: playback_text.y + (config.font_size * 2.5)
             text: action_stay_at_end.text
             onClicked: { if (action_stay_at_end_button.checked) {
                              action_stay_at_end_button.checked = false
@@ -96,7 +97,7 @@ Item {
         SettingsButton {
             id: action_seek_back_button
             checked: action_seek_back.checked
-            y: config.font_size * 26.5
+            y: action_stay_at_end_button.y + (config.font_size * 5.5)
             text: action_seek_back.text
             onClicked: { if (action_seek_back_button.checked) {
                              action_seek_back_button.checked = false
@@ -109,7 +110,7 @@ Item {
         SettingsButton {
             id: action_resume_all_button
             checked: action_resume_all.checked
-            y: config.font_size * 31.5
+            y: action_seek_back_button.y + (config.font_size * 5.5)
             text: action_resume_all.text
             onClicked: { if (action_resume_all_button.checked) {
                              action_resume_all_button.checked = false
@@ -119,8 +120,22 @@ Item {
                          }
             }
         }
+        SettingsButton {
+            id: action_play_on_headset_button
+            checked: action_play_on_headset.checked
+            y: action_resume_all_button.y + (config.font_size * 5.5)
+            text: action_play_on_headset.text
+            onClicked: { if (action_play_on_headset_button.checked) {
+                             action_play_on_headset_button.checked = false
+                         }
+                         else {
+                             action_play_on_headset_button.checked = true
+                         }
+            }
+        }
         Text {
-            y: config.font_size * 37
+            id: play_mode_text
+            y: action_play_on_headset_button.y + (config.font_size * 5.5)
             anchors.horizontalCenter: parent.horizontalCenter
             text: play_mode_str
             font.pixelSize: config.font_size * 1.5
@@ -129,8 +144,8 @@ Item {
         SettingsButtonSmall {
             id: action_play_mode_all_button
             checked: action_play_mode_all.checked
-            y: config.font_size * 39.5
             x: parent.width / 25
+            y: play_mode_text.y + (config.font_size * 2.5)
             text: action_play_mode_all.text
             onClicked: { action_play_mode_all_button.checked = true
                          action_play_mode_single_button.checked = false
@@ -141,10 +156,8 @@ Item {
         SettingsButtonSmall {
             id: action_play_mode_single_button
             checked: action_play_mode_single.checked
-            width: parent.width / 5
-            height: config.font_size * 4
-            y: config.font_size * 39.5
             x: (parent.width / 25 * 2) + width
+            y: action_play_mode_all_button.y
             text: action_play_mode_single.text
             onClicked: { action_play_mode_all_button.checked = false
                          action_play_mode_single_button.checked = true
@@ -155,10 +168,8 @@ Item {
         SettingsButtonSmall {
             id: action_play_mode_random_button
             checked: action_play_mode_random.checked
-            width: parent.width / 5
-            height: config.font_size * 4
-            y: config.font_size * 39.5
             x: (parent.width / 25 * 3) + (width * 2)
+            y: action_play_mode_all_button.y
             text: action_play_mode_random.text
             onClicked: { action_play_mode_all_button.checked = false
                          action_play_mode_single_button.checked = false
@@ -169,10 +180,8 @@ Item {
         SettingsButtonSmall {
             id: action_play_mode_repeat_button
             checked: action_play_mode_repeat.checked
-            width: parent.width / 5
-            height: config.font_size * 4
-            y: config.font_size * 39.5
             x: (parent.width / 25 * 4) + (width * 3)
+            y: action_play_mode_all_button.y
             text: action_play_mode_repeat.text
             onClicked: { action_play_mode_all_button.checked = false
                          action_play_mode_single_button.checked = false
@@ -181,7 +190,49 @@ Item {
             }
         }
         Text {
-            y: config.font_size * 45
+            id: headset_button_text
+            y: action_play_mode_all_button.y + (config.font_size * 5.5)
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: headset_button_str
+            font.pixelSize: config.font_size * 1.5
+            color: themeController.foreground
+        }
+        SettingsButtonSmall {
+            id: action_headset_button_short_button
+            checked: action_headset_button_short.checked
+            x: ((parent.width / 5 * 2) - (parent.width / 25 * 2)) / 2
+            y: headset_button_text.y + (config.font_size * 2.5)
+            text: action_headset_button_short.text
+            onClicked: { action_headset_button_short_button.checked = true
+                         action_headset_button_long_button.checked = false
+                         action_headset_button_switch_button.checked = false
+           }
+        }
+        SettingsButtonSmall {
+            id: action_headset_button_long_button
+            checked: action_headset_button_long.checked
+            x: action_headset_button_short_button.x + width + (parent.width / 25)
+            y: action_headset_button_short_button.y
+            text: action_headset_button_long.text
+            onClicked: { action_headset_button_short_button.checked = false
+                         action_headset_button_long_button.checked = true
+                         action_headset_button_switch_button.checked = false
+           }
+        }
+        SettingsButtonSmall {
+            id: action_headset_button_switch_button
+            checked: action_headset_button_switch.checked
+            x: action_headset_button_long_button.x + width + (parent.width / 25)
+            y: action_headset_button_short_button.y
+            text: action_headset_button_switch.text
+            onClicked: { action_headset_button_short_button.checked = false
+                         action_headset_button_long_button.checked = false
+                         action_headset_button_switch_button.checked = true
+           }
+        }
+        Text {
+            id: theme_text
+            y: action_headset_button_short_button.y + (config.font_size * 5.5)
             anchors.horizontalCenter: parent.horizontalCenter
             text: theme_str
             font.pixelSize: config.font_size * 1.5
@@ -211,14 +262,16 @@ Item {
     }
     property variant actions: [action_scrolling_labels, action_lock_progress,
             action_dual_action, action_stay_at_end, action_seek_back,
-            action_resume_all,
+            action_resume_all, action_play_on_headset,
             action_play_mode_all, action_play_mode_single,
-            action_play_mode_random, action_play_mode_repeat]
+            action_play_mode_random, action_play_mode_repeat,
+            action_headset_button_short, action_headset_button_long, action_headset_button_switch]
     property variant buttons: [action_scrolling_labels_button, action_lock_progress_button,
             action_dual_action_button, action_stay_at_end_button, action_seek_back_button,
-            action_resume_all_button,
+            action_resume_all_button, action_play_on_headset_button,
             action_play_mode_all_button, action_play_mode_single_button,
-            action_play_mode_random_button, action_play_mode_repeat_button]
+            action_play_mode_random_button, action_play_mode_repeat_button,
+            action_headset_button_short_button, action_headset_button_long_button, action_headset_button_switch_button]
     onClose: { var i=0
                for (i=0;i<settingsArea.actions.length;i++) {
                    settingsArea.buttons[i].checked = settingsArea.actions[i].checked
