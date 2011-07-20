@@ -57,14 +57,14 @@ def detect():
 
         if os.path.exists('/etc/osso_software_version') or \
                 os.path.exists('/proc/component_version') or \
-                file_contains('/etc/issue', 'maemo'):
+                file_contains('/etc/issue', 'maemo') or \
+                file_contains('/etc/issue', 'Harmattan'):
             MAEMO = True
-            
+
             if file_contains('/etc/issue', 'Maemo 5'):
                 FREMANTLE = True
-
-        elif file_contains('/etc/issue', 'Harmattan'):
-            HARMATTAN = True
+            elif file_contains('/etc/issue', 'Harmattan'):
+                HARMATTAN = True
 
         elif os.path.exists('/etc/meego-release'):
             MEEGO = True
