@@ -78,6 +78,26 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             self.view.showFullScreen()
         else:
             self.view.show()
+
+        if platform.HANDSET:
+            import dbus
+            # Enable play/pause with headset button
+            #interface.headset_device.connect_to_signal('Condition', \
+            #        self.handle_headset_button)
+
+            system_bus = dbus.SystemBus()
+            if platform.HARMATTAN:
+                self.headset_path = '/org/freedesktop/Hal/devices/computer_logicaldev_input_0'
+            elif platform.FREMANTLE:
+                self.headset_path = '/org/freedesktop/Hal/devices/computer_logicaldev_input_1'
+            # Monitor connection state of BT headset
+            system_bus.add_signal_receiver(self.handle_connection_state, 'DeviceAdded', \
+                    'org.freedesktop.Hal.Manager', None, '/org/freedesktop/Hal/Manager')
+
+            # Monitor BT headset buttons
+            system_bus.add_signal_receiver(self.handle_bt_button, 'Condition', \
+                    'org.freedesktop.Hal.Device', None, self.headset_path)
+
         self.app.exec_()
 
     def create_actions(self):
@@ -588,6 +608,31 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     @QtCore.Slot(str)
     def open_external_url(self, url):
         os.system("xdg-open " + url)
+
+    def handle_connection_state(self, device_path):
+        if device_path == self.headset_path and self.config.getboolean("options", "play_on_headset") and not self.playlist.playing:
+            self.playlist.play_pause_toggle()
+
+    def handle_bt_button(self, signal, button):
+        if signal == 'ButtonPressed':
+            if button == 'play-cd':
+                self.playlist.play_pause_toggle()
+            elif button == 'pause-cd':
+                self.playlist.play_pause_toggle()
+            elif button == 'previous-song':
+                if self.config.get("options", "headset_button") == "short":
+                    self.do_seek(-1*self.config.getint("options", "seek_short"))
+                elif self.config.get("options", "headset_button") == "long":
+                    self.do_seek(-1*self.config.getint("options", "seek_long"))
+                else:
+                    self.playlist.prev()
+            elif button == 'next-song':
+                if self.config.get("options", "headset_button") == "short":
+                    self.do_seek(self.config.getint("options", "seek_short"))
+                elif self.config.get("options", "headset_button") == "long":
+                    self.do_seek(self.config.getint("options", "seek_long"))
+                else:
+                    self.playlist.next()
 
 class ImageProvider(QtDeclarative.QDeclarativeImageProvider):
     def __init__(self, main):
