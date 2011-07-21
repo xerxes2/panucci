@@ -86,17 +86,28 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             #        self.handle_headset_button)
 
             system_bus = dbus.SystemBus()
+            self.headset_path = '/org/freedesktop/Hal/devices/computer_logicaldev_input'
+            self.headset_bt_path = '/org/freedesktop/Hal/devices/computer_logicaldev_input'
             if platform.HARMATTAN:
-                self.headset_path = '/org/freedesktop/Hal/devices/computer_logicaldev_input_0'
+                self.headset_bt_path = '/org/freedesktop/Hal/devices/computer_logicaldev_input_0'
             elif platform.FREMANTLE:
-                self.headset_path = '/org/freedesktop/Hal/devices/computer_logicaldev_input_1'
-            # Monitor connection state of BT headset
-            system_bus.add_signal_receiver(self.handle_connection_state, 'DeviceAdded', \
+                self.headset_bt_path = '/org/freedesktop/Hal/devices/computer_logicaldev_input_1'
+
+            # Monitor connection state of headset
+            system_bus.add_signal_receiver(self.handle_headset_connection_state, 'DeviceAdded', \
                     'org.freedesktop.Hal.Manager', None, '/org/freedesktop/Hal/Manager')
 
-            # Monitor BT headset buttons
-            system_bus.add_signal_receiver(self.handle_bt_button, 'Condition', \
+            # Monitor connection state of BT headset
+            system_bus.add_signal_receiver(self.handle_headset_bt_connection_state, 'DeviceAdded', \
+                    'org.freedesktop.Hal.Manager', None, '/org/freedesktop/Hal/Manager')
+
+            # Monitor headset buttons
+            system_bus.add_signal_receiver(self.handle_headset_button, 'Condition', \
                     'org.freedesktop.Hal.Device', None, self.headset_path)
+
+            # Monitor BT headset buttons
+            system_bus.add_signal_receiver(self.handle_headset_bt_button, 'Condition', \
+                    'org.freedesktop.Hal.Device', None, self.headset_bt_path)
 
         self.app.exec_()
 
@@ -651,15 +662,36 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     def open_external_url(self, url):
         os.system("xdg-open " + url)
 
-    def handle_connection_state(self, device_path):
+    def handle_headset_connection_state(self, device_path):
         if device_path == self.headset_path and self.config.getboolean("options", "play_on_headset") and not self.playlist.playing:
             self.playlist.play_pause_toggle()
 
-    def handle_bt_button(self, signal, button):
+    def handle_headset_button(self, signal, button):
         if signal == 'ButtonPressed':
-            if button == 'play-cd':
+            if button == 'play-pause':
                 self.playlist.play_pause_toggle()
-            elif button == 'pause-cd':
+            elif button == 'rewind':
+                if self.config.get("options", "headset_button") == "short":
+                    self.do_seek(-1*self.config.getint("options", "seek_short"))
+                elif self.config.get("options", "headset_button") == "long":
+                    self.do_seek(-1*self.config.getint("options", "seek_long"))
+                else:
+                    self.playlist.prev()
+            elif button == 'forward':
+                if self.config.get("options", "headset_button") == "short":
+                    self.do_seek(self.config.getint("options", "seek_short"))
+                elif self.config.get("options", "headset_button") == "long":
+                    self.do_seek(self.config.getint("options", "seek_long"))
+                else:
+                    self.playlist.next()
+
+    def handle_headset_bt_connection_state(self, device_path):
+        if device_path == self.headset_bt_path and self.config.getboolean("options", "play_on_headset") and not self.playlist.playing:
+            self.playlist.play_pause_toggle()
+
+    def handle_headset_bt_button(self, signal, button):
+        if signal == 'ButtonPressed':
+            if button == 'play-cd' or button == 'pause-cd':
                 self.playlist.play_pause_toggle()
             elif button == 'previous-song':
                 if self.config.get("options", "headset_button") == "short":
