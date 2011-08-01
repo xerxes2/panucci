@@ -15,7 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
-#
 
 from distutils.core import setup
 
@@ -39,7 +38,8 @@ if not os.path.exists('data/panucci.service') and 'clean' not in sys.argv:
 
 DATA_FILES = [
     ('share/panucci', glob.glob('icons/*.png')),
-    ('share/panucci', ['data/panucci.conf', 'data/panucci-all.conf']),
+    ('share/panucci', glob.glob('data/ui/qml/*')),
+    ('share/panucci', ['data/panucci.conf', 'data/panucci-all.conf', 'data/theme.conf']),
     ('share/applications', ['data/panucci.desktop']),
     ('share/icons/hicolor/scalable/apps', ['data/panucci.svg']),
     ('share/icons/hicolor/64x64/apps', ['data/panucci.png']),
@@ -62,7 +62,7 @@ sys.path.insert(0, SRC_DIR)
 import panucci
 
 setup(
-        name='Panucci',
+        name='panucci',
         version=panucci.__version__,
         description='Resuming audiobook and podcast player',
         author='Thomas Perl',
@@ -73,4 +73,3 @@ setup(
         scripts=SCRIPTS,
         data_files=DATA_FILES,
 )
-

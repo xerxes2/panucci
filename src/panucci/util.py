@@ -20,6 +20,7 @@ from __future__ import absolute_import
 
 import os.path
 from sys import argv
+from urllib import quote
 
 def convert_ns(time_int):
     """Convert nanosecond values into strings
@@ -74,9 +75,10 @@ def pretty_filename(filename):
 def find_data_file(filename):
     bin_dir = os.path.dirname(argv[0])
     locations = [
-            os.path.join(bin_dir, '..', 'share', 'panucci'),
             os.path.join(bin_dir, '..', 'icons'),
             os.path.join(bin_dir, '..', 'data'),
+            os.path.join(bin_dir, '..', 'data/ui/qml'),
+            os.path.join(bin_dir, '..', 'share', 'panucci'),
             '/opt/panucci',
     ]
 
@@ -89,3 +91,8 @@ def write_config(config):
     _file = open(os.path.expanduser("~/.config/panucci/panucci-noedit.conf"), "w")
     config.write(_file)
     _file.close()
+
+def file_to_url(uri):
+    if uri.startswith('/'):
+        uri = 'file://' + quote(os.path.abspath(uri))
+    return uri

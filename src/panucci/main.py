@@ -38,11 +38,9 @@ platform.detect()
 
 def run(opts, args):
     if args:
-        if '://' in args[0]:
-            # Assume a URL (HTTP, HTTPs, etc...)
-            filepath = args[0]
-        else:
-            filepath = os.path.abspath(args[0])
+        filepath = args[0]
+        if not '://' in filepath:
+            filepath = os.path.abspath(filepath)
     elif opts.queue_filename:
         filepath = os.path.abspath(opts.queue_filename)
     else:
@@ -66,10 +64,14 @@ def run(opts, args):
 
         if opts.qt:
             from panucci.qtui.qtmain import PanucciGUI
+        elif opts.qml:
+            from panucci.qmlui.qmlmain import PanucciGUI
         elif opts.gtk:
             from panucci.gtkui.gtkmain import PanucciGUI
         elif settings.config.get("options", "gui") == "qt":
             from panucci.qtui.qtmain import PanucciGUI
+        elif settings.config.get("options", "gui") == "qml":
+            from panucci.qmlui.qmlmain import PanucciGUI
         else:
             from panucci.gtkui.gtkmain import PanucciGUI
         PanucciGUI(settings, filepath)

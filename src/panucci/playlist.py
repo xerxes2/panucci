@@ -293,7 +293,7 @@ class Playlist(ObservableService):
             self.__log.info('Cannot find item with id: %s', item_id)
             return False
 
-        if bookmark_id is None:
+        if not bookmark_id:
             if self.__queue.current_item_position == self.__queue.index(item):
                 is_end = self.end_of_playlist()
                 self.stop()
@@ -739,6 +739,12 @@ class Playlist(ObservableService):
 
     def reset_player(self):
         self.__player.on_reset_playlist()
+
+    def get_volume_level(self):
+        return self.__player.get_volume_level()
+
+    def set_volume_level(self, percent):
+        self.__player.set_volume_level(percent)
 
 class Queue(list, ObservableService):
     """ A Simple list of PlaylistItems """

@@ -69,6 +69,7 @@ class PanucciGUI(object):
         widget = QtGui.QWidget()
         widget.setLayout(self.__player_tab.mainbox)
         self.main_window.setCentralWidget(widget)
+        self.main_window.setAttribute(QtCore.Qt.WA_LockLandscapeOrientation)
         self.main_window.show()
         self.playlist.init(filepath=filename)
         self.app.exec_()

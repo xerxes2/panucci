@@ -317,14 +317,14 @@ class PlaylistItem(object):
 
     def __get_title(self):
         """ Get the title of item, priority is (most important first):
-            1. the title given in playlist metadata
-            2. the title in the file's metadata (ex. ID3)
+            1. the title in the file's metadata (ex. ID3)
+            2. the title given in playlist metadata
             3. a "pretty" version of the filename """
 
-        if self.playlist_title is not None:
-            return self.playlist_title
-        elif self.__metadata.title:
+        if self.__metadata.title:
             return self.__metadata.title
+        elif self.playlist_title is not None:
+            return self.playlist_title
         else:
             return util.pretty_filename(self.filepath)
 

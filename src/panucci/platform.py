@@ -23,6 +23,7 @@ import os.path
 # Variables that can be used to query platform status
 MAEMO = False
 FREMANTLE = False
+HARMATTAN = False
 MEEGO = False
 HANDSET = False
 DESKTOP = True
@@ -41,24 +42,29 @@ def detect():
     """
     global MAEMO
     global FREMANTLE
+    global HARMATTAN
     global MEEGO
     global HANDSET
     global DESKTOP
 
     if os.path.exists('/etc/osso_software_version') or \
             os.path.exists('/proc/component_version') or \
-            file_contains('/etc/issue/', 'maemo') or \
+            file_contains('/etc/issue', 'maemo') or \
+            file_contains('/etc/issue', 'Harmattan') or \
             os.path.exists('/etc/meego-release'):
         HANDSET = True
         DESKTOP = False
 
         if os.path.exists('/etc/osso_software_version') or \
                 os.path.exists('/proc/component_version') or \
-                file_contains('/etc/issue/', 'maemo'):
+                file_contains('/etc/issue', 'maemo') or \
+                file_contains('/etc/issue', 'Harmattan'):
             MAEMO = True
-            
+
             if file_contains('/etc/issue', 'Maemo 5'):
                 FREMANTLE = True
+            elif file_contains('/etc/issue', 'Harmattan'):
+                HARMATTAN = True
 
         elif os.path.exists('/etc/meego-release'):
             MEEGO = True

@@ -117,10 +117,11 @@ class panucciInterface(dbus.service.Object):
 
     @dbus.service.method('org.panucci.panucciInterface', in_signature='s')
     def play_file(self, filepath):
+        filepath = filepath.encode("utf-8")
         self.__log.debug('play_file() called with: ' + filepath)
         if self.playlist:
             self.playlist.load(filepath)
-            self.playlist.play()
+            self.playlist.last()
 
     @dbus.service.method('org.panucci.panucciInterface', in_signature='su')
     def playback_from(self, uri, seconds):
@@ -152,6 +153,7 @@ class panucciInterface(dbus.service.Object):
 
     @dbus.service.method('org.panucci.panucciInterface', in_signature='s')
     def queue_file(self, filepath):
+        filepath = filepath.encode("utf-8")
         self.__log.debug('queue_file() called with: ' + filepath)
         if self.playlist: self.playlist.load(filepath)
 
