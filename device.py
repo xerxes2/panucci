@@ -1,60 +1,39 @@
-#!/usr/bin/env python
-
-# Usage: device.py <device name>
+#!/usr/bin/python
 
 import sys
 import os
+import ConfigParser
 
-bin_dir = os.path.dirname(sys.argv[0])
-_device = sys.argv[1]
+if len(sys.argv) != 2:
+    print >>sys.stderr, """
+    Usage: %s <device>
+    """ % sys.argv[0]
+    sys.exit(1)
 
-_file = open(bin_dir + "doc/devices.txt")
-_str = _file.read()
-_file.close()
-_list = _str.splitlines()
+appname, device = sys.argv
 
-check_list = []
-_check = False
-for i in _list:
-    if not _check:
-        if i.strip(":") == _device:
-            _check = True
-    else:
-        if i.startswith(" "):
-            check_list.append(i.strip())
-        else:
-            break
+root = os.path.dirname(__file__)
+devices = ConfigParser.ConfigParser()
+devices.read([os.path.join(root, 'doc', 'devices.ini')])
 
-_file = open(bin_dir + "data/panucci.conf")
-_str = _file.read()
-_file.close()
-panucci_conf = _str.splitlines()
+if device not in devices.sections():
+    print 'Unknown device:', device
+    sys.exit(2)
 
-_file = open(bin_dir + "data/panucci-all.conf")
-_str = _file.read()
-_file.close()
-panucci_all_conf = _str.splitlines()
+files_to_update = ['panucci.conf', 'panucci-all.conf']
+files_to_update = [os.path.join(root, 'data', x) for x in files_to_update]
 
-for i in range(len(panucci_conf)):
-    _option = panucci_conf[i].split("=")[0].strip()
-    for j in check_list:
-        new_option = j.split("=")[0].strip()
-        if new_option == _option:
-            panucci_conf[i] = j
+def config_from_file(filename):
+    parser = ConfigParser.ConfigParser()
+    parser.read([filename])
+    return parser
 
-for i in range(len(panucci_all_conf)):
-    _option = panucci_all_conf[i].split("=")[0].strip()
-    for j in check_list:
-        new_option = j.split("=")[0].strip()
-        if new_option == _option:
-            panucci_all_conf[i] = j
+parsers = map(config_from_file, files_to_update)
 
-_file = open(bin_dir + "data/panucci.conf.new", "w")
-for i in panucci_conf:
-    _file.write(i + "\n")
-_file.close()
+for key, value in devices.items(device):
+    for parser in parsers:
+        parser.set('options', key, value)
 
-_file = open(bin_dir + "data/panucci-all.conf.new", "w")
-for i in panucci_all_conf:
-    _file.write(i + "\n")
-_file.close()
+for parser, filename in zip(parsers, files_to_update):
+    parser.write(open(filename, 'w'))
+
