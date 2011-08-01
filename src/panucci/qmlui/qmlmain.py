@@ -73,7 +73,8 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.timer = QtCore.QTimer()
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.timer_callback)
-        self.view.setAttribute(QtCore.Qt.WA_LockLandscapeOrientation)
+        if platform.HARMATTAN:
+            self.view.setAttribute(QtCore.Qt.WA_LockLandscapeOrientation)
         if platform.HANDSET:
             self.view.showFullScreen()
         else:
