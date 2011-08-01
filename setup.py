@@ -41,7 +41,7 @@ DATA_FILES = [
     ('share/panucci', glob.glob('data/ui/qml/*')),
     ('share/panucci', ['data/panucci.conf', 'data/panucci-all.conf', 'data/theme.conf']),
     ('share/applications', ['data/panucci.desktop']),
-    ('share/icons/hicolor/scalable/apps', ['data/panucci.svg']),
+    ('share/icons/hicolor/scalable/apps', ['data/panucci.svg', 'data/panucci.png']),
     ('share/icons/hicolor/64x64/apps', ['data/panucci.png']),
     ('share/dbus-1/services', ['data/panucci.service']),
 ]
