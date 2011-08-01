@@ -1,3 +1,9 @@
+panucci (0.99.3) fremantle; urgency=low
+
+  * Fourth build of xerxes2's repo
+
+ -- Thomas Perl <m@thp.io>  Mon,  1 Aug 2011 14:55:06 +0200
+
 panucci (0.99.2) fremantle; urgency=low
 
   * Third experimental build of xerxes2's Github fork

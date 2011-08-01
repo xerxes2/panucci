@@ -22,6 +22,7 @@ configure:
 build: build-stamp
 build-stamp:
 	dh_testdir
+	${PYTHON} device.py N900
 	make mo
 	make data/panucci.service
 	${SETUP} build
