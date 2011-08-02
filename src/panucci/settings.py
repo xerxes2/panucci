@@ -40,7 +40,7 @@ class Settings(object):
         self.__log = logging.getLogger('panucci.settings.Settings')
         self.config = ConfigParser.SafeConfigParser()
         # Parse everything
-        _file = open(util.find_data_file("panucci-all.conf"))
+        _file = open(util.find_data_file("default.conf"))
         self.config.readfp(_file)
         _file.close()
         # Parse non editable
