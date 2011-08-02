@@ -47,6 +47,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.app = QtGui.QApplication(["Panucci"])
         self.app.setWindowIcon(QtGui.QIcon(util.find_data_file('panucci.png')))
         self.view = QtDeclarative.QDeclarativeView()
+        self.view.setResizeMode(QtDeclarative.QDeclarativeView.SizeRootObjectToView)
         self.view.closeEvent = self.close_main_window_callback
         self.context = self.view.rootContext()
         self.context.setContextProperty('main', self)
@@ -58,7 +59,6 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         engine = self.context.engine()
         self.image_provider = ImageProvider(self)
         engine.addImageProvider("cover", self.image_provider)
-        self.view.setSource(util.find_data_file("main.qml"))
 
         self.playlist.register( 'stopped', self.on_player_stopped )
         self.playlist.register( 'playing', self.on_player_playing )
@@ -68,17 +68,21 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.playlist.register( 'new-metadata-available', self.on_player_new_metadata )
         self.playlist.register( 'reset-playlist', self.on_player_reset_playlist )
 
-        self.playlist.init(filepath=filename)
-        self.view.rootObject().start_scrolling_timer(self.config.getboolean("options", "scrolling_labels"))
         self.timer = QtCore.QTimer()
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.timer_callback)
         if platform.HARMATTAN:
-            self.view.setAttribute(QtCore.Qt.WA_LockLandscapeOrientation)
-        if platform.HANDSET:
+            self.view.setSource(util.find_data_file("main_harmattan.qml"))
+            self.view.showFullScreen()
+        elif platform.FREMANTLE:
+            self.view.setSource(util.find_data_file("main_fremantle.qml"))
             self.view.showFullScreen()
         else:
+            self.view.setSource(util.find_data_file("main_default.qml"))
             self.view.show()
+
+        self.playlist.init(filepath=filename)
+        self.view.rootObject().property("root").start_scrolling_timer(self.config.getboolean("options", "scrolling_labels"))
 
         if platform.HANDSET:
             import dbus
@@ -321,7 +325,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.view.activateWindow()
 
     def add_media_callback(self):
-        self.view.rootObject().openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
+        self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
                                                self.config.get("options", "default_folder").decode('utf-8'), "add")
 
     @QtCore.Slot(str, str)
@@ -330,15 +334,15 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         if action == "open":
             if os.path.isdir(os.path.expanduser(value)):
                 self.config.set("options", "default_folder", value)
-                self.view.rootObject().openFilechooser(self.get_filechooser_items(value), value.decode('utf-8'), False)
+                self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(value), value.decode('utf-8'), False)
         elif action == "up":
             value = value.rsplit("/", 1)[0]
             self.config.set("options", "default_folder", value)
-            self.view.rootObject().openFilechooser(self.get_filechooser_items(value), value.decode('utf-8'), False)
+            self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(value), value.decode('utf-8'), False)
         elif action == "add":
             if os.path.exists(os.path.expanduser(value)):
                 self.playlist.load(os.path.abspath(os.path.expanduser(value)))
-                self.view.rootObject().openPlaylist(False, self.get_playlist_items())
+                self.view.rootObject().property("root").openPlaylist(False, self.get_playlist_items())
         elif action == "save":
             ext = util.detect_filetype(os.path.expanduser(value))
             if not self.playlist.save_to_new_playlist(os.path.expanduser(value), ext):
@@ -378,25 +382,25 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         return self.filechooser_items
 
     def play_one_callback(self):
-        self.view.rootObject().openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
+        self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
                                                self.config.get("options", "default_folder").decode('utf-8'), "play_one")
 
     def save_playlist_callback(self):
-        self.view.rootObject().openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
+        self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
                                                self.config.get("options", "default_folder").decode('utf-8'), "save")
 
     def clear_playlist_callback(self):
         self.playlist.reset_playlist()
 
     def sleep_timer_callback(self):
-        self.view.rootObject().openSleepTimer()
+        self.view.rootObject().property("root").openSleepTimer()
 
     @QtCore.Slot(str)
     def start_timed_shutdown(self, _minutes):
         QtCore.QTimer.singleShot(60000*int(_minutes), self.quit_panucci)
 
     def volume_control_callback(self):
-        self.view.rootObject().openVolumeControl(str(self.playlist.get_volume_level()))
+        self.view.rootObject().property("root").openVolumeControl(str(self.playlist.get_volume_level()))
 
     @QtCore.Slot(str)
     def set_volume_level(self, _percent):
@@ -415,7 +419,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.playlist.delete_all_bookmarks()
 
     def playlist_callback(self):
-        self.view.rootObject().openPlaylist(True, self.get_playlist_items())
+        self.view.rootObject().property("root").openPlaylist(True, self.get_playlist_items())
 
     def get_playlist_items(self):
         self.playlist_items = []
@@ -438,10 +442,10 @@ class PanucciGUI(QtCore.QObject, ObservableService):
                 metadata[i] = metadata[i].decode("utf-8")
             else:
                 metadata[i] = " "
-        self.view.rootObject().openPlaylistItemInfo(metadata)
+        self.view.rootObject().property("root").openPlaylistItemInfo(metadata)
 
     def settings_callback(self):
-        self.view.rootObject().openSettings()
+        self.view.rootObject().property("root").openSettings()
         #from panucci.qtui.qtsettingsdialog import SettingsDialog
         #SettingsDialog(self)
 
@@ -459,7 +463,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def scrolling_labels_callback(self):
         self.set_config_option("scrolling_labels", str(self.action_scrolling_labels.isChecked()).lower())
-        self.view.rootObject().start_scrolling_timer(self.config.getboolean("options", "scrolling_labels"))
+        self.view.rootObject().property("root").start_scrolling_timer(self.config.getboolean("options", "scrolling_labels"))
 
     def resume_all_callback(self):
         self.set_config_option("resume_all", str(self.action_resume_all.isChecked()).lower())
@@ -492,7 +496,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def about_callback(self):
         from panucci import about
-        self.view.rootObject().openAboutDialog([about.about_name+" "+panucci.__version__, about.about_text,
+        self.view.rootObject().property("root").openAboutDialog([about.about_name+" "+panucci.__version__, about.about_text,
                                                 about.about_copyright, about.about_website])
 
     def set_config_option(self, option, value):
@@ -582,7 +586,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def set_text_x(self):
         if self.metadata:
-            self.view.rootObject().set_text_x()
+            self.view.rootObject().property("root").set_text_x()
 
     def get_cover_str(self):
         if self.metadata and self.metadata.has_key('image') and self.metadata['image']:
