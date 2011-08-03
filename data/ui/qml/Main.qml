@@ -169,7 +169,7 @@ Rectangle {
         id: progressBar
         x: 0
         anchors { bottom: button_back.top
-                  bottomMargin: 3
+                  bottomMargin: 6
         }
         width: config.main_width
         height: config.progress_height
