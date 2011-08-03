@@ -168,7 +168,9 @@ Rectangle {
     Rectangle {
         id: progressBar
         x: 0
-        y: config.main_height - config.button_height - config.progress_height - config.button_border_width
+        anchors { bottom: button_back.top
+                  bottomMargin: 3
+        }
         width: config.main_width
         height: config.progress_height
         color: themeController.progress_bg_color
@@ -199,7 +201,7 @@ Rectangle {
     AppButton {
         id: button_back
         x: 0
-        y: config.main_height - config.button_height
+        anchors.bottom: root.bottom
         image: "media-skip-backward.png"
         onReleased: image = "media-skip-backward.png"
         onPressed: { if (action_dual_action.checked == true)
@@ -216,26 +218,26 @@ Rectangle {
     }
     AppButton {
         x: config.button_width + config.button_border_width + 2
-        y: config.main_height - config.button_height
+        y: button_back.y
         image: "media-seek-backward.png"
         onClicked: action_player_rewind.trigger()
     }
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 2
-        y: config.main_height - config.button_height
+        y: button_back.y
         image: main.play_pause_icon_path
         onClicked: action_player_play.trigger()
     }
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 3
-        y: config.main_height - config.button_height
+        y: button_back.y
         image: "media-seek-forward.png"
         onClicked: action_player_forward.trigger()
     }
     AppButton {
         id: button_forward
         x: (config.button_width + config.button_border_width + 2) * 4
-        y: config.main_height - config.button_height
+        y: button_back.y
         image: "media-skip-forward.png"
         onReleased: image = "media-skip-forward.png"
         onPressed: { if (action_dual_action.checked == true)
@@ -252,7 +254,7 @@ Rectangle {
     }
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 5
-        y: config.main_height - config.button_height
+        y: button_back.y
         image: "bookmark-new.png"
         onClicked: main.bookmark_callback()
     }

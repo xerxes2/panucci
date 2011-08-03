@@ -10,8 +10,7 @@ Item {
     property variant forward: ""
     property variant action: ""
 
-    MouseArea {
-        anchors.fill: parent
+    MouseArea { anchors.fill: parent
     }
     Rectangle {
         color: themeController.background
@@ -68,29 +67,33 @@ Item {
     }
     Rectangle {
         width: root.width
-        height: config.font_size * 1.1
+        height: config.font_size * 1.6
         x: 0
-        y: textinput.focus ? 0: root.height - config.button_height - textinput.height - config.button_border_width
+        anchors { bottom: button_home.top
+                  bottomMargin: 3
+        }
         color: themeController.progress_bg_color
-    }
-    TextInput {
-        id: textinput
-        width: root.width
-        x: 5
-        y: textinput.focus ? 0: root.height - config.button_height - textinput.height - config.button_border_width
-        color: themeController.foreground
-        font.pixelSize: config.font_size
-        text: filechooserArea.path
 
-        Keys.onPressed: {
-            if (event.key == Qt.Key_Return) {
-                textinput.focus = false
+        TextInput {
+            id: textinput
+            width: root.width
+            x: config.font_size * .1
+            y: config.font_size * .1
+            color: themeController.foreground
+            font.pixelSize: config.font_size
+            text: filechooserArea.path
+
+            Keys.onPressed: {
+                if (event.key == Qt.Key_Return) {
+                    textinput.focus = false
+                }
             }
         }
     }
     AppButton {
+        id: button_home
         x: 0
-        y: root.height - config.button_height
+        anchors.bottom: filechooserArea.bottom
         image: "home.png"
         onClicked: { filechooserView.currentIndex = -1
                      main.filechooser_callback("open", "~")
@@ -98,7 +101,7 @@ Item {
     }
     AppButton {
         x: (config.button_width + config.button_border_width + 2)
-        y: root.height - config.button_height
+        y: button_home.y
         image: "left.png"
         onClicked: { filechooserView.currentIndex = -1
                      if (filechooserArea.back != "" && filechooserArea.back != filechooserArea.path) {
@@ -109,7 +112,7 @@ Item {
     }
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 2
-        y: root.height - config.button_height
+        y: button_home.y
         image: "right.png"
         onClicked: { filechooserView.currentIndex = -1
                      if (filechooserArea.forward != "" && filechooserArea.forward != filechooserArea.path) {
@@ -120,7 +123,7 @@ Item {
     }
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 3
-        y: root.height - config.button_height
+        y: button_home.y
         image: "up.png"
         onClicked: { filechooserView.currentIndex = -1
                      filechooserArea.back = filechooserArea.path
@@ -132,7 +135,7 @@ Item {
     }
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 4
-        y: root.height - config.button_height
+        y: button_home.y
         image: "cancel.png"
         onClicked: { filechooserView.currentIndex = -1
                      filechooserArea.close()
@@ -140,7 +143,7 @@ Item {
     }
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 5
-        y: root.height - config.button_height
+        y: button_home.y
         image: "apply.png"
         onClicked: { filechooserArea.close()
                      filechooserView.currentIndex = -1

@@ -240,8 +240,9 @@ Item {
         }
     }
     AppButton {
-        x: root.width - config.button_width - config.button_border_width
-        y: root.height - config.button_height
+        anchors { right: settingsArea.right
+                  bottom: settingsArea.bottom
+        }
         image: "apply.png"
         onClicked: { var i=0
                      for (i=0;i<settingsArea.actions.length;i++) {
