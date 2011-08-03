@@ -5,6 +5,7 @@ function createThemeButtons() {
     var component
     component = Qt.createComponent("SettingsButtonSmall.qml")
     var button
+    // On harmattan some height get lost, increase a bit
     var ypos = theme_text.y + (config.font_size * 2.5)
     var count = 0
     var i
@@ -14,7 +15,7 @@ function createThemeButtons() {
             button.x = settingsFlick.width / 25
             button.y = ypos
             count++
-            settingsFlick.contentHeight = ypos + (config.font_size * 5)
+            settingsFlick.contentHeight = ypos + (config.font_size * 7)
         }
         else if (count == 1) {
             button.x = (settingsFlick.width / 25 * 2) + button.width

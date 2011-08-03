@@ -17,9 +17,10 @@ Item {
     }
     Flickable {
         id: settingsFlick
-        width: root.width - config.button_width - config.button_border_width
-        height: root.height
-        contentWidth: root.width - config.button_width - config.button_border_width
+        width: rootWindow.width - config.button_width - config.button_border_width
+        height: rootWindow.height
+        contentWidth: width
+        contentHeight: height
         clip: true
 
         MouseArea {
