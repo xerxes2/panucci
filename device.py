@@ -20,7 +20,7 @@ if device not in devices.sections():
     print 'Unknown device:', device
     sys.exit(2)
 
-files_to_update = ['panucci.conf', 'panucci-all.conf']
+files_to_update = ['panucci.conf', 'default.conf']
 files_to_update = [os.path.join(root, 'data', x) for x in files_to_update]
 
 def config_from_file(filename):
