@@ -244,7 +244,7 @@ Item {
         anchors { right: settingsArea.right
                   bottom: settingsArea.bottom
         }
-        image: "apply.png"
+        image: "artwork/apply.png"
         onClicked: { var i=0
                      for (i=0;i<settingsArea.actions.length;i++) {
                          if (settingsArea.actions[i].checked != settingsArea.buttons[i].checked)

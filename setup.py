@@ -37,8 +37,9 @@ if not os.path.exists('data/panucci.service') and 'clean' not in sys.argv:
     sys.exit(1)
 
 DATA_FILES = [
-    ('share/panucci', glob.glob('icons/*.png')),
-    ('share/panucci', glob.glob('data/ui/qml/*')),
+    ('share/panucci/icons', glob.glob('icons/*.png')),
+    ('share/panucci/qml', glob.glob('data/ui/qml/*.qml')),
+    ('share/panucci/qml', glob.glob('data/ui/qml/*.js')),
     ('share/panucci', ['data/panucci.conf', 'data/default.conf', 'data/theme.conf']),
     ('share/applications', ['data/panucci.desktop']),
     ('share/pixmaps', ['data/panucci.png']),
@@ -74,3 +75,15 @@ setup(
         scripts=SCRIPTS,
         data_files=DATA_FILES,
 )
+
+if "install" in sys.argv:
+    _prefix = "/usr"
+    _rootdir = "/"
+    for i in sys.argv:
+        if i.startswith("--prefix"):
+            _prefix = i[9:]
+        elif i.startswith("--root"):
+            _rootdir = i[7:]
+    if os.path.exists(_rootdir +  _prefix + "/share/panucci/qml/artwork"):
+        os.remove(_rootdir + _prefix + "/share/panucci/qml/artwork")
+    os.symlink("../icons", _rootdir + _prefix + "/share/panucci/qml/artwork")

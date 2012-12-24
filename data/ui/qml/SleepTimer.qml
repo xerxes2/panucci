@@ -56,7 +56,7 @@ Item {
     AppButton {
         anchors.horizontalCenter: parent.horizontalCenter
         y: config.font_size * 7.5
-        image: "apply.png"
+        image: "artwork/apply.png"
         onClicked: { sleepTimerArea.close()
                      main.start_timed_shutdown(value.text)
                    }

@@ -19,7 +19,7 @@ Item {
         x: 10
         y: 10
         smooth: true
-        source: "panucci_64x64.png"
+        source: "artwork/panucci_64x64.png"
     }
     Text {
         id: about_name

@@ -97,14 +97,14 @@ Rectangle {
          interval: config.dual_delay
          running: false
          repeat: false
-         onTriggered: button_back.image = "gtk-goto-first-ltr.png"
+         onTriggered: button_back.image = "artwork/gtk-goto-first-ltr.png"
     }
     Timer {
          id: timer_forward
          interval: config.dual_delay
          running: false
          repeat: false
-         onTriggered: button_forward.image = "gtk-goto-last-ltr.png"
+         onTriggered: button_forward.image = "artwork/gtk-goto-last-ltr.png"
     }
     Timer {
          id: timer_scrolling
@@ -202,8 +202,8 @@ Rectangle {
         id: button_back
         x: 0
         anchors.bottom: root.bottom
-        image: "media-skip-backward.png"
-        onReleased: image = "media-skip-backward.png"
+        image: "artwork/media-skip-backward.png"
+        onReleased: image = "artwork/media-skip-backward.png"
         onPressed: { if (action_dual_action.checked == true)
                          timer_back.start()
                    }
@@ -213,13 +213,13 @@ Rectangle {
                      }
                      else
                          action_player_skip_back.trigger()
-                         image = "media-skip-backward.png"
+                         image = "artwork/media-skip-backward.png"
         }
     }
     AppButton {
         x: config.button_width + config.button_border_width + 2
         y: button_back.y
-        image: "media-seek-backward.png"
+        image: "artwork/media-seek-backward.png"
         onClicked: action_player_rewind.trigger()
     }
     AppButton {
@@ -231,15 +231,15 @@ Rectangle {
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 3
         y: button_back.y
-        image: "media-seek-forward.png"
+        image: "artwork/media-seek-forward.png"
         onClicked: action_player_forward.trigger()
     }
     AppButton {
         id: button_forward
         x: (config.button_width + config.button_border_width + 2) * 4
         y: button_back.y
-        image: "media-skip-forward.png"
-        onReleased: image = "media-skip-forward.png"
+        image: "artwork/media-skip-forward.png"
+        onReleased: image = "artwork/media-skip-forward.png"
         onPressed: { if (action_dual_action.checked == true)
                          timer_forward.start()
                    }
@@ -249,13 +249,13 @@ Rectangle {
                      }
                      else
                          action_player_skip_forward.trigger()
-                         image = "media-skip-forward.png"
+                         image = "artwork/media-skip-forward.png"
         }
     }
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 5
         y: button_back.y
-        image: "bookmark-new.png"
+        image: "artwork/bookmark-new.png"
         onClicked: main.bookmark_callback()
     }
     ContextMenu {

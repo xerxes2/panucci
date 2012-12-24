@@ -561,9 +561,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def get_play_pause_icon_path(self):
         if self.action_player_play.isChecked():
-            _path = "media-playback-pause.png"
+            _path = "artwork/media-playback-pause.png"
         else:
-            _path = "media-playback-start.png"
+            _path = "artwork/media-playback-start.png"
         return _path
 
     def get_artist_str(self):

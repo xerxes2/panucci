@@ -38,7 +38,7 @@ Item {
             property variant item: modelData
             Image {
                 x: 10
-                source: modelData.directory ? "folder.png" : "file.png"
+                source: modelData.directory ? "artwork/folder.png" : "artwork/file.png"
                 anchors {
                     verticalCenter: parent.verticalCenter
                 }
@@ -94,7 +94,7 @@ Item {
         id: button_home
         x: 0
         anchors.bottom: filechooserArea.bottom
-        image: "home.png"
+        image: "artwork/home.png"
         onClicked: { filechooserView.currentIndex = -1
                      main.filechooser_callback("open", "~")
         }
@@ -102,7 +102,7 @@ Item {
     AppButton {
         x: (config.button_width + config.button_border_width + 2)
         y: button_home.y
-        image: "left.png"
+        image: "artwork/left.png"
         onClicked: { filechooserView.currentIndex = -1
                      if (filechooserArea.back != "" && filechooserArea.back != filechooserArea.path) {
                          filechooserArea.forward = filechooserArea.path
@@ -113,7 +113,7 @@ Item {
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 2
         y: button_home.y
-        image: "right.png"
+        image: "artwork/right.png"
         onClicked: { filechooserView.currentIndex = -1
                      if (filechooserArea.forward != "" && filechooserArea.forward != filechooserArea.path) {
                          filechooserArea.back = filechooserArea.path
@@ -124,7 +124,7 @@ Item {
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 3
         y: button_home.y
-        image: "up.png"
+        image: "artwork/up.png"
         onClicked: { filechooserView.currentIndex = -1
                      filechooserArea.back = filechooserArea.path
                      if (filechooserView.currentItem)
@@ -136,7 +136,7 @@ Item {
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 4
         y: button_home.y
-        image: "cancel.png"
+        image: "artwork/cancel.png"
         onClicked: { filechooserView.currentIndex = -1
                      filechooserArea.close()
         }
@@ -144,7 +144,7 @@ Item {
     AppButton {
         x: (config.button_width + config.button_border_width + 2) * 5
         y: button_home.y
-        image: "apply.png"
+        image: "artwork/apply.png"
         onClicked: { filechooserArea.close()
                      filechooserView.currentIndex = -1
                      main.filechooser_callback(filechooserArea.action, textinput.text)
