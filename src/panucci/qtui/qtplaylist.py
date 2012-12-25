@@ -149,7 +149,7 @@ class PlaylistTab():
 
         for item, data in self.playlist.get_playlist_item_ids():
             parent = QtGui.QStandardItem(data.get('title').decode('utf-8'))
-            self.__model.appendRow((parent, None, QtGui.QStandardItem(item)))
+            self.__model.appendRow((parent, QtGui.QStandardItem(), QtGui.QStandardItem(item)))
 
             for bid, bname, bpos in self.playlist.get_bookmarks_from_item_id( item ):
                 parent.appendRow((QtGui.QStandardItem(bname.decode('utf-8')), QtGui.QStandardItem(util.convert_ns(bpos)),
