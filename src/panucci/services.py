@@ -28,8 +28,6 @@ from logging import getLogger
 
 from panucci import platform
 
-import gobject
-
 class ObservableService(object):
     def __init__(self, signal_names=[], log=None):
         self._log = getLogger('ObservableService') if log is None else log
@@ -163,6 +161,7 @@ class __headphone_watcher(ObservableService):
         self.__is_connected = None
 
         if platform.MAEMO and not platform.FREMANTLE and not platform.HARMATTAN:
+            import gobject
             try:
                 self.__sys_file = open( sys_file, 'r' )
                 self.__is_connected = self.__get_state_from_fd(self.__sys_file)
