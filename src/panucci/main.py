@@ -66,14 +66,23 @@ def run(opts, args):
             from panucci.qtui.qtmain import PanucciGUI
         elif opts.qml:
             from panucci.qmlui.qmlmain import PanucciGUI
+        elif opts.qml2:
+            from panucci.qml2ui.qml2main import PanucciGUI
         elif opts.gtk:
             from panucci.gtkui.gtkmain import PanucciGUI
+        elif opts.gtk3:
+            from panucci.gtk3ui.gtkmain import PanucciGUI
         elif settings.config.get("options", "gui") == "qt":
             from panucci.qtui.qtmain import PanucciGUI
         elif settings.config.get("options", "gui") == "qml":
             from panucci.qmlui.qmlmain import PanucciGUI
+        elif settings.config.get("options", "gui") == "qml2":
+            from panucci.qml2ui.qml2main import PanucciGUI
+        elif settings.config.get("options", "gui") == "gtk3":
+            from panucci.gtk3ui.gtkmain import PanucciGUI
         else:
             from panucci.gtkui.gtkmain import PanucciGUI
+
         PanucciGUI(settings, filepath)
     else:
         if filepath is not None:

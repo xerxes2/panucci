@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Panucci.
-# Copyright (c) 2008-2011 The Panucci Project
+# Copyright (c) 2008-2014 The Panucci Project
 #
 # Panucci is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,9 +21,11 @@ import os
 import logging
 import ConfigParser
 
-from PySide import QtCore
-from PySide import QtGui
-from PySide import QtDeclarative
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
+from PyQt5 import QtQml
+from PyQt5 import QtQuick
 
 import panucci
 from panucci import util
@@ -35,8 +37,8 @@ from panucci.services import ObservableService
 class PanucciGUI(QtCore.QObject, ObservableService):
     def __init__(self, settings, filename=None):
         self.__log = logging.getLogger('panucci.panucci.PanucciGUI')
-        QtCore.QObject.__init__(self)
-        ObservableService.__init__(self, [], self.__log)
+        kwds = {"parent":None, "log":self.__log}
+        super(PanucciGUI, self).__init__(**kwds)
         self.config = settings.config
         interface.register_gui(self)
         self.playlist = playlist.Playlist(self.config)
@@ -44,11 +46,11 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.progress_fraction = 0
         self.metadata = None
 
-        self.app = QtGui.QApplication(["Panucci"])
+        self.app = QtWidgets.QApplication(["Panucci"])
         self.app.setWindowIcon(QtGui.QIcon(util.find_data_file('panucci.png')))
-        self.view = QtDeclarative.QDeclarativeView()
-        self.view.setResizeMode(QtDeclarative.QDeclarativeView.SizeRootObjectToView)
-        self.view.closeEvent = self.close_main_window_callback
+        self.app.aboutToQuit.connect(self.about_to_quit_callback)
+        self.view = QtQuick.QQuickView()
+        self.view.setResizeMode(QtQuick.QQuickView.SizeRootObjectToView)
         self.context = self.view.rootContext()
         self.context.setContextProperty('main', self)
         self.context.setContextProperty('config', self.make_config())
@@ -59,7 +61,6 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         engine = self.context.engine()
         self.image_provider = ImageProvider(self)
         engine.addImageProvider("cover", self.image_provider)
-
         self.playlist.register( 'stopped', self.on_player_stopped )
         self.playlist.register( 'playing', self.on_player_playing )
         self.playlist.register( 'paused', self.on_player_paused )
@@ -71,84 +72,51 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.timer = QtCore.QTimer()
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.timer_callback)
-        if platform.HARMATTAN:
-            self.view.setSource(util.find_data_file("qml/main_harmattan.qml"))
-            self.view.showFullScreen()
-        elif platform.FREMANTLE:
-            self.view.setSource(util.find_data_file("qml/main_fremantle.qml"))
+        if platform.SAILFISH:
+            self.view.setSource(QtCore.QUrl(util.find_data_file("qml2/main_sailfish.qml")))
             self.view.showFullScreen()
         else:
-            self.view.setSource(util.find_data_file("qml/main_default.qml"))
+            self.view.setSource(QtCore.QUrl(util.find_data_file("qml2/main_default.qml")))
             self.view.show()
 
         self.playlist.init(filepath=filename)
         self.view.rootObject().property("root").start_scrolling_timer(self.config.getboolean("options", "scrolling_labels"))
 
-        if platform.HANDSET:
-            import dbus
-            # Enable play/pause with headset button
-            #interface.headset_device.connect_to_signal('Condition', \
-            #        self.handle_headset_button)
-
-            system_bus = dbus.SystemBus()
-            self.headset_path = '/org/freedesktop/Hal/devices/computer_logicaldev_input'
-            self.headset_bt_path = '/org/freedesktop/Hal/devices/computer_logicaldev_input'
-            if platform.HARMATTAN:
-                self.headset_bt_path = '/org/freedesktop/Hal/devices/computer_logicaldev_input_0'
-            elif platform.FREMANTLE:
-                self.headset_bt_path = '/org/freedesktop/Hal/devices/computer_logicaldev_input_1'
-
-            # Monitor connection state of headset
-            system_bus.add_signal_receiver(self.handle_headset_connection_state, 'DeviceAdded', \
-                    'org.freedesktop.Hal.Manager', None, '/org/freedesktop/Hal/Manager')
-
-            # Monitor connection state of BT headset
-            system_bus.add_signal_receiver(self.handle_headset_bt_connection_state, 'DeviceAdded', \
-                    'org.freedesktop.Hal.Manager', None, '/org/freedesktop/Hal/Manager')
-
-            # Monitor headset buttons
-            system_bus.add_signal_receiver(self.handle_headset_button, 'Condition', \
-                    'org.freedesktop.Hal.Device', None, self.headset_path)
-
-            # Monitor BT headset buttons
-            system_bus.add_signal_receiver(self.handle_headset_bt_button, 'Condition', \
-                    'org.freedesktop.Hal.Device', None, self.headset_bt_path)
-
         self.app.exec_()
 
     def create_actions(self):
         # File menu
-        self.action_add_media = QtGui.QAction(QtGui.QIcon(''), _("Add Media").decode("utf-8"), self.view, shortcut="Ctrl+A",
+        self.action_add_media = QtWidgets.QAction(QtGui.QIcon(''), _("Add Media").decode("utf-8"), self.view, shortcut="Ctrl+A",
             statusTip="Add file to playlist", triggered=self.add_media_callback)
         self.context.setContextProperty('action_add_media', self.action_add_media)
-        self.action_play_one = QtGui.QAction(QtGui.QIcon(''), _("Play One").decode("utf-8"), self.view, shortcut="Ctrl+O",
+        self.action_play_one = QtWidgets.QAction(QtGui.QIcon(''), _("Play One").decode("utf-8"), self.view, shortcut="Ctrl+O",
             statusTip="Play one file", triggered=self.play_one_callback)
         self.context.setContextProperty('action_play_one', self.action_play_one)
-        self.action_save_playlist = QtGui.QAction(QtGui.QIcon(':/images/save.png'), _("Save Playlist").decode("utf-8"), self.view,
+        self.action_save_playlist = QtWidgets.QAction(QtGui.QIcon(':/images/save.png'), _("Save Playlist").decode("utf-8"), self.view,
             shortcut="Ctrl+W", statusTip="Save current playlist as m3u", triggered=self.save_playlist_callback)
         self.context.setContextProperty('action_save_playlist', self.action_save_playlist)
-        self.action_clear_playlist = QtGui.QAction(QtGui.QIcon(':/images/trashcan.png'), _("Clear Playlist").decode("utf-8"), self.view,
+        self.action_clear_playlist = QtWidgets.QAction(QtGui.QIcon(':/images/trashcan.png'), _("Clear Playlist").decode("utf-8"), self.view,
             shortcut="Ctrl+H", statusTip="Clear current playlist", triggered=self.clear_playlist_callback)
         self.context.setContextProperty('action_clear_playlist', self.action_clear_playlist)
-        self.action_delete_bookmarks = QtGui.QAction(QtGui.QIcon(':/images/trashcan.png'), _("Delete All Bookmarks").decode("utf-8"), self.view,
+        self.action_delete_bookmarks = QtWidgets.QAction(QtGui.QIcon(':/images/trashcan.png'), _("Delete All Bookmarks").decode("utf-8"), self.view,
             shortcut="Ctrl+K", statusTip="Delete all bookmarks", triggered=self.delete_bookmarks_callback)
         self.context.setContextProperty('action_delete_bookmarks', self.action_delete_bookmarks)
-        self.action_quit = QtGui.QAction(QtGui.QIcon('/usr/share/icons/gnome/16x16/actions/exit.png'), "Quit", self.view, shortcut="Ctrl+Q",
+        self.action_quit = QtWidgets.QAction(QtGui.QIcon('/usr/share/icons/gnome/16x16/actions/exit.png'), "Quit", self.view, shortcut="Ctrl+Q",
             statusTip="Exit the application", triggered=self.quit_panucci)
         self.context.setContextProperty('action_quit', self.action_quit)
         # Tools menu
-        self.action_playlist = QtGui.QAction(_("Playlist").decode("utf-8"), self.view, shortcut="Ctrl+P",
+        self.action_playlist = QtWidgets.QAction(_("Playlist").decode("utf-8"), self.view, shortcut="Ctrl+P",
             statusTip=_("Open playlist"), triggered=self.playlist_callback)
         self.context.setContextProperty('action_playlist', self.action_playlist)
-        self.action_settings = QtGui.QAction(_("Settings").decode("utf-8"), self.view, shortcut="Ctrl+C",
+        self.action_settings = QtWidgets.QAction(_("Settings").decode("utf-8"), self.view, shortcut="Ctrl+C",
             statusTip=_("Open settings dialog"), triggered=self.settings_callback)
         self.context.setContextProperty('action_settings', self.action_settings)
-        self.action_timer = QtGui.QAction(_("Sleep Timer").decode("utf-8"), self.view, shortcut="Ctrl+T",
+        self.action_timer = QtWidgets.QAction(_("Sleep Timer").decode("utf-8"), self.view, shortcut="Ctrl+T",
             statusTip=_("Start a timed shutdown"), triggered=self.sleep_timer_callback)
         self.context.setContextProperty('action_timer', self.action_timer)
         self.shutdown_str = _("Shutdown time in minutes").decode("utf-8")
         self.context.setContextProperty('shutdown_str', self.shutdown_str)
-        self.action_volume_control = QtGui.QAction(_("Volume Control").decode("utf-8"), self.view, shortcut="Ctrl+V",
+        self.action_volume_control = QtWidgets.QAction(_("Volume Control").decode("utf-8"), self.view, shortcut="Ctrl+V",
             statusTip=_(""), triggered=self.volume_control_callback)
         self.context.setContextProperty('action_volume_control', self.action_volume_control)
         self.volume_level_str = _('Volume level in percent').decode("utf-8")
@@ -156,62 +124,62 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         # Settings menu
         self.main_window_str = _("Main Window").decode("utf-8")
         self.context.setContextProperty('main_window_str', self.main_window_str)
-        self.action_lock_progress = QtGui.QAction(_("Lock Progress Bar").decode("utf-8"), self.view, shortcut="Ctrl+L",
+        self.action_lock_progress = QtWidgets.QAction(_("Lock Progress Bar").decode("utf-8"), self.view, shortcut="Ctrl+L",
             statusTip="Lock progress bar", triggered=self.lock_progress_callback)
         self.action_lock_progress.setCheckable(True)
         self.action_lock_progress.setChecked(self.config.getboolean("options", "lock_progress"))
         self.context.setContextProperty('action_lock_progress', self.action_lock_progress)
-        self.action_dual_action = QtGui.QAction(_("Dual Action Button").decode("utf-8"), self.view, shortcut="Ctrl+B",
+        self.action_dual_action = QtWidgets.QAction(_("Dual Action Button").decode("utf-8"), self.view, shortcut="Ctrl+B",
             statusTip="Set dual action button", triggered=self.dual_action_callback)
         self.action_dual_action.setCheckable(True)
         self.action_dual_action.setChecked(self.config.getboolean("options", "dual_action_button"))
         self.context.setContextProperty('action_dual_action', self.action_dual_action)
-        self.action_scrolling_labels = QtGui.QAction(_("Scrolling Labels").decode("utf-8"), self.view, shortcut="Ctrl+D",
+        self.action_scrolling_labels = QtWidgets.QAction(_("Scrolling Labels").decode("utf-8"), self.view, shortcut="Ctrl+D",
             statusTip="Scroll title labels when too long", triggered=self.scrolling_labels_callback)
         self.action_scrolling_labels.setCheckable(True)
         self.action_scrolling_labels.setChecked(self.config.getboolean("options", "scrolling_labels"))
         self.context.setContextProperty('action_scrolling_labels', self.action_scrolling_labels)
         self.playback_str = _("Playback").decode("utf-8")
         self.context.setContextProperty('playback_str', self.playback_str)
-        self.action_stay_at_end = QtGui.QAction(_("Stay at End").decode("utf-8"), self.view, shortcut="Ctrl+E",
+        self.action_stay_at_end = QtWidgets.QAction(_("Stay at End").decode("utf-8"), self.view, shortcut="Ctrl+E",
             statusTip="Stay at file end", triggered=self.stay_at_end_callback)
         self.action_stay_at_end.setCheckable(True)
         self.action_stay_at_end.setChecked(self.config.getboolean("options", "stay_at_end"))
         self.context.setContextProperty('action_stay_at_end', self.action_stay_at_end)
-        self.action_seek_back = QtGui.QAction(_("Seek Back").decode("utf-8"), self.view, shortcut="Ctrl+S",
+        self.action_seek_back = QtWidgets.QAction(_("Seek Back").decode("utf-8"), self.view, shortcut="Ctrl+S",
             statusTip="Seek back to previous file", triggered=self.seek_back_callback)
         self.action_seek_back.setCheckable(True)
         self.action_seek_back.setChecked(self.config.getboolean("options", "seek_back"))
         self.context.setContextProperty('action_seek_back', self.action_seek_back)
-        self.action_resume_all = QtGui.QAction(_("Resume All").decode("utf-8"), self.view, shortcut="Ctrl+R",
+        self.action_resume_all = QtWidgets.QAction(_("Resume All").decode("utf-8"), self.view, shortcut="Ctrl+R",
             statusTip="Resume all files automatically", triggered=self.resume_all_callback)
         self.action_resume_all.setCheckable(True)
         self.action_resume_all.setChecked(self.config.getboolean("options", "resume_all"))
         self.context.setContextProperty('action_resume_all', self.action_resume_all)
-        self.action_play_on_headset = QtGui.QAction(_("Play on Headset").decode("utf-8"), self.view, shortcut="Ctrl+B",
+        self.action_play_on_headset = QtWidgets.QAction(_("Play on Headset").decode("utf-8"), self.view, shortcut="Ctrl+B",
             statusTip="Start playback automatically when connecting headset", triggered=self.play_on_headset_callback)
         self.action_play_on_headset.setCheckable(True)
         self.action_play_on_headset.setChecked(self.config.getboolean("options", "play_on_headset"))
         self.context.setContextProperty('action_play_on_headset', self.action_play_on_headset)
         self.play_mode_str = _("Play Mode").decode("utf-8")
         self.context.setContextProperty('play_mode_str', self.play_mode_str)
-        self.action_play_mode_all = QtGui.QAction(_("All").decode("utf-8"), self.view, statusTip="Set play mode",
+        self.action_play_mode_all = QtWidgets.QAction(_("All").decode("utf-8"), self.view, statusTip="Set play mode",
             triggered=self.play_mode_all_callback)
         self.action_play_mode_all.setCheckable(True)
         self.context.setContextProperty('action_play_mode_all', self.action_play_mode_all)
-        self.action_play_mode_single = QtGui.QAction(_("Single").decode("utf-8"), self.view, statusTip="Set play mode",
+        self.action_play_mode_single = QtWidgets.QAction(_("Single").decode("utf-8"), self.view, statusTip="Set play mode",
             triggered=self.play_mode_single_callback)
         self.action_play_mode_single.setCheckable(True)
         self.context.setContextProperty('action_play_mode_single', self.action_play_mode_single)
-        self.action_play_mode_random = QtGui.QAction(_("Random").decode("utf-8"), self.view, statusTip="Set play mode",
+        self.action_play_mode_random = QtWidgets.QAction(_("Random").decode("utf-8"), self.view, statusTip="Set play mode",
             triggered=self.play_mode_random_callback)
         self.action_play_mode_random.setCheckable(True)
         self.context.setContextProperty('action_play_mode_random', self.action_play_mode_random)
-        self.action_play_mode_repeat = QtGui.QAction(_("Repeat").decode("utf-8"), self.view, statusTip="Set play mode",
+        self.action_play_mode_repeat = QtWidgets.QAction(_("Repeat").decode("utf-8"), self.view, statusTip="Set play mode",
             triggered=self.play_mode_repeat_callback)
         self.action_play_mode_repeat.setCheckable(True)
         self.context.setContextProperty('action_play_mode_repeat', self.action_play_mode_repeat)
-        actiongroup_play_mode = QtGui.QActionGroup(self.view)
+        actiongroup_play_mode = QtWidgets.QActionGroup(self.view)
         actiongroup_play_mode.setExclusive(True)
         self.action_play_mode_all.setActionGroup(actiongroup_play_mode)
         self.action_play_mode_single.setActionGroup(actiongroup_play_mode)
@@ -227,19 +195,19 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             self.action_play_mode_all.setChecked(True)
         self.headset_button_str = _("Headset Button").decode("utf-8")
         self.context.setContextProperty('headset_button_str', self.headset_button_str)
-        self.action_headset_button_short = QtGui.QAction(_("Short").decode("utf-8"), self.view,
+        self.action_headset_button_short = QtWidgets.QAction(_("Short").decode("utf-8"), self.view,
             triggered=self.headset_button_short_callback)
         self.action_headset_button_short.setCheckable(True)
         self.context.setContextProperty('action_headset_button_short', self.action_headset_button_short)
-        self.action_headset_button_long = QtGui.QAction(_("Long").decode("utf-8"), self.view,
+        self.action_headset_button_long = QtWidgets.QAction(_("Long").decode("utf-8"), self.view,
             triggered=self.headset_button_long_callback)
         self.action_headset_button_long.setCheckable(True)
         self.context.setContextProperty('action_headset_button_long', self.action_headset_button_long)
-        self.action_headset_button_switch = QtGui.QAction(_("Switch").decode("utf-8"), self.view,
+        self.action_headset_button_switch = QtWidgets.QAction(_("Switch").decode("utf-8"), self.view,
             triggered=self.headset_button_switch_callback)
         self.action_headset_button_switch.setCheckable(True)
         self.context.setContextProperty('action_headset_button_switch', self.action_headset_button_switch)
-        actiongroup_headset_button = QtGui.QActionGroup(self.view)
+        actiongroup_headset_button = QtWidgets.QActionGroup(self.view)
         actiongroup_headset_button.setExclusive(True)
         self.action_headset_button_short.setActionGroup(actiongroup_headset_button)
         self.action_headset_button_long.setActionGroup(actiongroup_headset_button)
@@ -253,30 +221,30 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.theme_str = _('Theme').decode("utf-8")
         self.context.setContextProperty('theme_str', self.theme_str)
         # help menu
-        self.action_about = QtGui.QAction(QtGui.QIcon('about.png'), _("About").decode("utf-8"), self.view,
+        self.action_about = QtWidgets.QAction(QtGui.QIcon('about.png'), _("About").decode("utf-8"), self.view,
             statusTip="Show about dialog", triggered=self.about_callback)
         self.context.setContextProperty('action_about', self.action_about)
         # Player
-        self.action_player_rrewind = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
+        self.action_player_rrewind = QtWidgets.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
             triggered=self.player_rrewind_callback)
         self.context.setContextProperty('action_player_rrewind', self.action_player_rrewind)
-        self.action_player_rewind = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
+        self.action_player_rewind = QtWidgets.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
             triggered=self.player_rewind_callback)
         self.context.setContextProperty('action_player_rewind', self.action_player_rewind)
-        self.action_player_play = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
+        self.action_player_play = QtWidgets.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
             triggered=self.player_play_callback)
         self.action_player_play.setCheckable(True)
         self.context.setContextProperty('action_player_play', self.action_player_play)
-        self.action_player_forward = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
+        self.action_player_forward = QtWidgets.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
             triggered=self.player_forward_callback)
         self.context.setContextProperty('action_player_forward', self.action_player_forward)
-        self.action_player_fforward = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
+        self.action_player_fforward = QtWidgets.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
             triggered=self.player_fforward_callback)
         self.context.setContextProperty('action_player_fforward', self.action_player_fforward)
-        self.action_player_skip_back = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
+        self.action_player_skip_back = QtWidgets.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
             triggered=self.player_skip_back_callback)
         self.context.setContextProperty('action_player_skip_back', self.action_player_skip_back)
-        self.action_player_skip_forward = QtGui.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
+        self.action_player_skip_forward = QtWidgets.QAction(QtGui.QIcon(''), _("").decode("utf-8"), self.view,
             triggered=self.player_skip_forward_callback)
         self.context.setContextProperty('action_player_skip_forward', self.action_player_skip_forward)
         # Playlist info
@@ -313,13 +281,13 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         return self.config_qml
 
     def quit_panucci(self):
+        self.about_to_quit_callback()
+        self.app.exit()
+
+    def about_to_quit_callback(self):
         self.view.hide()
         self.playlist.quit()
         util.write_config(self.config)
-        self.app.exit()
-
-    def close_main_window_callback(self, event):
-        self.quit_panucci()
 
     def show_main_window(self):
         self.view.activateWindow()
@@ -328,7 +296,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
                                                self.config.get("options", "default_folder").decode('utf-8'), "add")
 
-    @QtCore.Slot(str, str)
+    @QtCore.pyqtSlot(str, str)
     def filechooser_callback(self, action, value):
         value = value.encode('utf-8')
         if action == "open":
@@ -395,23 +363,23 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     def sleep_timer_callback(self):
         self.view.rootObject().property("root").openSleepTimer()
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def start_timed_shutdown(self, _minutes):
         QtCore.QTimer.singleShot(60000*int(_minutes), self.quit_panucci)
 
     def volume_control_callback(self):
         self.view.rootObject().property("root").openVolumeControl(str(self.playlist.get_volume_level()))
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def set_volume_level(self, _percent):
         self.playlist.set_volume_level(int(_percent))
 
-    @QtCore.Slot(str, str)
+    @QtCore.pyqtSlot(str, str)
     def remove_callback(self, _id, _bid):
         self.playlist.remove_bookmark(_id, _bid)
         self.playlist_callback()
 
-    @QtCore.Slot(str, str)
+    @QtCore.pyqtSlot(str, str)
     def jump_to_callback(self, _id, _bid):
         self.playlist.load_from_bookmark_id(_id, _bid)
 
@@ -431,7 +399,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
         return self.playlist_items
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def playlist_item_info_callback(self, item_id):
         playlist_item = self.playlist.get_item_by_id(item_id)
         metadata = playlist_item.metadata
@@ -529,7 +497,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     def player_play_callback(self):
         self.playlist.play_pause_toggle()
 
-    @QtCore.Slot()
+    @QtCore.pyqtSlot()
     def bookmark_callback(self):
         self.playlist.add_bookmark_at_current_position()
 
@@ -544,7 +512,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.progress_fraction = float(time_elapsed) / float(total_time) if total_time else 0
         self.on_set_progress.emit()
 
-    @QtCore.Slot(float)
+    @QtCore.pyqtSlot(float)
     def on_progress_clicked(self, new_fraction):
         if not self.config.getboolean("options", "lock_progress"):
             resp = self.playlist.do_seek(percent=new_fraction)
@@ -600,16 +568,16 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     def get_progress(self):
         return self.progress_fraction
 
-    on_play_pause = QtCore.Signal()
-    on_set_progress = QtCore.Signal()
-    on_set_metadata = QtCore.Signal()
-    play_pause_icon_path = QtCore.Property(str, get_play_pause_icon_path, notify=on_play_pause)
-    time_string = QtCore.Property(str, get_time_str, notify=on_set_progress)
-    progress = QtCore.Property(float, get_progress, notify=on_set_progress)
-    artist_string = QtCore.Property(str, get_artist_str, notify=on_set_metadata)
-    album_string = QtCore.Property(str, get_album_str, notify=on_set_metadata)
-    title_string = QtCore.Property(str, get_title_str, notify=on_set_metadata)
-    cover_string = QtCore.Property(str, get_cover_str, notify=on_set_metadata)
+    on_play_pause = QtCore.pyqtSignal()
+    on_set_progress = QtCore.pyqtSignal()
+    on_set_metadata = QtCore.pyqtSignal()
+    play_pause_icon_path = QtCore.pyqtProperty(str, get_play_pause_icon_path, notify=on_play_pause)
+    time_string = QtCore.pyqtProperty(str, get_time_str, notify=on_set_progress)
+    progress = QtCore.pyqtProperty(float, get_progress, notify=on_set_progress)
+    artist_string = QtCore.pyqtProperty(str, get_artist_str, notify=on_set_metadata)
+    album_string = QtCore.pyqtProperty(str, get_album_str, notify=on_set_metadata)
+    title_string = QtCore.pyqtProperty(str, get_title_str, notify=on_set_metadata)
+    cover_string = QtCore.pyqtProperty(str, get_cover_str, notify=on_set_metadata)
 
     def on_player_stopped(self):
         self.timer.stop()
@@ -639,7 +607,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.metadata = None
         self.on_set_progress.emit()
         self.on_set_metadata.emit()
-        self.view.setWindowTitle("Panucci")
+        self.view.setTitle("Panucci")
 
     def on_player_new_metadata(self):
         self.metadata = self.playlist.get_file_metadata()
@@ -652,7 +620,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         _title = self.metadata["title"]
         if len(_title) > 25:
             _title = _title[:24] + '...'
-        self.view.setWindowTitle(_title.decode('utf-8'))
+        self.view.setTitle(_title.decode('utf-8'))
 
     def on_player_end_of_playlist(self, loop):
         if not loop:
@@ -663,7 +631,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.on_player_stopped()
         self.on_player_new_track()
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def open_external_url(self, url):
         os.system("xdg-open " + url)
 
@@ -713,18 +681,18 @@ class PanucciGUI(QtCore.QObject, ObservableService):
                 else:
                     self.playlist.next()
 
-class ImageProvider(QtDeclarative.QDeclarativeImageProvider):
+class ImageProvider(QtQuick.QQuickImageProvider):
     def __init__(self, main):
-        QtDeclarative.QDeclarativeImageProvider.__init__(self, QtDeclarative.QDeclarativeImageProvider.Pixmap)
+        QtQuick.QQuickImageProvider.__init__(self, QtQuick.QQuickImageProvider.Pixmap)
         self.__main = main
 
-    def requestPixmap(self, id, size, requestedSize):
-        size = requestedSize.width()
+    def requestPixmap(self, id, requestedSize):
+        width = requestedSize.width()
+        height = requestedSize.height()
         pixmap = QtGui.QPixmap()
-        #pixmap.fill("red")
         pixmap.loadFromData(self.__main.metadata['image'])
-        #pixmap = pixmap.scaled(size, size, mode=QtCore.Qt.SmoothTransformation)
-        return pixmap
+        pixmap.scaled(width, height, transformMode=QtCore.Qt.SmoothTransformation)
+        return pixmap, QtCore.QSize(width, height)
 
 class PlaylistItem(QtCore.QObject):
     def __init__(self, _id, _caption, _bookmark, _position):
@@ -736,11 +704,11 @@ class PlaylistItem(QtCore.QObject):
         self._bookmark = _bookmark
         self._position = _position
 
-    changed = QtCore.Signal()
+    changed = QtCore.pyqtSignal()
 
     def _get_id(self):
         return self._id
-    
+
     def _get_caption(self):
         return self._caption
 
@@ -750,10 +718,10 @@ class PlaylistItem(QtCore.QObject):
     def _get_position(self):
         return self._position
 
-    item_id = QtCore.Property(str, _get_id, notify=changed)
-    caption = QtCore.Property(unicode, _get_caption, notify=changed)
-    bookmark_id = QtCore.Property(str, _get_bookmark, notify=changed)
-    position = QtCore.Property(str, _get_position, notify=changed)
+    item_id = QtCore.pyqtProperty(str, _get_id, notify=changed)
+    caption = QtCore.pyqtProperty(unicode, _get_caption, notify=changed)
+    bookmark_id = QtCore.pyqtProperty(str, _get_bookmark, notify=changed)
+    position = QtCore.pyqtProperty(str, _get_position, notify=changed)
 
 class FilechooserItem(QtCore.QObject):
     def __init__(self, _caption, _path, _directory):
@@ -767,7 +735,7 @@ class FilechooserItem(QtCore.QObject):
         self._path = _path
         self._directory = _directory
 
-    changed = QtCore.Signal()
+    changed = QtCore.pyqtSignal()
 
     def _get_caption(self):
         return self._caption
@@ -778,9 +746,9 @@ class FilechooserItem(QtCore.QObject):
     def _get_directory(self):
         return self._directory
 
-    caption = QtCore.Property(unicode, _get_caption, notify=changed)
-    path = QtCore.Property(unicode, _get_path, notify=changed)
-    directory = QtCore.Property(bool, _get_directory, notify=changed)
+    caption = QtCore.pyqtProperty(unicode, _get_caption, notify=changed)
+    path = QtCore.pyqtProperty(unicode, _get_path, notify=changed)
+    directory = QtCore.pyqtProperty(bool, _get_directory, notify=changed)
 
 class ThemeController(QtCore.QObject):
     def __init__(self, config):
@@ -795,7 +763,7 @@ class ThemeController(QtCore.QObject):
         self.config_theme.readfp(_file)
         _file.close()
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def set_theme(self, theme):
         self.config.set("options", "theme", theme.strip().lower())
         self.changed.emit()
@@ -826,11 +794,11 @@ class ThemeController(QtCore.QObject):
     def _get_progress_bg_color(self):
         return "#" + self.config_theme.get(self.config.get("options", "theme"), "progress_background_color")
 
-    changed = QtCore.Signal()
-    background = QtCore.Property(str, _get_background, notify=changed)
-    foreground = QtCore.Property(str, _get_foreground, notify=changed)
-    highlight = QtCore.Property(str, _get_highlight, notify=changed)
-    button_color = QtCore.Property(str, _get_button_color, notify=changed)
-    button_border_color = QtCore.Property(str, _get_button_border_color, notify=changed)
-    progress_color = QtCore.Property(str, _get_progress_color, notify=changed)
-    progress_bg_color = QtCore.Property(str, _get_progress_bg_color, notify=changed)
+    changed = QtCore.pyqtSignal()
+    background = QtCore.pyqtProperty(str, _get_background, notify=changed)
+    foreground = QtCore.pyqtProperty(str, _get_foreground, notify=changed)
+    highlight = QtCore.pyqtProperty(str, _get_highlight, notify=changed)
+    button_color = QtCore.pyqtProperty(str, _get_button_color, notify=changed)
+    button_border_color = QtCore.pyqtProperty(str, _get_button_border_color, notify=changed)
+    progress_color = QtCore.pyqtProperty(str, _get_progress_color, notify=changed)
+    progress_bg_color = QtCore.pyqtProperty(str, _get_progress_bg_color, notify=changed)

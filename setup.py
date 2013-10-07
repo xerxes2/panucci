@@ -40,6 +40,8 @@ DATA_FILES = [
     ('share/panucci/icons', glob.glob('icons/*.png')),
     ('share/panucci/qml', glob.glob('data/ui/qml/*.qml')),
     ('share/panucci/qml', glob.glob('data/ui/qml/*.js')),
+    ('share/panucci/qml2', glob.glob('data/ui/qml2/*.qml')),
+    ('share/panucci/qml2', glob.glob('data/ui/qml2/*.js')),
     ('share/panucci', ['data/panucci.conf', 'data/default.conf', 'data/theme.conf']),
     ('share/applications', ['data/panucci.desktop']),
     ('share/pixmaps', ['data/panucci.png']),
@@ -87,3 +89,6 @@ if "install" in sys.argv:
     if os.path.exists(_rootdir +  _prefix + "/share/panucci/qml/artwork"):
         os.remove(_rootdir + _prefix + "/share/panucci/qml/artwork")
     os.symlink("../icons", _rootdir + _prefix + "/share/panucci/qml/artwork")
+    if os.path.exists(_rootdir +  _prefix + "/share/panucci/qml2/artwork"):
+        os.remove(_rootdir + _prefix + "/share/panucci/qml2/artwork")
+    os.symlink("../icons", _rootdir + _prefix + "/share/panucci/qml2/artwork")

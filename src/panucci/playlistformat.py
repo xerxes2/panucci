@@ -563,7 +563,7 @@ class FileMetadata(object):
 
                 if self.tag_mappings[filetype][tag] != 'coverart':
                     try:
-                        value = escape(str(value).strip())
+                        value = escape(unicode(value).strip().encode("utf-8"))
                     except Exception, e:
                         self.__log.exception(
                           'Could not convert tag (%s) to escaped string', tag )

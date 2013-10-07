@@ -45,8 +45,10 @@ parser.add_option('-q', '--queue', action='store', type='string',
 parser.add_option('-d', '--debug', action='store_true', default=False,
     dest='debug', help='Enable verbose logging')
 parser.add_option("--gtk", action="store_true")
+parser.add_option("--gtk3", action="store_true")
 parser.add_option("--qt", action="store_true")
 parser.add_option("--qml", action="store_true")
+parser.add_option("--qml2", action="store_true")
 opts, args = parser.parse_args()
 
 if len(args) > 1 or ( opts.queue_filename and len(args) ):

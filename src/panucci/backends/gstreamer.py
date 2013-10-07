@@ -46,7 +46,6 @@ class Player(base.BasePlayer):
         except Exception, e:
             self.__log.exception('Error getting position...')
             pos_int = dur_int = 0
-
         return pos_int, dur_int
 
     def _get_state(self):

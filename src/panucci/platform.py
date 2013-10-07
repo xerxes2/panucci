@@ -25,6 +25,7 @@ MAEMO = False
 FREMANTLE = False
 HARMATTAN = False
 MEEGO = False
+SAILFISH = False
 HANDSET = False
 DESKTOP = True
 
@@ -44,6 +45,7 @@ def detect():
     global FREMANTLE
     global HARMATTAN
     global MEEGO
+    global SAILFISH
     global HANDSET
     global DESKTOP
 

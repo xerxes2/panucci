@@ -63,7 +63,6 @@ class BasePlayer(services.ObservableService):
         """ A cached version of _get_position_duration """
         if self.playing or self.paused:
             self.__position, self.__duration = self._get_position_duration()
-
         return self.__position, self.__duration
 
     def get_state(self):

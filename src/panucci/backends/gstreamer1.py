@@ -18,7 +18,7 @@
 
 from __future__ import absolute_import
 
-import sys
+import sys, time
 from gi.repository import GLib as glib
 from gi.repository import Gst as gst
 import logging
@@ -36,19 +36,27 @@ class Player(base.BasePlayer):
         self.__log = logging.getLogger('panucci.backends.GStreamerPlayer')
         self.__player = None
         # Workaround for weird bug
-        self.initial_pause_position = True
+        #self.initial_pause_position = True
 
     def _get_position_duration(self):
         try:
+            """
             if self.initial_pause_position == True:
                 pos_int = 0
             else:
                 pos_int = self.__player.query_position(gst.Format.TIME)[1]
+            """
+            _int = 0
+            while not self.__player.query_duration(gst.Format.TIME)[0]:
+                time.sleep(0.02)
+                _int = _int + 1
+                if _int > 10:
+                    break
+            pos_int = self.__player.query_position(gst.Format.TIME)[1]
             dur_int = self.__player.query_duration(gst.Format.TIME)[1]
         except Exception, e:
             self.__log.exception('Error getting position...')
             pos_int = dur_int = 0
-
         return pos_int, dur_int
 
     def _get_state(self):
@@ -57,15 +65,17 @@ class Player(base.BasePlayer):
         else:
             state = self.__player.get_state(1)[1]
             return { gst.State.NULL    : self.STATE_STOPPED,
+                     gst.State.READY  : self.STATE_PAUSED,
                      gst.State.PAUSED  : self.STATE_PAUSED,
                      gst.State.PLAYING : self.STATE_PLAYING
                    }.get( state, self.STATE_NULL )
-
+            
+        
     def _load_media(self, uri):
         self.__setup_player()
         self.__player.set_property("uri", uri)
         self.__player.set_state(gst.State.PAUSED)
-        self.initial_pause_position = True
+        #self.initial_pause_position = True
 
     def _pause(self):
         self.__player.set_state(gst.State.PAUSED)
@@ -76,7 +86,7 @@ class Player(base.BasePlayer):
     def _play(self):
         if self.__player:
             self.__player.set_state(gst.State.PLAYING)
-            self.initial_pause_position = False
+            #self.initial_pause_position = False
             return True
         else:
             return False
@@ -86,7 +96,7 @@ class Player(base.BasePlayer):
         if self.__player:
             self.__player.set_state(gst.State.NULL)
             self.set_position_duration(0, 0)
-            self.initial_pause_position = True
+            #self.initial_pause_position = True
             self.__player.set_state(gst.State.PAUSED)
             if player:
                 self.__player.set_state(gst.State.NULL)
@@ -100,7 +110,7 @@ class Player(base.BasePlayer):
             self.__log.exception( 'Error seeking' )
             error = True
         self.seeking = False
-        self.initial_pause_position = False
+        #self.initial_pause_position = False
         return not error
 
     def _get_volume_level(self):

@@ -29,9 +29,9 @@ from logging import getLogger
 from panucci import platform
 
 class ObservableService(object):
-    def __init__(self, signal_names=[], log=None):
+    def __init__(self, signal_names=[], log=None, **kwds):
+        super(ObservableService, self).__init__(**kwds)
         self._log = getLogger('ObservableService') if log is None else log
-
         self.observers = {}
         for signal in signal_names:
             self.observers[signal] = []
