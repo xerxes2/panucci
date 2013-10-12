@@ -281,7 +281,6 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         return self.config_qml
 
     def quit_panucci(self):
-        self.about_to_quit_callback()
         self.app.exit()
 
     def about_to_quit_callback(self):
@@ -290,7 +289,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         util.write_config(self.config)
 
     def show_main_window(self):
-        self.view.activateWindow()
+        self.view.requestActivate()
 
     def add_media_callback(self):
         self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),

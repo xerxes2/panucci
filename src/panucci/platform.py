@@ -70,3 +70,4 @@ def detect():
 
         elif os.path.exists('/etc/meego-release'):
             MEEGO = True
+            SAILFISH = True

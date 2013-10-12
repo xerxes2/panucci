@@ -1,3 +1,3 @@
-include README COPYING MANIFEST.in makefile setup.py
+include README COPYING MANIFEST.in makefile setup.py device.py
 recursive-include data *
 recursive-include doc *
