@@ -7,6 +7,7 @@ ApplicationWindow {
     property variant root: mainObject
     //width: config.main_width
     //height: config.main_height
+    cover: root.root
 
     initialPage: Page {
             id: mainPage
