@@ -51,6 +51,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.app.aboutToQuit.connect(self.about_to_quit_callback)
         self.view = QtQuick.QQuickView()
         self.view.setResizeMode(QtQuick.QQuickView.SizeRootObjectToView)
+        self.view.setDefaultAlphaBuffer(True)
         self.context = self.view.rootContext()
         self.context.setContextProperty('main', self)
         self.context.setContextProperty('config', self.make_config())
@@ -81,7 +82,6 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
         self.playlist.init(filepath=filename)
         self.view.rootObject().property("root").start_scrolling_timer(self.config.getboolean("options", "scrolling_labels"))
-
         self.app.exec_()
 
     def create_actions(self):
@@ -281,10 +281,10 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         return self.config_qml
 
     def quit_panucci(self):
+        self.view.close()
         self.app.exit()
 
     def about_to_quit_callback(self):
-        self.view.hide()
         self.playlist.quit()
         util.write_config(self.config)
 
