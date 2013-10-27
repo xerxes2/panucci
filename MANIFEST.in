@@ -1,3 +1,5 @@
-include README COPYING MANIFEST.in makefile setup.py device.py
+include README COPYING MANIFEST.in makefile setup.py device.py bin/panucci
 recursive-include data *
 recursive-include doc *
+prune data/ui/qml/artwork
+prune data/ui/qml2/artwork

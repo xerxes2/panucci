@@ -49,7 +49,13 @@ def detect():
     global HANDSET
     global DESKTOP
 
-    if os.path.exists('/etc/osso_software_version') or \
+    if os.path.exists('/etc/os-release'):
+        if file_contains('/etc/os-release', 'sailfishos'):
+            SAILFISH = True
+            HANDSET = True
+            DESKTOP = False
+
+    elif os.path.exists('/etc/osso_software_version') or \
             os.path.exists('/proc/component_version') or \
             file_contains('/etc/issue', 'maemo') or \
             file_contains('/etc/issue', 'Harmattan') or \
@@ -70,4 +76,3 @@ def detect():
 
         elif os.path.exists('/etc/meego-release'):
             MEEGO = True
-            SAILFISH = True
