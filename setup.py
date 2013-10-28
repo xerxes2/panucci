@@ -29,9 +29,10 @@ PACKAGES = [d2p(d) for d, dd, ff in os.walk(SRC_DIR) if '__init__.py' in ff]
 
 SCRIPTS = glob.glob('bin/*')
 
-if not os.path.exists('data/panucci.service') and 'clean' not in sys.argv:
+if not os.path.exists('panucci.service') and \
+    'clean' not in sys.argv and 'sdist' not in sys.argv:
     print >>sys.stderr, """
-    data/panucci.service not found. Maybe you want to run
+    build/panucci.service not found. Maybe you want to run
     "make install" instead of using setup.py directly?
     """
     sys.exit(1)
@@ -47,10 +48,10 @@ DATA_FILES = [
     ('share/pixmaps', ['data/panucci.png']),
     ('share/icons/hicolor/scalable/apps', ['data/panucci.svg']),
     ('share/icons/hicolor/64x64/apps', ['data/panucci.png']),
-    ('share/dbus-1/services', ['data/panucci.service']),
+    ('share/dbus-1/services', ['panucci.service']),
 ]
 
-mo_files = glob.glob('data/locale/*/LC_MESSAGES/panucci.mo')
+mo_files = glob.glob('build/locale/*/LC_MESSAGES/panucci.mo')
 
 if len(mo_files) == 0:
     print >>sys.stderr, """
@@ -59,7 +60,7 @@ if len(mo_files) == 0:
     """
 
 for mofile in mo_files:
-    modir = os.path.dirname(mofile).replace('data', 'share')
+    modir = os.path.dirname(mofile).replace('build', 'share')
     DATA_FILES.append((modir, [mofile]))
 
 sys.path.insert(0, SRC_DIR)
@@ -76,6 +77,7 @@ setup(
         package_dir={ '': SRC_DIR },
         scripts=SCRIPTS,
         data_files=DATA_FILES,
+        license="GPL3"
 )
 
 if "install" in sys.argv:

@@ -25,9 +25,8 @@ TRANSLATION_SOURCES=$(wildcard src/panucci/*.py) $(wildcard src/panucci/backends
 
 PYTHON ?= python
 
-data/panucci.service: data/panucci.service.in
-	sed 's|@INSTALL_PREFIX@|'/$(PREFIX)'|g' < data/panucci.service.in > data/panucci.service
-
+data/panucci.service:
+	sed 's|@INSTALL_PREFIX@|'/$(PREFIX)'|g' < data/panucci.service.in > panucci.service
 
 install: mo data/panucci.service
 	$(PYTHON) setup.py install --root=$(DESTDIR) --prefix=$(PREFIX)
@@ -41,19 +40,22 @@ po:
 
 mo:
 	for langfile in data/po/*.po; do \
-	  mo_dir="data/locale/`basename $${langfile} .po`/LC_MESSAGES/"; \
+	  mo_dir="build/locale/`basename $${langfile} .po`/LC_MESSAGES/"; \
 	  mkdir -p $${mo_dir}; \
 	  msgfmt $${langfile} -o $${mo_dir}/panucci.mo; \
 	done
 
+dist:
+	$(PYTHON) setup.py sdist
+
 clean:
 	find src/ -name '*.pyc' -exec rm '{}' \;
 	find src/ -name '*.pyo' -exec rm '{}' \;
-	rm -rf build data/locale
-	rm -f data/panucci.service data/po/*~
+	rm -rf build
+	rm -f panucci.service data/po/*~
 
 distclean: clean
 	rm -rf dist
 
-.PHONY: install test po mo clean distclean
+.PHONY: install test po mo dist clean distclean
 
