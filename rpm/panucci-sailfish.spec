@@ -10,7 +10,7 @@ Source: panucci-%{version}.tar.gz
 #BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires: python, gettext
-Requires: gst-plugins-base, mutagen, pyqt, python-gstreamer
+Requires: gst-plugins-base, mutagen, pyqt, python-gstreamer, dbus-python
 
 %description
 An audiobook and podcast player written in python.
@@ -27,6 +27,7 @@ python setup.py build
 rm -rf $RPM_BUILD_ROOT
 python device.py Sailfish
 python setup.py install --no-compile -O2 --root=$RPM_BUILD_ROOT
+cp icons/panucci_86x86.png $RPM_BUILD_ROOT/usr/share/pixmaps/panucci.png
 # Remove unneeded stuff
 rm -r $RPM_BUILD_ROOT/usr/share/panucci/qml
 rm -r $RPM_BUILD_ROOT/usr/lib/python2.7/site-packages/panucci/qtui

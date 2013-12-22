@@ -17,8 +17,8 @@ Item {
     }
     Flickable {
         id: settingsFlick
-        width: rootWindow.width - config.button_width - config.button_border_width
-        height: rootWindow.height
+        width: config.main_width - config.button_width - config.button_border_width
+        height: config.main_height
         contentWidth: width
         contentHeight: height
         clip: true

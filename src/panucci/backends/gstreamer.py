@@ -21,6 +21,7 @@ from __future__ import absolute_import
 import gobject
 import gst
 import logging
+import time
 
 from panucci.backends import base
 
@@ -73,6 +74,9 @@ class Player(base.BasePlayer):
     def _play(self):
         if self.__player:
             self.__player.set_state(gst.STATE_PLAYING)
+            if self.initial_pause_position == True:
+                time.sleep(0.2)
+            self.__player.set_property("mute", False)
             self.initial_pause_position = False
             return True
         else:

@@ -82,6 +82,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
         self.playlist.init(filepath=filename)
         self.view.rootObject().property("root").start_scrolling_timer(self.config.getboolean("options", "scrolling_labels"))
+        #print self.view.size()
         self.app.exec_()
 
     def create_actions(self):
