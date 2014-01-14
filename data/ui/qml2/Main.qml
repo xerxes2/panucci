@@ -193,7 +193,7 @@ Rectangle {
     Text {
         anchors.centerIn: progressBar
         color: themeController.foreground
-        font.pixelSize: config.font_size
+        font.pixelSize: config.progress_height / 3
         font.weight: Font.Bold
         text: main.time_string
         verticalAlignment: Text.AlignVCenter
