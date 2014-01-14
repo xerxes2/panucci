@@ -339,8 +339,8 @@ class PanucciGUI(QtCore.QObject, ObservableService):
                 else:
                     file_list.append(i)
 
-        dir_list.sort(lambda x,y : cmp (x.lower(), y.lower()))
-        file_list.sort(lambda x,y : cmp (x.lower(), y.lower()))
+        dir_list.sort(key=lambda v: (v.upper(), v[0].islower()))
+        file_list.sort(key=lambda v: (v.upper(), v[0].islower()))
         self.filechooser_items = []
         for i in dir_list:
             self.filechooser_items.append(FilechooserItem(i, folder, True))
