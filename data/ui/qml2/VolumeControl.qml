@@ -24,8 +24,8 @@ Item {
     }
     Rectangle {
         id: valuebar
-        width: root.width / 2
-        height: config.font_size * 3
+        width: root.width / 1.5
+        height: config.progress_height
         y: config.font_size * 3.5
         anchors.horizontalCenter: parent.horizontalCenter
         color: themeController.progress_bg_color
@@ -52,7 +52,7 @@ Item {
     Text {
         text: volumeControlArea.value == "None" ? disabled_str: volumeControlArea.value
         anchors.centerIn: valuebar
-        font.pixelSize: config.font_size * 1.5
+        font.pixelSize: config.progress_height / 2
         color: themeController.foreground
     }
 }

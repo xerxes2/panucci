@@ -40,7 +40,7 @@ Item {
     }
     Rectangle {
         id: valuebar
-        width: Math.round(root.width / 1.5)
+        width: root.width / 1.5
         height: config.progress_height
         y: config.font_size * 3.5
         anchors.horizontalCenter: parent.horizontalCenter
