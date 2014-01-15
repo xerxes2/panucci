@@ -4,7 +4,24 @@ import QtQuick 2.0
 Item {
     id: sleepTimerArea
     signal close
-
+    property variant mode: 0
+    
+    function timer_callback() {
+        var _int_x
+        var _int_v
+        _int_v = value.text - 1
+        value.text = _int_v
+        _int_x = Math.round((Math.pow(_int_v, 0.1) - 1) * valuebar.width)
+        if (_int_v == 1) {
+            progress.width = 0.04 * valuebar.width
+        }
+        else {
+            progress.width = _int_x
+        }
+        if (_int_v == 0)
+            action_quit.trigger()
+    }
+    
     MouseArea {
         anchors.fill: parent
         onClicked: sleepTimerArea.close()
@@ -23,8 +40,8 @@ Item {
     }
     Rectangle {
         id: valuebar
-        width: root.width / 2
-        height: config.font_size * 3
+        width: Math.round(root.width / 1.5)
+        height: config.progress_height
         y: config.font_size * 3.5
         anchors.horizontalCenter: parent.horizontalCenter
         color: themeController.progress_bg_color
@@ -32,7 +49,12 @@ Item {
         MouseArea {
             anchors.fill: parent
             onClicked: { value.text = Math.round(Math.pow((1 + (mouseX / parent.width)), 10))
-                         progress.width = mouseX
+                         if (value.text == 1) {
+                             progress.width = 0.04 * parent.width
+                         }
+                         else {
+                             progress.width = mouseX
+                         }
                        }
         }
         Rectangle {
@@ -50,15 +72,32 @@ Item {
         id: value
         text: "5"
         anchors.centerIn: valuebar
-        font.pixelSize: config.font_size * 1.5
+        font.pixelSize: config.progress_height / 2
         color: themeController.foreground
     }
     AppButton {
+        id: shutdownButton
         anchors.horizontalCenter: parent.horizontalCenter
-        y: config.font_size * 7.5
-        image: "artwork/apply.png"
-        onClicked: { sleepTimerArea.close()
-                     main.start_timed_shutdown(value.text)
+        y: valuebar.y + valuebar.height + config.font_size
+        image: "artwork/media-playback-start.png"
+        onClicked: { //sleepTimerArea.close()
+                     if (mode == 0) {
+                       mode = 1
+                       shutdownButton.image = "artwork/media-playback-pause.png"
+                       timer.start()
+                     }
+                     else {
+                       mode = 0
+                       shutdownButton.image = "artwork/media-playback-start.png"
+                       timer.stop()
+                     }
                    }
+    }
+    Timer {
+         id: timer
+         interval: 60000
+         running: false
+         repeat: true
+         onTriggered: timer_callback()
     }
 }

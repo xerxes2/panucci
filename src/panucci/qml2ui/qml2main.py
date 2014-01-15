@@ -73,6 +73,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.timer = QtCore.QTimer()
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.timer_callback)
+        
         if platform.SAILFISH:
             self.view.setSource(QtCore.QUrl(util.find_data_file("qml2/main_sailfish.qml")))
             self.view.showFullScreen()
@@ -349,6 +350,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
         return self.filechooser_items
 
+    def sleep_timer_callback(self):
+        self.view.rootObject().property("root").openSleepTimer()
+
     def play_one_callback(self):
         self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
                                                self.config.get("options", "default_folder").decode('utf-8'), "play_one")
@@ -359,13 +363,6 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def clear_playlist_callback(self):
         self.playlist.reset_playlist()
-
-    def sleep_timer_callback(self):
-        self.view.rootObject().property("root").openSleepTimer()
-
-    @QtCore.pyqtSlot(str)
-    def start_timed_shutdown(self, _minutes):
-        QtCore.QTimer.singleShot(60000*int(_minutes), self.quit_panucci)
 
     def volume_control_callback(self):
         self.view.rootObject().property("root").openVolumeControl(str(self.playlist.get_volume_level()))
