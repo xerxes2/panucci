@@ -148,7 +148,7 @@ Rectangle {
     Rectangle {
         id: title_rect
         width: config.main_width - 10
-        height: config.font_size * 1.2
+        height: config.font_size * 1.4
         x: config.cover_height + 5
         y: ((config.cover_height - (config.font_size * 5.4)) / 2) + (config.font_size * 4.1)
         color: themeController.background
