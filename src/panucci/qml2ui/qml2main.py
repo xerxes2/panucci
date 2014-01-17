@@ -415,28 +415,28 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         #SettingsDialog(self)
 
     def lock_progress_callback(self):
-        self.set_config_option("lock_progress", str(self.action_lock_progress.isChecked()).lower())
+        self.set_config_option("lock_progress", unicode(self.action_lock_progress.isChecked()).lower())
 
     def dual_action_callback(self):
-        self.set_config_option("dual_action_button", str(self.action_dual_action.isChecked()).lower())
+        self.set_config_option("dual_action_button", unicode(self.action_dual_action.isChecked()).lower())
 
     def stay_at_end_callback(self):
-        self.set_config_option("stay_at_end", str(self.action_stay_at_end.isChecked()).lower())
+        self.set_config_option("stay_at_end", unicode(self.action_stay_at_end.isChecked()).lower())
 
     def seek_back_callback(self):
-        self.set_config_option("seek_back", str(self.action_seek_back.isChecked()).lower())
+        self.set_config_option("seek_back", unicode(self.action_seek_back.isChecked()).lower())
 
     def scrolling_labels_callback(self):
-        self.set_config_option("scrolling_labels", str(self.action_scrolling_labels.isChecked()).lower())
+        self.set_config_option("scrolling_labels", unicode(self.action_scrolling_labels.isChecked()).lower())
         self.view.rootObject().property("root").start_scrolling_timer(self.config.getboolean("options", "scrolling_labels"))
 
     def resume_all_callback(self):
-        self.set_config_option("resume_all", str(self.action_resume_all.isChecked()).lower())
+        self.set_config_option("resume_all", unicode(self.action_resume_all.isChecked()).lower())
         if not self.action_resume_all.isChecked():
             self.playlist.reset_all_seek_to()
 
     def play_on_headset_callback(self):
-        self.set_config_option("play_on_headset", str(self.action_play_on_headset.isChecked()).lower())
+        self.set_config_option("play_on_headset", unicode(self.action_play_on_headset.isChecked()).lower())
 
     def play_mode_all_callback(self):
         self.set_config_option("play_mode", "all")
