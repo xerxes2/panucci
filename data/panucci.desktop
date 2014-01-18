@@ -7,4 +7,4 @@ Icon=/usr/share/pixmaps/panucci.png
 Terminal=false
 Type=Application
 Categories=Audio;
-MimeType=audio/x-mp3;audio/ogg;audio/mpeg;audio/x-aac;audio/x-flac;audio/x-vorbis;audio/x-opus;audio/x-alac
+MimeType=audio/x-mp3;audio/ogg;audio/mpeg;audio/x-aac;audio/x-flac;audio/x-vorbis;audio/x-opus;audio/x-alac;

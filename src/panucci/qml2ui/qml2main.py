@@ -297,6 +297,10 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
                                                self.config.get("options", "default_folder").decode('utf-8'), "add")
 
+##################################
+# Filechooser begin
+##################################
+
     @QtCore.pyqtSlot(str, str)
     def filechooser_callback(self, action, value):
         value = value.encode('utf-8')
@@ -338,7 +342,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
                 if os.path.isdir(_path):
                     dir_list.append(i)
                 else:
-                    file_list.append(i)
+                    _ext = i.split(".")[-1]
+                    if _ext in panucci.EXTENSIONS or _ext in panucci.PLAYLISTS:
+                        file_list.append(i)
 
         dir_list.sort(key=lambda v: (v.upper(), v[0].islower()))
         file_list.sort(key=lambda v: (v.upper(), v[0].islower()))
@@ -349,6 +355,10 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             self.filechooser_items.append(FilechooserItem(i, folder, False))
 
         return self.filechooser_items
+
+##################################
+# Filechooser end
+##################################
 
     def sleep_timer_callback(self):
         self.view.rootObject().property("root").openSleepTimer()
@@ -409,6 +419,15 @@ class PanucciGUI(QtCore.QObject, ObservableService):
                 metadata[i] = " "
         self.view.rootObject().property("root").openPlaylistItemInfo(metadata)
 
+    def about_callback(self):
+        from panucci import about
+        self.view.rootObject().property("root").openAboutDialog([about.about_name+" "+panucci.__version__, about.about_text,
+                                                about.about_copyright, about.about_website])
+
+##################################
+# Settings begin
+##################################
+
     def settings_callback(self):
         self.view.rootObject().property("root").openSettings()
         #from panucci.qtui.qtsettingsdialog import SettingsDialog
@@ -459,13 +478,12 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     def headset_button_switch_callback(self):
         self.set_config_option("headset_button", "switch")
 
-    def about_callback(self):
-        from panucci import about
-        self.view.rootObject().property("root").openAboutDialog([about.about_name+" "+panucci.__version__, about.about_text,
-                                                about.about_copyright, about.about_website])
-
     def set_config_option(self, option, value):
         self.config.set("options", option, value)
+
+##################################
+# Settings end
+##################################
 
     def _play_file(self, filename, pause_on_load=False):
         self.playlist.load( os.path.abspath(filename) )
