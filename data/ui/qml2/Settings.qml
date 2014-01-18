@@ -250,17 +250,19 @@ Item {
                          if (settingsArea.actions[i].checked != settingsArea.buttons[i].checked)
                              settingsArea.actions[i].trigger()
                      }
+                     main.set_config_qml("theme", theme)
                      settingsArea.close()
                    }
     }
     Component.onCompleted: Generator.createThemeButtons()
     function themeButtonClicked(button) {
-        var i
+        var i=0
         for (i=0;i<themes.length;i++) {
             Generator.themeButtons[i].checked = false
         }
         button.checked = true
         themeController.set_theme(button.text)
+        theme = button.text.toLowerCase()
     }
     property variant actions: [action_scrolling_labels, action_lock_progress,
             action_dual_action, action_stay_at_end, action_seek_back,
@@ -274,9 +276,22 @@ Item {
             action_play_mode_all_button, action_play_mode_single_button,
             action_play_mode_random_button, action_play_mode_repeat_button,
             action_headset_button_short_button, action_headset_button_long_button, action_headset_button_switch_button]
+    property variant theme: config.theme
     onClose: { var i=0
                for (i=0;i<settingsArea.actions.length;i++) {
                    settingsArea.buttons[i].checked = settingsArea.actions[i].checked
+               }
+               
+               if (theme != config.theme) {
+                   themeController.set_theme(config.theme)
+                   for (i=0;i<themes.length;i++) {
+                       if (Generator.themeButtons[i].text.toLowerCase() != config.theme) {
+                           Generator.themeButtons[i].checked = false
+                       }
+                       else {
+                           Generator.themeButtons[i].checked = true
+                       }
+                   }
                }
              }
 }

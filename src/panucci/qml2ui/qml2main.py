@@ -282,6 +282,11 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.config_qml["theme"] = self.config.get("options", "theme")
         return self.config_qml
 
+    @QtCore.pyqtSlot(str, str)
+    def set_config_qml(self, option, value):
+        self.config_qml[option] = value
+        self.context.setContextProperty("config", self.config_qml)
+
     def quit_panucci(self):
         self.view.close()
         self.app.exit()
