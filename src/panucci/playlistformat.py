@@ -477,6 +477,9 @@ class FileMetadata(object):
         'ogg': { 'title':  'title',
                  'artist': 'artist',
                  'album':  'album' },
+        'opus':{ 'title':  'title',
+                 'artist': 'artist',
+                 'album':  'album' },
     }
     tag_mappings['m4a']  = tag_mappings['mp4']
     tag_mappings['flac'] = tag_mappings['ogg']
@@ -528,6 +531,8 @@ class FileMetadata(object):
             import mutagen.mp3 as meta_parser
         elif filetype == 'ogg':
             import mutagen.oggvorbis as meta_parser
+        elif filetype == 'opus':
+            import mutagen.oggopus as meta_parser
         elif filetype == 'flac':
             import mutagen.flac as meta_parser
         elif filetype in ['mp4', 'm4a']:
