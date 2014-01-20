@@ -26,17 +26,17 @@ Item {
     }
     Flickable {
         id: playlistItemInfoFlick
-        width: root.width
-        height: root.height - config.font_size - 3.5
+        width: config.main_width
+        height: config.main_height - (config.font_size * 3.5)
         x: 0
         y: config.font_size * 3.5
-        //contentWidth: root.width * 2
-        contentWidth: leftColumn.width + rightColumn.width + (config.font_size * 2.5)
+        property int _contentWidth: leftColumn.width + rightColumn.width + (config.font_size * 2.5)
+        contentWidth: _contentWidth < width? width: _contentWidth
         clip: true
 
         MouseArea {
-        anchors.fill: parent
-        onClicked: playlistItemInfoArea.close()
+            anchors.fill: parent
+            onClicked: playlistItemInfoArea.close()
         }
         Column {
             id: leftColumn
