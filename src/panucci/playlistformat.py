@@ -476,13 +476,12 @@ class FileMetadata(object):
                  'APIC': 'coverart' },
         'ogg': { 'title':  'title',
                  'artist': 'artist',
-                 'album':  'album' },
-        'opus':{ 'title':  'title',
-                 'artist': 'artist',
-                 'album':  'album' },
+                 'album':  'album' ,
+                 'metadata_block_picture': 'coverart' },
     }
     tag_mappings['m4a']  = tag_mappings['mp4']
     tag_mappings['flac'] = tag_mappings['ogg']
+    tag_mappings['opus'] = tag_mappings['ogg']
 
     def __init__(self, filepath):
         self.__log = logging.getLogger('panucci.playlist.FileMetadata')
@@ -577,9 +576,16 @@ class FileMetadata(object):
                     # attribute whereas others do not :S
                     if hasattr( value, 'data' ):
                         value = value.data
+                    elif filetype in ["ogg", "opus"]:
+                        import mutagen.flac
+                        import base64
+                        _pic = mutagen.flac.Picture(base64.b64decode(value))
+                        value = _pic.data
 
                 setattr( self, self.tag_mappings[filetype][tag], value )
 
+        if filetype == 'flac' and metadata.pictures:
+            self.coverart = metadata.pictures[0].data
         if self.coverart is None:
             self.coverart = self.__find_coverart()
 

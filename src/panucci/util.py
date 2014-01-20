@@ -21,6 +21,7 @@ from __future__ import absolute_import
 import os.path
 from sys import argv
 from urllib import quote
+from base64 import b64decode
 
 def convert_ns(time_int):
     """Convert nanosecond values into strings
