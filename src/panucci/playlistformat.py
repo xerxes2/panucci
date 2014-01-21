@@ -477,10 +477,12 @@ class FileMetadata(object):
         'ogg': { 'title':  'title',
                  'artist': 'artist',
                  'album':  'album' ,
-                 'metadata_block_picture': 'coverart' },
+                 'METADATA_BLOCK_PICTURE': 'coverart' },
+        'flac':{ 'TITLE': 'title',
+                 'ARTIST': 'artist',
+                 'ALBUM': 'album' }
     }
     tag_mappings['m4a']  = tag_mappings['mp4']
-    tag_mappings['flac'] = tag_mappings['ogg']
     tag_mappings['opus'] = tag_mappings['ogg']
 
     def __init__(self, filepath):
@@ -551,20 +553,19 @@ class FileMetadata(object):
             return False
 
         self.length = metadata.info.length * 10**9
-        for tag,value in metadata.iteritems():
-            if tag.find(':') != -1: # hack for weirdly named coverart tags
-                tag = tag.split(':')[0]
-
-            if self.tag_mappings[filetype].has_key(tag):
-                if isinstance( value, list ):
-                    if len(value):
-                        # Here we could either join the list or just take one
-                        # item. I chose the latter simply because some ogg
-                        # files have several messed up titles...
-                        value = value[0]
-                    else:
-                        continue
-
+        for tag in self.tag_mappings[filetype].keys():
+            value = None
+            if filetype in ["ogg", "flac", "opus"]:
+                for _tup in metadata.tags:
+                    if tag == _tup[0]:
+                        value = _tup[1]
+            else:
+                for _key in metadata.tags.keys():
+                    if tag == _key:
+                        value = metadata.tags[_key]
+                        if isinstance(value, list):
+                            value = value[0]
+            if value:
                 if self.tag_mappings[filetype][tag] != 'coverart':
                     try:
                         value = escape(unicode(value).strip().encode("utf-8"))
