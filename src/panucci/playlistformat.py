@@ -561,7 +561,7 @@ class FileMetadata(object):
                         value = _tup[1]
             else:
                 for _key in metadata.tags.keys():
-                    if tag == _key:
+                    if tag == _key.strip(":"):
                         value = metadata.tags[_key]
                         if isinstance(value, list):
                             value = value[0]
