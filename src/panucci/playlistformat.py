@@ -477,13 +477,11 @@ class FileMetadata(object):
         'ogg': { 'title':  'title',
                  'artist': 'artist',
                  'album':  'album' ,
-                 'METADATA_BLOCK_PICTURE': 'coverart' },
-        'flac':{ 'TITLE': 'title',
-                 'ARTIST': 'artist',
-                 'ALBUM': 'album' }
+                 'metadata_block_picture': 'coverart' },
     }
     tag_mappings['m4a']  = tag_mappings['mp4']
     tag_mappings['opus'] = tag_mappings['ogg']
+    tag_mappings['flac'] = tag_mappings['ogg']
 
     def __init__(self, filepath):
         self.__log = logging.getLogger('panucci.playlist.FileMetadata')
@@ -557,11 +555,14 @@ class FileMetadata(object):
             value = None
             if filetype in ["ogg", "flac", "opus"]:
                 for _tup in metadata.tags:
-                    if tag == _tup[0]:
+                    if tag == unicode(_tup[0]).lower():
                         value = _tup[1]
             else:
                 for _key in metadata.tags.keys():
-                    if tag == _key.strip(":"):
+                    _tag = _key
+                    if ":" in _key:
+                        _tag = _key.split(":")[0]
+                    if tag == _tag:
                         value = metadata.tags[_key]
                         if isinstance(value, list):
                             value = value[0]
