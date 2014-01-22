@@ -9,6 +9,7 @@ Item {
     property variant back: ""
     property variant forward: ""
     property variant action: ""
+    property variant view: filechooserView
 
     MouseArea { anchors.fill: parent
     }
@@ -37,7 +38,7 @@ Item {
         delegate: FilechooserItem {
             property variant item: modelData
             Image {
-                x: 10
+                x: config.font_size / 2
                 source: modelData.directory ? "artwork/folder.png" : "artwork/file.png"
                 anchors {
                     verticalCenter: parent.verticalCenter
@@ -48,7 +49,7 @@ Item {
                     left: parent.left
                     right: parent.right
                     verticalCenter: parent.verticalCenter
-                    leftMargin: 40
+                    leftMargin: config.font_size * 3
                 }
                 color: themeController.foreground
                 font.pixelSize: config.font_size
@@ -58,7 +59,6 @@ Item {
                 filechooserView.currentIndex = index
                 filechooserArea.path = modelData.path + "/" + modelData.caption
                 if (modelData.directory == true) {
-                    filechooserView.currentIndex = -1
                     filechooserArea.back = modelData.path
                     main.filechooser_callback("open", filechooserArea.path)
                 }

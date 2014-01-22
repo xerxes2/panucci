@@ -36,6 +36,7 @@ Rectangle {
         filechooser.state = 'opened'
         filechooser.items = items
         filechooser.path = path
+        filechooser.view.currentIndex = -1
         if (action)
             filechooser.action = action
     }
