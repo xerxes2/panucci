@@ -1,20 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# This file is part of Panucci.
-# Copyright (c) 2008-2014 The Panucci Project
-#
-# Panucci is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Panucci is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 import os
@@ -302,9 +286,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
                                                self.config.get("options", "default_folder").decode('utf-8'), "add")
 
-##################################
-# Filechooser begin
-##################################
+    ##################################
+    # Filechooser begin
+    ##################################
 
     @QtCore.pyqtSlot(str, str)
     def filechooser_callback(self, action, value):
@@ -361,9 +345,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
         return self.filechooser_items
 
-##################################
-# Filechooser end
-##################################
+    ##################################
+    # Filechooser end
+    ##################################
 
     def sleep_timer_callback(self):
         self.view.rootObject().property("root").openSleepTimer()
@@ -429,9 +413,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.view.rootObject().property("root").openAboutDialog([about.about_name+" "+panucci.__version__, about.about_text,
                                                 about.about_copyright, about.about_website])
 
-##################################
-# Settings begin
-##################################
+    ##################################
+    # Settings begin
+    ##################################
 
     def settings_callback(self):
         self.view.rootObject().property("root").openSettings()
@@ -486,9 +470,9 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     def set_config_option(self, option, value):
         self.config.set("options", option, value)
 
-##################################
-# Settings end
-##################################
+    ##################################
+    # Settings end
+    ##################################
 
     def _play_file(self, filename, pause_on_load=False):
         self.playlist.load( os.path.abspath(filename) )
@@ -572,6 +556,12 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         else:
             return ""
 
+    def get_current_item_position(self):
+        if self.metadata:
+            return self.playlist.current_position
+        else:
+            return 0
+
     def set_text_x(self):
         if self.metadata:
             self.view.rootObject().property("root").set_text_x()
@@ -598,6 +588,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
     album_string = QtCore.pyqtProperty(str, get_album_str, notify=on_set_metadata)
     title_string = QtCore.pyqtProperty(str, get_title_str, notify=on_set_metadata)
     cover_string = QtCore.pyqtProperty(str, get_cover_str, notify=on_set_metadata)
+    track_int = QtCore.pyqtProperty(int, get_current_item_position, notify=on_set_metadata)
 
     def on_player_stopped(self):
         self.timer.stop()

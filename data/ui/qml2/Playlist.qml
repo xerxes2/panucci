@@ -22,22 +22,28 @@ Item {
         clip: true
         header: Item { height: config.font_size }
         footer: Item { height: config.font_size }
-        
         highlight: Rectangle { color: themeController.highlight
                                width: playlistView.width
                                height: config.font_size * 3
-                               y: playlistView.currentItem.y
+                               y: playlistView.currentItem? playlistView.currentItem.y:root.height
                    }
         highlightFollowsCurrentItem: false
 
         delegate: PlaylistItem {
             property variant item: modelData
+            property variant rect: currentRect
+            Rectangle {
+                   id: currentRect
+                   color: themeController.progress_bg_color
+                   anchors.fill: parent
+                   opacity: main.track_int == index && playlistView.currentIndex != index? 1.0: 0.0
+            }
             Text {
                 anchors {
                     left: parent.left
                     right: parent.right
                     verticalCenter: parent.verticalCenter
-                    leftMargin: modelData.bookmark_id == "" ? config.font_size : config.font_size * 2
+                    leftMargin: modelData.bookmark_id == ""? config.font_size: config.font_size * 2
                 }
                 color: themeController.foreground
                 font.pixelSize: config.font_size
