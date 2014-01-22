@@ -49,7 +49,7 @@ Item {
                     left: parent.left
                     right: parent.right
                     verticalCenter: parent.verticalCenter
-                    leftMargin: config.font_size * 3
+                    leftMargin: config.font_size * 2.5
                 }
                 color: themeController.foreground
                 font.pixelSize: config.font_size
