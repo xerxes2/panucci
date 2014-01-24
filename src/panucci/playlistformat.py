@@ -1,20 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# This file is part of Panucci.
-# Copyright (c) 2008-2011 The Panucci Project
-#
-# Panucci is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Panucci is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Panucci.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import
 
@@ -310,7 +294,10 @@ class PlaylistItem(object):
         metadata = self.__metadata.get_metadata()
         metadata['title'] = self.title
         return metadata
-
+    
+    def set_metadata(self, metadata):
+        self.__metadata.set_metadata(metadata)
+    
     @property
     def filetype(self):
         return util.detect_filetype(self.filepath)
@@ -486,6 +473,7 @@ class FileMetadata(object):
     def __init__(self, filepath):
         self.__log = logging.getLogger('panucci.playlist.FileMetadata')
         self.__filepath = filepath
+        self.filetype = util.detect_filetype(self.__filepath)
 
         self.title = ''
         self.artist = ''
@@ -524,21 +512,19 @@ class FileMetadata(object):
                 self.coverart = self.__find_coverart()
             return
 
-        filetype = util.detect_filetype(self.__filepath)
-
-        if filetype == 'mp3':
+        if self.filetype == 'mp3':
             import mutagen.mp3 as meta_parser
-        elif filetype == 'ogg':
+        elif self.filetype == 'ogg':
             import mutagen.oggvorbis as meta_parser
-        elif filetype == 'opus':
+        elif self.filetype == 'opus':
             import mutagen.oggopus as meta_parser
-        elif filetype == 'flac':
+        elif self.filetype == 'flac':
             import mutagen.flac as meta_parser
-        elif filetype in ['mp4', 'm4a']:
+        elif self.filetype in ['mp4', 'm4a']:
             import mutagen.mp4 as meta_parser
         else:
             self.__log.info(
-                'Extracting metadata not supported for %s files.', filetype )
+                'Extracting metadata not supported for %s files.', self.filetype )
             return False
 
         try:
@@ -551,9 +537,9 @@ class FileMetadata(object):
             return False
 
         self.length = metadata.info.length * 10**9
-        for tag in self.tag_mappings[filetype].keys():
+        for tag in self.tag_mappings[self.filetype].keys():
             value = None
-            if filetype in ["ogg", "flac", "opus"]:
+            if self.filetype in ["ogg", "flac", "opus"]:
                 for _tup in metadata.tags:
                     if tag == unicode(_tup[0]).lower():
                         value = _tup[1]
@@ -567,7 +553,7 @@ class FileMetadata(object):
                         if isinstance(value, list):
                             value = value[0]
             if value:
-                if self.tag_mappings[filetype][tag] != 'coverart':
+                if self.tag_mappings[self.filetype][tag] != 'coverart':
                     try:
                         value = escape(unicode(value).strip().encode("utf-8"))
                     except Exception, e:
@@ -578,15 +564,15 @@ class FileMetadata(object):
                     # attribute whereas others do not :S
                     if hasattr( value, 'data' ):
                         value = value.data
-                    elif filetype in ["ogg", "opus"]:
+                    elif self.filetype in ["ogg", "opus"]:
                         import mutagen.flac
                         import base64
                         _pic = mutagen.flac.Picture(base64.b64decode(value))
                         value = _pic.data
 
-                setattr( self, self.tag_mappings[filetype][tag], value )
+                setattr( self, self.tag_mappings[self.filetype][tag], value )
 
-        if filetype == 'flac' and metadata.pictures:
+        if self.filetype == 'flac' and metadata.pictures:
             self.coverart = metadata.pictures[0].data
         if self.coverart is None:
             self.coverart = self.__find_coverart()
@@ -670,3 +656,29 @@ class FileMetadata(object):
         }
 
         return metadata
+
+    def set_metadata(self, _metadata):
+        if self.filetype == 'mp3':
+            import mutagen.easyid3 as meta_parser
+        elif self.filetype == 'ogg':
+            import mutagen.oggvorbis as meta_parser
+        elif self.filetype == 'opus':
+            import mutagen.oggopus as meta_parser
+        elif self.filetype == 'flac':
+            import mutagen.flac as meta_parser
+        elif self.filetype in ['mp4', 'm4a']:
+            import mutagen.easymp4 as meta_parser
+
+        if self.filetype in ['mp4', 'm4a']:
+            metadata = meta_parser.EasyMP4(self.__filepath)
+        else:
+            metadata = meta_parser.Open(self.__filepath)
+         
+        metadata["artist"] = _metadata["artist"]
+        metadata["title"] = _metadata["title"]
+        metadata["album"] = _metadata["album"]
+        metadata.save()
+
+        for tag in _metadata.keys():
+            if tag != "length":
+                setattr( self, tag, _metadata[tag].encode("utf-8") )

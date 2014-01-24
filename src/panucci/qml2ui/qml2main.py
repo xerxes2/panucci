@@ -246,6 +246,8 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.context.setContextProperty('info_album_str', self.info_album_str)
         self.info_filepath_str = _('Filepath:').decode("utf-8")
         self.context.setContextProperty('info_filepath_str', self.info_filepath_str)
+        #self.info_header_str = _('Edit details').decode("utf-8")
+        #self.context.setContextProperty('info_edit_str', self.info_edit_str)
         # Misc
         self.disabled_str = _('Disabled').decode("utf-8")
         self.context.setContextProperty('disabled_str', self.disabled_str)
@@ -406,7 +408,16 @@ class PanucciGUI(QtCore.QObject, ObservableService):
                 metadata[i] = metadata[i].decode("utf-8")
             else:
                 metadata[i] = " "
-        self.view.rootObject().property("root").openPlaylistItemInfo(metadata)
+        self.view.rootObject().property("root").openPlaylistItemInfo(item_id, metadata)
+
+    @QtCore.pyqtSlot(str, "QVariant")
+    def playlist_item_info_edit_callback(self, item_id, metadata):
+        playlist_item = self.playlist.get_item_by_id(item_id)
+        playlist_item.set_metadata(metadata)
+        self.view.rootObject().property("root").openPlaylistItemInfo(item_id, metadata)
+        self.view.rootObject().property("root").openPlaylist(False, self.get_playlist_items())
+        self.metadata = self.playlist.get_file_metadata()
+        self.on_set_metadata.emit()
 
     def about_callback(self):
         from panucci import about
@@ -419,8 +430,6 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def settings_callback(self):
         self.view.rootObject().property("root").openSettings()
-        #from panucci.qtui.qtsettingsdialog import SettingsDialog
-        #SettingsDialog(self)
 
     def lock_progress_callback(self):
         self.set_config_option("lock_progress", unicode(self.action_lock_progress.isChecked()).lower())

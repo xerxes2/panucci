@@ -4,13 +4,14 @@ import QtQuick 2.0
 Item {
     id: playlistItemInfoArea
     signal close
+    property string item_id
     property variant metadata: {"artist":"","title":"","length":"","album":"","path":""}
     onClose: { playlistItemInfoFlick.contentX = 0
                playlistItemInfoFlick.contentY = 0
     }
     MouseArea {
         anchors.fill: parent
-        onClicked: playlistItemInfoArea.close()
+        onClicked: openPlaylistItemInfoEdit(item_id, metadata)
     }
     Rectangle {
         color: themeController.background

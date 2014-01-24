@@ -25,9 +25,15 @@ Rectangle {
             playlist.state = 'opened'
         playlist.items = items
     }
-    function openPlaylistItemInfo(metadata) {
+    function openPlaylistItemInfo(item_id, metadata) {
         playlistItemInfo.state = 'opened'
+        playlistItemInfo.item_id = item_id
         playlistItemInfo.metadata = metadata
+    }
+    function openPlaylistItemInfoEdit(item_id, metadata) {
+        playlistItemInfoEdit.state = 'opened'
+        playlistItemInfoEdit.item_id = item_id
+        playlistItemInfoEdit.metadata = metadata
     }
     function openSettings() {
         settings.state = 'opened'
@@ -127,7 +133,7 @@ Rectangle {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: {action_player_play.trigger()}
+            onClicked: {action_playlist.trigger()}
         }
     }
     Text {
@@ -429,6 +435,53 @@ Rectangle {
                 }
                 AnchorChanges {
                     target: playlistItemInfo
+                    anchors.right: root.left
+                }
+                StateChangeScript {
+                    //script: controller.contextMenuClosed()
+                }
+            }
+        ]
+        transitions: Transition {
+            AnchorAnimation { duration: 150 }
+        }
+    }
+    PlaylistItemInfoEdit {
+        id: playlistItemInfoEdit
+        width: parent.width
+        opacity: 0
+
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+        }
+        onClose: playlistItemInfoEdit.state = 'closed'
+        state: 'closed'
+        Behavior on opacity { NumberAnimation { duration: 300 } }
+
+        states: [
+            State {
+                name: 'opened'
+                PropertyChanges {
+                    target: playlistItemInfoEdit
+                    opacity: 1
+                }
+                AnchorChanges {
+                    target: playlistItemInfoEdit
+                    anchors.right: root.right
+                }
+                StateChangeScript {
+                    script: playlistItemInfoEdit.open()
+                }
+            },
+            State {
+                name: 'closed'
+                PropertyChanges {
+                    target: playlistItemInfoEdit
+                    opacity: 0
+                }
+                AnchorChanges {
+                    target: playlistItemInfoEdit
                     anchors.right: root.left
                 }
                 StateChangeScript {
