@@ -295,8 +295,8 @@ class PlaylistItem(object):
         metadata['title'] = self.title
         return metadata
     
-    def set_metadata(self, metadata):
-        self.__metadata.set_metadata(metadata)
+    def set_metadata(self, metadata, image):
+        self.__metadata.set_metadata(metadata, image)
     
     @property
     def filetype(self):
@@ -657,7 +657,7 @@ class FileMetadata(object):
 
         return metadata
 
-    def set_metadata(self, _metadata):
+    def set_metadata(self, _metadata, _picture=None):
         if self.filetype == 'mp3':
             import mutagen.easyid3 as meta_parser
         elif self.filetype == 'ogg':
@@ -680,5 +680,31 @@ class FileMetadata(object):
         metadata.save()
 
         for tag in _metadata.keys():
-            if tag != "length":
+            if tag not in ["length", "image"]:
                 setattr( self, tag, _metadata[tag].encode("utf-8") )
+
+        if _picture:
+            _file = open(_picture, "rb")
+            _data = _file.read()
+            _file.close()
+            self.coverart = _data
+
+            if self.filetype in ["ogg", "opus", "flac"]:
+                import base64, mutagen.flac
+                picture = mutagen.flac.Picture()
+                picture.data = _data
+                if self.filetype == "flac":
+                    metadata.clear_pictures()
+                    metadata.add_picture(picture)
+                else:
+                    metadata["metadata_block_picture"] = base64.b64encode(picture.write())
+            elif self.filetype == "mp3":
+                from mutagen.id3 import ID3, APIC
+                metadata = ID3(self.__filepath)
+                metadata.add(APIC(encoding=3, type=3, desc=u'Cover', data=_data))
+            elif self.filetype in ['mp4', 'm4a']:
+                from mutagen.mp4 import MP4, MP4Cover
+                metadata = MP4(self.__filepath)
+                metadata.tags["covr"] = [(MP4Cover(_data))]
+
+            metadata.save()

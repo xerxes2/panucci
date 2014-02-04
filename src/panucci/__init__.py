@@ -4,7 +4,7 @@ from __future__ import absolute_import
 
 import os.path
 
-__version__ = '0.99.5.4'
+__version__ = '0.99.6.0'
 
 HOME = os.path.expanduser('~/.config/panucci')
 
@@ -20,3 +20,4 @@ THEME_FILE = os.path.join(HOME, 'theme.conf')
 
 EXTENSIONS = ('mp2', 'mp3', 'mp4', 'ogg', 'm4a', 'wav', 'flac', 'opus', 'aac', 'alac')
 PLAYLISTS = ('m3u')
+IMAGES = ('png', 'jpg', 'jpeg')

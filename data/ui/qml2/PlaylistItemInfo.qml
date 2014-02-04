@@ -5,25 +5,32 @@ Item {
     id: playlistItemInfoArea
     signal close
     property string item_id
+    property string image
     property variant metadata: {"artist":"","title":"","length":"","album":"","path":""}
     onClose: { playlistItemInfoFlick.contentX = 0
                playlistItemInfoFlick.contentY = 0
     }
     MouseArea {
         anchors.fill: parent
-        onClicked: openPlaylistItemInfoEdit(item_id, metadata)
+        onClicked: playlistItemInfoArea.close()
     }
     Rectangle {
         color: themeController.background
         anchors.fill: parent
         opacity: .9
     }
-    Text {
-        text: info_header_str
-        y: config.font_size
-        anchors.horizontalCenter: parent.horizontalCenter
-        font.pixelSize: config.font_size * 1.5
-        color: themeController.foreground
+    Item {
+        width: root.width - coverImage.width
+        height: config.font_size * 3
+        x: 0
+        y: 0
+        Text {
+            text: info_header_str
+            y: config.font_size
+            anchors.horizontalCenter: parent.horizontalCenter
+            font.pixelSize: config.font_size * 1.5
+            color: themeController.foreground
+        }
     }
     Flickable {
         id: playlistItemInfoFlick
@@ -109,6 +116,20 @@ Item {
                 font.pixelSize: config.font_size
                 color: themeController.foreground
             }
+        }
+    }
+    Image {
+        id: coverImage
+        width: config.font_size * 6
+        height: config.font_size * 6
+        source: playlistItemInfoArea.image
+        anchors {
+            top: parent.top
+            right: parent.right
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: openPlaylistItemInfoEdit(item_id, metadata, image)
         }
     }
 }

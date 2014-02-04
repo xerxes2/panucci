@@ -4,6 +4,7 @@ import QtQuick 2.0
 Item {
     id: filechooserArea
     signal close
+    property int mode: 1
     property variant items: []
     property variant path: ""
     property variant back: ""
@@ -39,6 +40,8 @@ Item {
             property variant item: modelData
             Image {
                 x: config.font_size / 2
+                width: config.font_size
+                height: config.font_size
                 source: modelData.directory ? "artwork/folder.png" : "artwork/file.png"
                 anchors {
                     verticalCenter: parent.verticalCenter
@@ -49,7 +52,7 @@ Item {
                     left: parent.left
                     right: parent.right
                     verticalCenter: parent.verticalCenter
-                    leftMargin: config.font_size * 2.5
+                    leftMargin: config.font_size * 2
                 }
                 color: themeController.foreground
                 font.pixelSize: config.font_size
@@ -60,7 +63,7 @@ Item {
                 filechooserArea.path = modelData.path + "/" + modelData.caption
                 if (modelData.directory == true) {
                     filechooserArea.back = modelData.path
-                    main.filechooser_callback("open", filechooserArea.path)
+                    main.filechooser_callback("open", filechooserArea.path, filechooserArea.mode)
                 }
             }
         }
@@ -96,7 +99,7 @@ Item {
         anchors.bottom: filechooserArea.bottom
         image: "artwork/home.png"
         onClicked: { filechooserView.currentIndex = -1
-                     main.filechooser_callback("open", "~")
+                     main.filechooser_callback("open", "~", filechooserArea.mode)
         }
     }
     AppButton {
@@ -106,7 +109,7 @@ Item {
         onClicked: { filechooserView.currentIndex = -1
                      if (filechooserArea.back != "" && filechooserArea.back != filechooserArea.path) {
                          filechooserArea.forward = filechooserArea.path
-                         main.filechooser_callback("open", filechooserArea.back)
+                         main.filechooser_callback("open", filechooserArea.back, filechooserArea.mode)
                      }
         }
     }
@@ -117,7 +120,7 @@ Item {
         onClicked: { filechooserView.currentIndex = -1
                      if (filechooserArea.forward != "" && filechooserArea.forward != filechooserArea.path) {
                          filechooserArea.back = filechooserArea.path
-                         main.filechooser_callback("open", filechooserArea.forward)
+                         main.filechooser_callback("open", filechooserArea.forward, filechooserArea.mode)
                      }
         }
     }
@@ -128,9 +131,9 @@ Item {
         onClicked: { filechooserView.currentIndex = -1
                      filechooserArea.back = filechooserArea.path
                      if (filechooserView.currentItem)
-                         main.filechooser_callback("up", filechooserView.currentItem.item.path)
+                         main.filechooser_callback("up", filechooserView.currentItem.item.path, filechooserArea.mode)
                      else
-                         main.filechooser_callback("up", filechooserArea.path)
+                         main.filechooser_callback("up", filechooserArea.path, filechooserArea.mode)
         }
     }
     AppButton {
@@ -147,7 +150,7 @@ Item {
         image: "artwork/apply.png"
         onClicked: { filechooserArea.close()
                      filechooserView.currentIndex = -1
-                     main.filechooser_callback(filechooserArea.action, textinput.text)
+                     main.filechooser_callback(filechooserArea.action, textinput.text, filechooserArea.mode)
         }
     }
 }

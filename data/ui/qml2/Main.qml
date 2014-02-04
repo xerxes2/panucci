@@ -25,23 +25,31 @@ Rectangle {
             playlist.state = 'opened'
         playlist.items = items
     }
-    function openPlaylistItemInfo(item_id, metadata) {
+    function openPlaylistItemInfo(item_id, metadata, image) {
         playlistItemInfo.state = 'opened'
         playlistItemInfo.item_id = item_id
         playlistItemInfo.metadata = metadata
+        playlistItemInfo.image = image
     }
-    function openPlaylistItemInfoEdit(item_id, metadata) {
+    function openPlaylistItemInfoEdit(item_id, metadata, image) {
         playlistItemInfoEdit.state = 'opened'
         playlistItemInfoEdit.item_id = item_id
         playlistItemInfoEdit.metadata = metadata
+        playlistItemInfoEdit.image = image
+        playlistItemInfoEdit.modified = false
+    }
+    function setCoverPath(image) {
+        playlistItemInfoEdit.image = image
+        playlistItemInfoEdit.modified = true
     }
     function openSettings() {
         settings.state = 'opened'
     }
-    function openFilechooser(items, path, action) {
+    function openFilechooser(items, path, action, mode) {
         filechooser.state = 'opened'
         filechooser.items = items
         filechooser.path = path
+        filechooser.mode = mode
         filechooser.view.currentIndex = -1
         if (action)
             filechooser.action = action

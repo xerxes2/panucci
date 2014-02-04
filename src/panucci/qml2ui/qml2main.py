@@ -285,24 +285,29 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.view.requestActivate()
 
     def add_media_callback(self):
-        self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
-                                               self.config.get("options", "default_folder").decode('utf-8'), "add")
+        self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder"), 1),
+                                               self.config.get("options", "default_folder").decode('utf-8'), "add", 1)
+
+    @QtCore.pyqtSlot()
+    def add_coverart_callback(self):
+        self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder"), 2),
+                                               self.config.get("options", "default_folder").decode('utf-8'), "image", 2)
 
     ##################################
     # Filechooser begin
     ##################################
 
-    @QtCore.pyqtSlot(str, str)
-    def filechooser_callback(self, action, value):
+    @QtCore.pyqtSlot(str, str, int)
+    def filechooser_callback(self, action, value, mode):
         value = value.encode('utf-8')
         if action == "open":
             if os.path.isdir(os.path.expanduser(value)):
                 self.config.set("options", "default_folder", value)
-                self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(value), value.decode('utf-8'), False)
+                self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(value, mode), value.decode('utf-8'), False, mode)
         elif action == "up":
             value = value.rsplit("/", 1)[0]
             self.config.set("options", "default_folder", value)
-            self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(value), value.decode('utf-8'), False)
+            self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(value, mode), value.decode('utf-8'), False, mode)
         elif action == "add":
             if os.path.exists(os.path.expanduser(value)):
                 self.playlist.load(os.path.abspath(os.path.expanduser(value)))
@@ -317,8 +322,11 @@ class PanucciGUI(QtCore.QObject, ObservableService):
             if os.path.exists(os.path.expanduser(value)):
                 self.clear_playlist_callback()
                 self.playlist.load(os.path.abspath(os.path.expanduser(value)))
+        elif action == "image":
+            if os.path.isfile(os.path.expanduser(value)) and util.detect_filetype(value) in panucci.IMAGES:
+                self.view.rootObject().property("root").setCoverPath(os.path.expanduser(value))
 
-    def get_filechooser_items(self, folder):
+    def get_filechooser_items(self, folder, mode):
         _dir = os.path.expanduser(folder)
         dirlist = os.listdir(_dir)
         dir_list = []
@@ -334,8 +342,12 @@ class PanucciGUI(QtCore.QObject, ObservableService):
                     dir_list.append(i)
                 else:
                     _ext = i.split(".")[-1]
-                    if _ext in panucci.EXTENSIONS or _ext in panucci.PLAYLISTS:
-                        file_list.append(i)
+                    if mode == 1:
+                        if _ext in panucci.EXTENSIONS or _ext in panucci.PLAYLISTS:
+                            file_list.append(i)
+                    elif mode == 2:
+                        if _ext in panucci.IMAGES:
+                            file_list.append(i)
 
         dir_list.sort(key=lambda v: (v.upper(), v[0].islower()))
         file_list.sort(key=lambda v: (v.upper(), v[0].islower()))
@@ -355,12 +367,12 @@ class PanucciGUI(QtCore.QObject, ObservableService):
         self.view.rootObject().property("root").openSleepTimer()
 
     def play_one_callback(self):
-        self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
-                                               self.config.get("options", "default_folder").decode('utf-8'), "play_one")
+        self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder"), 1),
+                                               self.config.get("options", "default_folder").decode('utf-8'), "play_one", 1)
 
     def save_playlist_callback(self):
-        self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder")),
-                                               self.config.get("options", "default_folder").decode('utf-8'), "save")
+        self.view.rootObject().property("root").openFilechooser(self.get_filechooser_items(self.config.get("options", "default_folder"), 1),
+                                               self.config.get("options", "default_folder").decode('utf-8'), "save", 1)
 
     def clear_playlist_callback(self):
         self.playlist.reset_playlist()
@@ -408,13 +420,21 @@ class PanucciGUI(QtCore.QObject, ObservableService):
                 metadata[i] = metadata[i].decode("utf-8")
             else:
                 metadata[i] = " "
-        self.view.rootObject().property("root").openPlaylistItemInfo(item_id, metadata)
+        if metadata["image"]:
+            self.image = metadata["image"]
+            image = "image://cover/" + os.urandom(10)
+        else:
+            image = "artwork/panucci_86x86.png"
+        self.view.rootObject().property("root").openPlaylistItemInfo(item_id, metadata, image)
 
-    @QtCore.pyqtSlot(str, "QVariant")
-    def playlist_item_info_edit_callback(self, item_id, metadata):
+    @QtCore.pyqtSlot(str, "QVariant", str, bool)
+    def playlist_item_info_edit_callback(self, item_id, metadata, image, modified):
         playlist_item = self.playlist.get_item_by_id(item_id)
-        playlist_item.set_metadata(metadata)
-        self.view.rootObject().property("root").openPlaylistItemInfo(item_id, metadata)
+        if modified:
+            playlist_item.set_metadata(metadata, image)
+        else:
+            playlist_item.set_metadata(metadata, None)
+        self.view.rootObject().property("root").openPlaylistItemInfo(item_id, metadata, image)
         self.view.rootObject().property("root").openPlaylist(False, self.get_playlist_items())
         self.metadata = self.playlist.get_file_metadata()
         self.on_set_metadata.emit()
@@ -577,6 +597,7 @@ class PanucciGUI(QtCore.QObject, ObservableService):
 
     def get_cover_str(self):
         if self.metadata and self.metadata.has_key('image') and self.metadata['image']:
+            self.image = self.metadata['image']
             return "image://cover/" + os.urandom(10)
         else:
             return ""
@@ -710,7 +731,7 @@ class ImageProvider(QtQuick.QQuickImageProvider):
         width = requestedSize.width()
         height = requestedSize.height()
         pixmap = QtGui.QPixmap()
-        pixmap.loadFromData(self.__main.metadata['image'])
+        pixmap.loadFromData(self.__main.image)
         pixmap.scaled(width, height, transformMode=QtCore.Qt.SmoothTransformation)
         return pixmap, QtCore.QSize(width, height)
 
